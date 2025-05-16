@@ -5,6 +5,11 @@ export type * from './type'
 
 const BASE_URL = '/system/file'
 
+/** @desc 上传文件 */
+export function uploadFile(data: FormData) {
+  return http.post(`${BASE_URL}/upload`, data)
+}
+
 /** @desc 查询文件列表 */
 export function listFile(query: T.FilePageQuery) {
   return http.get<PageRes<T.FileItem[]>>(`${BASE_URL}`, query)
@@ -31,6 +36,11 @@ export function checkFile(sha256: string) {
 }
 
 /** @desc 创建文件夹 */
-export function createDir(path: string, name: string) {
-  return http.post<T.FileItem>(`${BASE_URL}/createDir`, { parentPath: path, name })
+export function createDir(parentPath: string, name: string) {
+  return http.post<T.FileItem>(`${BASE_URL}/dir`, { parentPath, originalName: name })
+}
+
+/** @desc 查询文件夹大小 */
+export function calcDirSize(id: string) {
+  return http.get<T.FileDirCalcSizeResp>(`${BASE_URL}/dir/${id}/size`)
 }

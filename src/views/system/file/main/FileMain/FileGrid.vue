@@ -16,9 +16,9 @@
           <div class="file-grid-item" @click.stop="handleClickFile(item)" @dblclick="handleDblclickFile(item)">
             <section class="file-grid-item__wrapper">
               <div class="file-icon">
-                <FileImage :data="item" :title="item.name"></FileImage>
+                <FileImage :data="item" :title="item.originalName"></FileImage>
               </div>
-              <p class="gi_line_1 file-name">{{ getFileName(item) }}</p>
+              <p class="gi_line_1 file-name">{{ item.originalName }}</p>
             </section>
             <!-- 勾选模式 -->
             <section
@@ -62,11 +62,6 @@ interface Props {
   data?: FileItem[]
   selectedFileIds?: string[]
   isBatchMode?: boolean
-}
-
-// 文件名称带后缀
-const getFileName = (item: FileItem) => {
-  return `${item.name}${item.extension ? `.${item.extension}` : ''}`
 }
 
 // 点击事件
