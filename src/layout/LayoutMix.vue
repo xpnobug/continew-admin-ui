@@ -30,10 +30,15 @@
       <Main></Main>
       <GiFooter v-if="appStore.copyrightDisplay" />
     </section>
+
+    <!-- 公告弹窗 -->
+    <NoticePopup ref="noticePopupRef" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { searchTree } from 'xe-utils'
 import Main from './components/Main.vue'
@@ -44,10 +49,12 @@ import Logo from './components/Logo.vue'
 import MenuFoldBtn from './components/MenuFoldBtn.vue'
 import WwAds from './components/WwAds.vue'
 import GiFooter from '@/components/GiFooter/index.vue'
+import NoticePopup from '@/views/user/message/components/NoticePopup.vue'
 import { useAppStore, useRouteStore } from '@/stores'
 import { isExternal } from '@/utils/validate'
 import { filterTree } from '@/utils'
 import { useDevice } from '@/hooks'
+import { getToken } from '@/utils/auth'
 
 defineOptions({ name: 'LayoutMix' })
 const route = useRoute()
@@ -62,6 +69,21 @@ const menuRoutes = filterTree(cloneRoutes, (i) => i.meta?.hidden === false)
 // 顶部一级菜单
 const topMenus = ref<RouteRecordRaw[]>([])
 topMenus.value = JSON.parse(JSON.stringify(menuRoutes))
+
+// 公告弹窗引用
+const noticePopupRef = ref<InstanceType<typeof NoticePopup>>()
+
+// 检查并显示未读公告
+const checkAndShowNotices = () => {
+  const token = getToken()
+
+  // 如果有token，检查未读公告
+  if (token) {
+    setTimeout(() => {
+      noticePopupRef.value?.open()
+    }, 1000) // 延迟1秒显示，让页面先加载完成
+  }
+}
 
 const getMenuIcon = (item: RouteRecordRaw) => {
   return item.meta?.icon || item.children?.[0].meta?.icon
@@ -102,6 +124,10 @@ watch(
   },
   { immediate: true },
 )
+
+onMounted(() => {
+  checkAndShowNotices()
+})
 </script>
 
 <style scoped lang="scss">

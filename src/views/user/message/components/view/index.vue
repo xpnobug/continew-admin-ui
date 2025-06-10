@@ -19,8 +19,7 @@
           <span>
             <icon-history class="icon" />
             <span class="label">发布时间：</span>
-            <span>{{ form?.effectiveTime ? form?.effectiveTime : form?.createTime
-            }}</span>
+            <span>{{ form?.publishTime }}</span>
           </span>
           <a-divider v-if="form?.updateTime" direction="vertical" />
           <span v-if="form?.updateTime">
@@ -54,8 +53,7 @@ const containerRef = ref<HTMLElement | null>()
 const [form, resetForm] = useResetReactive({
   title: '',
   createUserString: '',
-  effectiveTime: '',
-  createTime: '',
+  publishTime: '',
   content: '',
 })
 
