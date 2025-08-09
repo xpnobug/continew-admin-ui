@@ -2,24 +2,50 @@ import http from '@/utils/http'
 
 const BASE_URL = '/daily/dynamics'
 
+interface User {
+  id: string
+  username: string
+  nickname: string
+  avatar: string
+  status: number
+  gender: number
+  deptName: string
+}
+
+interface MediaItem {
+  id: string
+  type: number
+  url: string
+  coverUrl?: string
+  width: number
+  height: number
+  duration?: number
+}
+
 export interface DynamicsResp {
+  id: string
   userId: string
   content: string
   location: string
   circleId: string
-  isPublic: string
-  likesCount: string
-  commentsCount: string
-  sharesCount: string
-  status: string
+  isPublic: boolean
+  likesCount: number
+  commentsCount: number
+  sharesCount: number
+  status: number
   createTime: string
-  type: string
-  isTop: string
-  province: string
-  browse: string
-  createUserString: string
-  updateUserString: string
-  disabled: boolean
+  type: number
+  isTop: boolean
+  province: string | null
+  browse: number | null
+  createUserString: string | null
+  updateUserString: string | null
+  disabled?: boolean
+  user: User
+  imgs: MediaItem[]
+  video: MediaItem | null
+  audio: MediaItem | null
+  circle: any | null
 }
 export interface DynamicsDetailResp {
   id: string
@@ -27,21 +53,26 @@ export interface DynamicsDetailResp {
   content: string
   location: string
   circleId: string
-  isPublic: string
-  likesCount: string
-  commentsCount: string
-  sharesCount: string
-  status: string
+  isPublic: boolean
+  likesCount: number
+  commentsCount: number
+  sharesCount: number
+  status: number
   createUser: string
   createTime: string
   updateUser: string
   updateTime: string
-  type: string
-  isTop: string
-  province: string
-  browse: string
-  createUserString: string
-  updateUserString: string
+  type: number
+  isTop: boolean
+  province: string | null
+  browse: number | null
+  createUserString: string | null
+  updateUserString: string | null
+  user?: User
+  imgs?: MediaItem[]
+  video?: MediaItem | null
+  audio?: MediaItem | null
+  circle?: any | null
 }
 export interface DynamicsQuery {
   sort: Array<string>
