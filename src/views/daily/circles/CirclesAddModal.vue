@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
 import { useWindowSize } from '@vueuse/core'
-import { getCircles, addCircles, updateCircles } from '@/apis/daily/circles'
+import { addCircles, getCircles, updateCircles } from '@/apis/daily/circles'
 import { type ColumnItem, GiForm } from '@/components/GiForm'
 import { useResetReactive } from '@/hooks'
 import { useDict } from '@/hooks/app'

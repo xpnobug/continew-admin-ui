@@ -1,13 +1,13 @@
 <template>
   <a-modal
-      v-model:visible="visible"
-      :title="title"
-      :mask-closable="false"
-      :esc-to-close="false"
-      :width="width >= 600 ? 600 : '100%'"
-      draggable
-      @before-ok="save"
-      @close="reset"
+    v-model:visible="visible"
+    :title="title"
+    :mask-closable="false"
+    :esc-to-close="false"
+    :width="width >= 600 ? 600 : '100%'"
+    draggable
+    @before-ok="save"
+    @close="reset"
   >
     <GiForm ref="formRef" v-model="form" :columns="columns" />
   </a-modal>
@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
 import { useWindowSize } from '@vueuse/core'
-import { getDynamics, addDynamics, updateDynamics } from '@/apis/daily/dynamics'
+import { addDynamics, getDynamics, updateDynamics } from '@/apis/daily/dynamics'
 import { type ColumnItem, GiForm } from '@/components/GiForm'
 import { useResetReactive } from '@/hooks'
 import { useDict } from '@/hooks/app'
@@ -43,16 +43,15 @@ const [form, resetForm] = useResetReactive({
   circleId: '',
   isPublic: true,
   isTop: false,
-  status: 1
+  status: 1,
 })
 
 const dynamicTypeOptions = [
   { label: '纯文字', value: 0 },
   { label: '图片', value: 1 },
   { label: '视频', value: 2 },
-  { label: '音频', value: 3 }
+  { label: '音频', value: 3 },
 ]
-
 
 const columns: ColumnItem[] = reactive([
   {
@@ -62,8 +61,8 @@ const columns: ColumnItem[] = reactive([
     span: 24,
     required: true,
     props: {
-      placeholder: '请输入发布用户ID'
-    }
+      placeholder: '请输入发布用户ID',
+    },
   },
   {
     label: '动态类型',
@@ -72,8 +71,8 @@ const columns: ColumnItem[] = reactive([
     span: 24,
     required: true,
     props: {
-      options: dynamicTypeOptions
-    }
+      options: dynamicTypeOptions,
+    },
   },
   {
     label: '动态内容',
@@ -84,8 +83,8 @@ const columns: ColumnItem[] = reactive([
       placeholder: '请输入动态内容',
       rows: 4,
       maxLength: 500,
-      showWordLimit: true
-    }
+      showWordLimit: true,
+    },
   },
   {
     label: '所属圈子ID',
@@ -93,8 +92,8 @@ const columns: ColumnItem[] = reactive([
     type: 'input',
     span: 12,
     props: {
-      placeholder: '请输入圈子ID'
-    }
+      placeholder: '请输入圈子ID',
+    },
   },
   {
     label: '发布状态',
@@ -103,8 +102,8 @@ const columns: ColumnItem[] = reactive([
     span: 12,
     required: true,
     props: {
-      options: common_type
-    }
+      options: common_type,
+    },
   },
   {
     label: '公开状态',
@@ -113,8 +112,8 @@ const columns: ColumnItem[] = reactive([
     span: 12,
     required: true,
     props: {
-      options: common02_type
-    }
+      options: common02_type,
+    },
   },
   {
     label: '置顶状态',
@@ -123,8 +122,8 @@ const columns: ColumnItem[] = reactive([
     span: 12,
     required: true,
     props: {
-      options: common02_type
-    }
+      options: common02_type,
+    },
   },
   {
     label: '位置信息',
@@ -132,8 +131,8 @@ const columns: ColumnItem[] = reactive([
     type: 'input',
     span: 12,
     props: {
-      placeholder: '请输入详细位置信息'
-    }
+      placeholder: '请输入详细位置信息',
+    },
   },
   {
     label: '发布地点',
@@ -141,9 +140,9 @@ const columns: ColumnItem[] = reactive([
     type: 'input',
     span: 12,
     props: {
-      placeholder: '请输入发布省份/城市'
-    }
-  }
+      placeholder: '请输入发布省份/城市',
+    },
+  },
 ])
 
 // 重置

@@ -1,13 +1,13 @@
 <template>
   <a-modal
-      v-model:visible="visible"
-      :title="title"
-      :mask-closable="false"
-      :esc-to-close="false"
-      :width="width >= 600 ? 600 : '100%'"
-      draggable
-      @before-ok="save"
-      @close="reset"
+    v-model:visible="visible"
+    :title="title"
+    :mask-closable="false"
+    :esc-to-close="false"
+    :width="width >= 600 ? 600 : '100%'"
+    draggable
+    @before-ok="save"
+    @close="reset"
   >
     <GiForm ref="formRef" v-model="form" :columns="columns" />
   </a-modal>
@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
 import { useWindowSize } from '@vueuse/core'
-import { getAppConfig, addAppConfig, updateAppConfig } from '@/apis/daily/appConfig'
+import { addAppConfig, getAppConfig, updateAppConfig } from '@/apis/daily/appConfig'
 import { type ColumnItem, GiForm } from '@/components/GiForm'
 import { useResetReactive } from '@/hooks'
 import { useDict } from '@/hooks/app'
@@ -32,7 +32,7 @@ const visible = ref(false)
 const isUpdate = computed(() => !!dataId.value)
 const title = computed(() => (isUpdate.value ? '修改应用配置' : '新增应用配置'))
 const formRef = ref<InstanceType<typeof GiForm>>()
-const { common_type,common02_type } = useDict('common_type','common02_type')
+const { common_type, common02_type } = useDict('common_type', 'common02_type')
 
 const [form, resetForm] = useResetReactive({
   // todo 待补充

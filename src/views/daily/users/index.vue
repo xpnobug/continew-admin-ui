@@ -13,8 +13,8 @@
       @refresh="search"
     >
       <template #toolbar-left>
-	    <a-input-search v-model="queryForm.nickname" placeholder="请输入昵称" allow-clear @search="search" />
-	    <a-input-search v-model="queryForm.mobile" placeholder="请输入手机号" allow-clear @search="search" />
+        <a-input-search v-model="queryForm.nickname" placeholder="请输入昵称" allow-clear @search="search" />
+        <a-input-search v-model="queryForm.mobile" placeholder="请输入手机号" allow-clear @search="search" />
         <a-button @click="reset">
           <template #icon><icon-refresh /></template>
           <template #default>重置</template>
@@ -62,7 +62,7 @@
 import type { TableInstance } from '@arco-design/web-vue'
 import UsersAddModal from './UsersAddModal.vue'
 import UsersDetailDrawer from './UsersDetailDrawer.vue'
-import { type UsersResp, type UsersQuery, deleteUsers, exportUsers, listUsers } from '@/apis/daily/users'
+import { type UsersQuery, type UsersResp, deleteUsers, exportUsers, listUsers } from '@/apis/daily/users'
 import { useDownload, useTable } from '@/hooks'
 import { useDict } from '@/hooks/app'
 import { isMobile } from '@/utils'
@@ -70,12 +70,12 @@ import has from '@/utils/has'
 
 defineOptions({ name: 'Users' })
 
-const { common_type,gender_enum } = useDict('common_type','gender_enum')
+const { common_type, gender_enum } = useDict('common_type', 'gender_enum')
 
 const queryForm = reactive<UsersQuery>({
   nickname: undefined,
   mobile: undefined,
-  sort: ['id,desc']
+  sort: ['id,desc'],
 })
 
 const {
@@ -83,7 +83,7 @@ const {
   loading,
   pagination,
   search,
-  handleDelete
+  handleDelete,
 } = useTable((page) => listUsers({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
   { title: '微信OpenID', dataIndex: 'openid', slotName: 'openid' },
@@ -106,8 +106,8 @@ const columns: TableInstance['columns'] = [
     width: 160,
     align: 'center',
     fixed: !isMobile() ? 'right' : undefined,
-    show: has.hasPermOr(['daily:users:get', 'daily:users:update', 'daily:users:delete'])
-  }
+    show: has.hasPermOr(['daily:users:get', 'daily:users:update', 'daily:users:delete']),
+  },
 ]
 
 // 重置
@@ -121,7 +121,7 @@ const reset = () => {
 const onDelete = (record: UsersResp) => {
   return handleDelete(() => deleteUsers(record.id), {
     content: `是否确定删除该条数据？`,
-    showModal: true
+    showModal: true,
   })
 }
 

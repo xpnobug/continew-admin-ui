@@ -4,8 +4,8 @@
       <!-- 用户信息 -->
       <a-card title="发布用户" class="detail-card" :bordered="false">
         <div class="user-section">
-          <a-avatar 
-            :src="dataDetail?.user?.avatar" 
+          <a-avatar
+            :src="dataDetail?.user?.avatar"
             :size="48"
             class="user-avatar-large"
           >
@@ -67,7 +67,7 @@
           </div>
           <!-- 视频展示 -->
           <div v-if="dataDetail?.video" class="video-content">
-            <video 
+            <video
               :src="dataDetail.video.url"
               :poster="dataDetail.video.coverUrl"
               controls
@@ -193,7 +193,7 @@ const getLocationInfo = (location: string) => {
     const locationData = JSON.parse(location)
     return {
       name: locationData.name || '未知位置',
-      address: locationData.address || '未知地址'
+      address: locationData.address || '未知地址',
     }
   } catch {
     return { name: location, address: '解析失败' }
@@ -220,7 +220,7 @@ defineExpose({ onOpen })
 .detail-container {
   .detail-card {
     margin-bottom: 16px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
@@ -248,7 +248,7 @@ defineExpose({ onOpen })
         display: flex;
         align-items: center;
         gap: 12px;
-        
+
         .user-id {
           font-size: 12px;
           color: var(--color-text-3);

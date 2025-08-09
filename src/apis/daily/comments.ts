@@ -2,37 +2,73 @@ import http from '@/utils/http'
 
 const BASE_URL = '/daily/comments'
 
-export interface CommentsResp {
+interface User {
+  id: string
+  username: string
+  nickname: string
+  avatar: string
+  status: number
+  gender: number
+  deptName: string
+}
+
+interface ReplyComment {
+  id: string
   userId: string
   dynamicId: string
   content: string
-  likesCount: string
-  status: string
-  createTime: string
-  comment: string
+  likesCount: number
+  status: number
   img: string
-  createUserString: string
-  updateUserString: string
-  disabled: boolean
+  replyCommentId: string
+  replyUserId: string
+  createTime: string
+  user: User
+  replyUser: User | null
+  list: ReplyComment[] | null
+}
+
+export interface CommentsResp {
+  id: string
+  userId: string
+  dynamicId: string
+  content: string
+  likesCount: number
+  status: number
+  createTime: string
+  comment: string | null
+  img: string
+  replyCommentId: number
+  replyUserId: number
+  listCount: number
+  createUserString: string | null
+  updateUserString: string | null
+  disabled?: boolean
+  user: User
+  replyUser: User | null
+  list: ReplyComment[]
 }
 export interface CommentsDetailResp {
   id: string
   userId: string
   dynamicId: string
-  parentId: string
   content: string
-  likesCount: string
-  status: string
+  likesCount: number
+  status: number
   createUser: string
   createTime: string
   updateUser: string
   updateTime: string
-  comment: string
+  comment: string | null
   img: string
-  replyCommentId: string
-  replyUserId: string
-  createUserString: string
-  updateUserString: string
+  replyCommentId: number
+  replyUserId: number
+  listCount: number
+  createUserString: string | null
+  updateUserString: string | null
+  user?: User
+  replyUser?: User | null
+  list?: ReplyComment[]
 }
 export interface CommentsQuery {
   sort: Array<string>

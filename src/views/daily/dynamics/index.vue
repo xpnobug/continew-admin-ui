@@ -1,16 +1,16 @@
 <template>
   <div class="gi_table_page">
     <GiTable
-        title="动态管理"
-        row-key="id"
-        :data="dataList"
-        :columns="columns"
-        :loading="loading"
-        :scroll="{ x: '100%', y: '100%', minWidth: 1000 }"
-        :pagination="pagination"
-        :disabled-tools="['size']"
-        :disabled-column-keys="['name']"
-        @refresh="search"
+      title="动态管理"
+      row-key="id"
+      :data="dataList"
+      :columns="columns"
+      :loading="loading"
+      :scroll="{ x: '100%', y: '100%', minWidth: 1000 }"
+      :pagination="pagination"
+      :disabled-tools="['size']"
+      :disabled-column-keys="['name']"
+      @refresh="search"
     >
       <template #toolbar-left>
         <a-button @click="reset">
@@ -30,8 +30,8 @@
       </template>
       <template #user="{ record }">
         <div class="user-info">
-          <a-avatar 
-            :src="record.user?.avatar" 
+          <a-avatar
+            :src="record.user?.avatar"
             :size="32"
             class="user-avatar"
           >
@@ -125,11 +125,11 @@
           <a-link v-permission="['daily:dynamics:get']" title="详情" @click="onDetail(record)">详情</a-link>
           <a-link v-permission="['daily:dynamics:update']" title="修改" @click="onUpdate(record)">修改</a-link>
           <a-link
-              v-permission="['daily:dynamics:delete']"
-              status="danger"
-              :disabled="record.disabled"
-              :title="record.disabled ? '不可删除' : '删除'"
-              @click="onDelete(record)"
+            v-permission="['daily:dynamics:delete']"
+            status="danger"
+            :disabled="record.disabled"
+            :title="record.disabled ? '不可删除' : '删除'"
+            @click="onDelete(record)"
           >
             删除
           </a-link>
@@ -146,7 +146,7 @@
 import type { TableInstance } from '@arco-design/web-vue'
 import DynamicsAddModal from './DynamicsAddModal.vue'
 import DynamicsDetailDrawer from './DynamicsDetailDrawer.vue'
-import { type DynamicsResp, type DynamicsQuery, deleteDynamics, exportDynamics, listDynamics } from '@/apis/daily/dynamics'
+import { type DynamicsQuery, type DynamicsResp, deleteDynamics, exportDynamics, listDynamics } from '@/apis/daily/dynamics'
 import { useDownload, useTable } from '@/hooks'
 import { useDict } from '@/hooks/app'
 import { isMobile } from '@/utils'
@@ -157,7 +157,7 @@ defineOptions({ name: 'Dynamics' })
 const { common02_type, common_type } = useDict('common02_type', 'common_type')
 
 const queryForm = reactive<DynamicsQuery>({
-  sort: ['id,desc']
+  sort: ['id,desc'],
 })
 
 const {
@@ -165,61 +165,61 @@ const {
   loading,
   pagination,
   search,
-  handleDelete
+  handleDelete,
 } = useTable((page) => listDynamics({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
-  { 
-    title: '发布用户', 
-    dataIndex: 'user', 
+  {
+    title: '发布用户',
+    dataIndex: 'user',
     slotName: 'user',
-    width: 150
+    width: 150,
   },
-  { 
-    title: '动态内容', 
-    dataIndex: 'content', 
+  {
+    title: '动态内容',
+    dataIndex: 'content',
     slotName: 'content',
     width: 200,
     ellipsis: true,
-    tooltip: true
+    tooltip: true,
   },
-  { 
-    title: '动态类型', 
-    dataIndex: 'type', 
+  {
+    title: '动态类型',
+    dataIndex: 'type',
     slotName: 'type',
-    width: 100
+    width: 100,
   },
-  { 
-    title: '位置信息', 
-    dataIndex: 'location', 
+  {
+    title: '位置信息',
+    dataIndex: 'location',
     slotName: 'location',
-    width: 150
+    width: 150,
   },
-  { 
-    title: '公开状态', 
-    dataIndex: 'isPublic', 
+  {
+    title: '公开状态',
+    dataIndex: 'isPublic',
     slotName: 'isPublic',
-    width: 100
+    width: 100,
   },
-  { 
-    title: '置顶状态', 
-    dataIndex: 'isTop', 
+  {
+    title: '置顶状态',
+    dataIndex: 'isTop',
     slotName: 'isTop',
-    width: 100
+    width: 100,
   },
-  { 
-    title: '互动统计', 
+  {
+    title: '互动统计',
     children: [
       { title: '点赞', dataIndex: 'likesCount', slotName: 'likesCount', width: 80 },
       { title: '评论', dataIndex: 'commentsCount', slotName: 'commentsCount', width: 80 },
       { title: '分享', dataIndex: 'sharesCount', slotName: 'sharesCount', width: 80 },
-      { title: '浏览', dataIndex: 'browse', slotName: 'browse', width: 80 }
-    ]
+      { title: '浏览', dataIndex: 'browse', slotName: 'browse', width: 80 },
+    ],
   },
-  { 
-    title: '状态', 
-    dataIndex: 'status', 
+  {
+    title: '状态',
+    dataIndex: 'status',
     slotName: 'status',
-    width: 100
+    width: 100,
   },
   // {
   //   title: '发布地点',
@@ -227,11 +227,11 @@ const columns: TableInstance['columns'] = [
   //   slotName: 'province',
   //   width: 120
   // },
-  { 
-    title: '创建时间', 
-    dataIndex: 'createTime', 
+  {
+    title: '创建时间',
+    dataIndex: 'createTime',
     slotName: 'createTime',
-    width: 180
+    width: 180,
   },
   {
     title: '操作',
@@ -240,8 +240,8 @@ const columns: TableInstance['columns'] = [
     width: 160,
     align: 'center',
     fixed: !isMobile() ? 'right' : undefined,
-    show: has.hasPermOr(['daily:dynamics:get', 'daily:dynamics:update', 'daily:dynamics:delete'])
-  }
+    show: has.hasPermOr(['daily:dynamics:get', 'daily:dynamics:update', 'daily:dynamics:delete']),
+  },
 ]
 
 // 重置
@@ -253,7 +253,7 @@ const reset = () => {
 const onDelete = (record: DynamicsResp) => {
   return handleDelete(() => deleteDynamics(record.id), {
     content: `是否确定删除该条数据？`,
-    showModal: true
+    showModal: true,
   })
 }
 
@@ -318,7 +318,7 @@ const getLocationName = (location: string) => {
 .location-info {
   display: flex;
   align-items: center;
-  
+
   .location-text {
     font-size: 12px;
     max-width: 120px;

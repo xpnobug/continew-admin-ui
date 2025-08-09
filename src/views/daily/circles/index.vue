@@ -13,7 +13,7 @@
       @refresh="search"
     >
       <template #toolbar-left>
-	    <a-input-search v-model="queryForm.name" placeholder="请输入圈子名称" allow-clear @search="search" />
+        <a-input-search v-model="queryForm.name" placeholder="请输入圈子名称" allow-clear @search="search" />
         <a-button @click="reset">
           <template #icon><icon-refresh /></template>
           <template #default>重置</template>
@@ -64,7 +64,7 @@
 import type { TableInstance } from '@arco-design/web-vue'
 import CirclesAddModal from './CirclesAddModal.vue'
 import CirclesDetailDrawer from './CirclesDetailDrawer.vue'
-import { type CirclesResp, type CirclesQuery, deleteCircles, exportCircles, listCircles } from '@/apis/daily/circles'
+import { type CirclesQuery, type CirclesResp, deleteCircles, exportCircles, listCircles } from '@/apis/daily/circles'
 import { useDownload, useTable } from '@/hooks'
 import { useDict } from '@/hooks/app'
 import { isMobile } from '@/utils'
@@ -76,7 +76,7 @@ const { common_type } = useDict('common_type')
 
 const queryForm = reactive<CirclesQuery>({
   name: undefined,
-  sort: ['id,desc']
+  sort: ['id,desc'],
 })
 
 const {
@@ -84,7 +84,7 @@ const {
   loading,
   pagination,
   search,
-  handleDelete
+  handleDelete,
 } = useTable((page) => listCircles({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
   { title: '圈子名称', dataIndex: 'name', slotName: 'name' },
@@ -100,8 +100,8 @@ const columns: TableInstance['columns'] = [
     width: 160,
     align: 'center',
     fixed: !isMobile() ? 'right' : undefined,
-    show: has.hasPermOr(['daily:circles:get', 'daily:circles:update', 'daily:circles:delete'])
-  }
+    show: has.hasPermOr(['daily:circles:get', 'daily:circles:update', 'daily:circles:delete']),
+  },
 ]
 
 // 重置
@@ -114,7 +114,7 @@ const reset = () => {
 const onDelete = (record: CirclesResp) => {
   return handleDelete(() => deleteCircles(record.id), {
     content: `是否确定删除该条数据？`,
-    showModal: true
+    showModal: true,
   })
 }
 

@@ -1,19 +1,19 @@
 <template>
   <div class="gi_table_page">
     <GiTable
-        title="应用配置管理"
-        row-key="id"
-        :data="dataList"
-        :columns="columns"
-        :loading="loading"
-        :scroll="{ x: '100%', y: '100%', minWidth: 1000 }"
-        :pagination="pagination"
-        :disabled-tools="['size']"
-        :disabled-column-keys="['name']"
-        @refresh="search"
+      title="应用配置管理"
+      row-key="id"
+      :data="dataList"
+      :columns="columns"
+      :loading="loading"
+      :scroll="{ x: '100%', y: '100%', minWidth: 1000 }"
+      :pagination="pagination"
+      :disabled-tools="['size']"
+      :disabled-column-keys="['name']"
+      @refresh="search"
     >
       <template #toolbar-left>
-        <a-radio-group v-model="queryForm.status" :options="common_type" @change="search"/>
+        <a-radio-group v-model="queryForm.status" :options="common_type" @change="search" />
         <a-input-search v-model="queryForm.createUser" placeholder="请输入创建人" allow-clear @search="search" />
         <a-input-search v-model="queryForm.createTime" placeholder="请输入创建时间" allow-clear @search="search" />
         <a-button @click="reset">
@@ -63,11 +63,11 @@
           <a-link v-permission="['daily:appConfig:get']" title="详情" @click="onDetail(record)">详情</a-link>
           <a-link v-permission="['daily:appConfig:update']" title="修改" @click="onUpdate(record)">修改</a-link>
           <a-link
-              v-permission="['daily:appConfig:delete']"
-              status="danger"
-              :disabled="record.disabled"
-              :title="record.disabled ? '不可删除' : '删除'"
-              @click="onDelete(record)"
+            v-permission="['daily:appConfig:delete']"
+            status="danger"
+            :disabled="record.disabled"
+            :title="record.disabled ? '不可删除' : '删除'"
+            @click="onDelete(record)"
           >
             删除
           </a-link>
@@ -84,7 +84,7 @@
 import type { TableInstance } from '@arco-design/web-vue'
 import AppConfigAddModal from './AppConfigAddModal.vue'
 import AppConfigDetailDrawer from './AppConfigDetailDrawer.vue'
-import { type AppConfigResp, type AppConfigQuery, deleteAppConfig, exportAppConfig, listAppConfig } from '@/apis/daily/appConfig'
+import { type AppConfigQuery, type AppConfigResp, deleteAppConfig, exportAppConfig, listAppConfig } from '@/apis/daily/appConfig'
 import { useDownload, useTable } from '@/hooks'
 import { useDict } from '@/hooks/app'
 import { isMobile } from '@/utils'
@@ -92,13 +92,13 @@ import has from '@/utils/has'
 
 defineOptions({ name: 'AppConfig' })
 
-const { common_type,common02_type } = useDict('common_type','common02_type')
+const { common_type, common02_type } = useDict('common_type', 'common02_type')
 
 const queryForm = reactive<AppConfigQuery>({
   status: undefined,
   createUser: undefined,
   createTime: undefined,
-  sort: ['id,desc']
+  sort: ['id,desc'],
 })
 
 const {
@@ -106,7 +106,7 @@ const {
   loading,
   pagination,
   search,
-  handleDelete
+  handleDelete,
 } = useTable((page) => listAppConfig({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
   { title: '应用名称', dataIndex: 'appName', slotName: 'appName' },
@@ -135,8 +135,8 @@ const columns: TableInstance['columns'] = [
     width: 160,
     align: 'center',
     fixed: !isMobile() ? 'right' : undefined,
-    show: has.hasPermOr(['daily:appConfig:get', 'daily:appConfig:update', 'daily:appConfig:delete'])
-  }
+    show: has.hasPermOr(['daily:appConfig:get', 'daily:appConfig:update', 'daily:appConfig:delete']),
+  },
 ]
 
 // 重置
@@ -151,7 +151,7 @@ const reset = () => {
 const onDelete = (record: AppConfigResp) => {
   return handleDelete(() => deleteAppConfig(record.id), {
     content: `是否确定删除该条数据？`,
-    showModal: true
+    showModal: true,
   })
 }
 

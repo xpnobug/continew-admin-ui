@@ -54,17 +54,15 @@
 import type { TableInstance } from '@arco-design/web-vue'
 import CircleMembersAddModal from './CircleMembersAddModal.vue'
 import CircleMembersDetailDrawer from './CircleMembersDetailDrawer.vue'
-import { type CircleMembersResp, type CircleMembersQuery, deleteCircleMembers, exportCircleMembers, listCircleMembers } from '@/apis/daily/circleMembers'
+import { type CircleMembersQuery, type CircleMembersResp, deleteCircleMembers, exportCircleMembers, listCircleMembers } from '@/apis/daily/circleMembers'
 import { useDownload, useTable } from '@/hooks'
-import { useDict } from '@/hooks/app'
 import { isMobile } from '@/utils'
 import has from '@/utils/has'
 
 defineOptions({ name: 'CircleMembers' })
 
-
 const queryForm = reactive<CircleMembersQuery>({
-  sort: ['id,desc']
+  sort: ['id,desc'],
 })
 
 const {
@@ -72,7 +70,7 @@ const {
   loading,
   pagination,
   search,
-  handleDelete
+  handleDelete,
 } = useTable((page) => listCircleMembers({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
   { title: '角色：1创建者，2管理员，3普通成员', dataIndex: 'role', slotName: 'role' },
@@ -86,8 +84,8 @@ const columns: TableInstance['columns'] = [
     width: 160,
     align: 'center',
     fixed: !isMobile() ? 'right' : undefined,
-    show: has.hasPermOr(['daily:circleMembers:get', 'daily:circleMembers:update', 'daily:circleMembers:delete'])
-  }
+    show: has.hasPermOr(['daily:circleMembers:get', 'daily:circleMembers:update', 'daily:circleMembers:delete']),
+  },
 ]
 
 // 重置
@@ -99,7 +97,7 @@ const reset = () => {
 const onDelete = (record: CircleMembersResp) => {
   return handleDelete(() => deleteCircleMembers(record.id), {
     content: `是否确定删除该条数据？`,
-    showModal: true
+    showModal: true,
   })
 }
 

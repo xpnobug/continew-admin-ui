@@ -16,10 +16,9 @@
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
 import { useWindowSize } from '@vueuse/core'
-import { getCircleMembers, addCircleMembers, updateCircleMembers } from '@/apis/daily/circleMembers'
+import { addCircleMembers, getCircleMembers, updateCircleMembers } from '@/apis/daily/circleMembers'
 import { type ColumnItem, GiForm } from '@/components/GiForm'
 import { useResetReactive } from '@/hooks'
-import { useDict } from '@/hooks/app'
 
 const emit = defineEmits<{
   (e: 'save-success'): void

@@ -246,8 +246,8 @@ const selectAll: TableInstance['onSelectAll'] = (checked) => {
   tableData.value.forEach((item) => {
     item.isChecked = checked
     checked
-        ? selectedKeys.value.add(item.id)
-        : selectedKeys.value.delete(item.id)
+      ? selectedKeys.value.add(item.id)
+      : selectedKeys.value.delete(item.id)
     cascadeSelectChild(item, true)
   })
 }

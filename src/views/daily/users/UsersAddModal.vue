@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
 import { useWindowSize } from '@vueuse/core'
-import { getUsers, addUsers, updateUsers } from '@/apis/daily/users'
+import { addUsers, getUsers, updateUsers } from '@/apis/daily/users'
 import { type ColumnItem, GiForm } from '@/components/GiForm'
 import { useResetReactive } from '@/hooks'
 import { useDict } from '@/hooks/app'
@@ -32,7 +32,7 @@ const visible = ref(false)
 const isUpdate = computed(() => !!dataId.value)
 const title = computed(() => (isUpdate.value ? '修改用户' : '新增用户'))
 const formRef = ref<InstanceType<typeof GiForm>>()
-const { common_type,gender_enum } = useDict('common_type','gender_enum')
+const { common_type, gender_enum } = useDict('common_type', 'gender_enum')
 
 const [form, resetForm] = useResetReactive({
   // todo 待补充
@@ -91,7 +91,7 @@ const columns: ColumnItem[] = reactive([
     field: 'bio',
     type: 'textarea',
     props: {
-      autoSize: true
+      autoSize: true,
     },
     span: 24,
   },
