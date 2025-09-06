@@ -4,7 +4,7 @@
     :title="title"
     :mask-closable="false"
     :esc-to-close="false"
-    :width="width >= 600 ? 600 : '100%'"
+    :width="width >= 800 ? 800 : '100%'"
     draggable
     @before-ok="save"
     @close="reset"
@@ -39,53 +39,91 @@ const [form, resetForm] = useResetReactive({
 })
 
 const columns: ColumnItem[] = reactive([
+  // 基本信息
+  {
+    label: '基本信息',
+    field: 'basic-info',
+    type: 'title',
+    span: 24,
+  },
   {
     label: '应用名称',
     field: 'appName',
     type: 'input',
-    span: 24,
+    span: 12,
+    required: true,
   },
   {
     label: '应用宣传语',
     field: 'appSlogan',
     type: 'input',
-    span: 24,
+    span: 12,
   },
   {
     label: '应用公告',
     field: 'appNotice',
-    type: 'input',
+    type: 'textarea',
     span: 24,
+    props: {
+      rows: 3,
+    },
   },
   {
     label: '应用描述',
     field: 'appDesc',
+    type: 'textarea',
+    span: 24,
+    props: {
+      rows: 3,
+    },
+  },
+  {
+    label: '上传类型',
+    field: 'uploadType',
     type: 'input',
+    span: 12,
+  },
+  {
+    label: '状态',
+    field: 'status',
+    type: 'radio-group',
+    span: 12,
+    required: true,
+    props: {
+      options: common_type,
+    },
+  },
+  
+  // 版权信息
+  {
+    label: '版权信息',
+    field: 'copyright-info',
+    type: 'title',
     span: 24,
   },
   {
     label: '版权类型',
     field: 'copyType',
     type: 'input',
-    span: 24,
+    span: 12,
   },
   {
     label: '版权图片',
     field: 'copyImg',
     type: 'input',
-    span: 24,
+    span: 12,
   },
   {
     label: '版权文本',
     field: 'copyText',
     type: 'input',
-    span: 24,
+    span: 12,
   },
   {
     label: '版权网站',
     field: 'copyWebsite',
     type: 'input',
-    span: 24,
+    span: 12,
   },
   {
     label: '版权链接',
@@ -93,92 +131,84 @@ const columns: ColumnItem[] = reactive([
     type: 'input',
     span: 24,
   },
+  
+  // 功能开关
   {
-    label: '上传类型',
-    field: 'uploadType',
-    type: 'input',
+    label: '功能开关',
+    field: 'feature-switches',
+    type: 'title',
     span: 24,
   },
   {
-    label: '是否开启活动功能',
+    label: '活动功能',
     field: 'isActivity',
     type: 'switch',
-    span: 24,
+    span: 8,
     props: {
       options: common02_type,
     },
   },
   {
-    label: '是否开启瀑布流',
+    label: '瀑布流',
     field: 'isWaterfall',
     type: 'switch',
-    span: 24,
+    span: 8,
     props: {
       options: common02_type,
     },
   },
   {
-    label: '是否开启分类',
+    label: '分类功能',
     field: 'isClassify',
     type: 'switch',
-    span: 24,
+    span: 8,
     props: {
       options: common02_type,
     },
   },
   {
-    label: '是否开启商城',
+    label: '商城功能',
     field: 'isNoteShop',
     type: 'switch',
-    span: 24,
+    span: 8,
     props: {
       options: common02_type,
     },
   },
   {
-    label: '是否开启视频',
+    label: '视频功能',
     field: 'isNoteVideo',
     type: 'switch',
-    span: 24,
+    span: 8,
     props: {
       options: common02_type,
     },
   },
   {
-    label: '是否开启卡片',
+    label: '卡片功能',
     field: 'isCard',
     type: 'switch',
-    span: 24,
+    span: 8,
     props: {
       options: common02_type,
     },
   },
   {
-    label: '是否开启直播',
+    label: '直播功能',
     field: 'isLive',
     type: 'switch',
-    span: 24,
+    span: 8,
     props: {
       options: common02_type,
     },
   },
   {
-    label: '是否开启备忘录模式',
+    label: '备忘录模式',
     field: 'isMemo',
     type: 'switch',
-    span: 24,
+    span: 8,
     props: {
       options: common02_type,
-    },
-  },
-  {
-    label: '状态（1：启用；2：禁用）',
-    field: 'status',
-    type: 'radio-group',
-    span: 24,
-    required: true,
-    props: {
-      options: common_type,
     },
   },
 ])
@@ -227,4 +257,26 @@ const onUpdate = async (id: string) => {
 defineExpose({ onAdd, onUpdate })
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+:deep(.arco-form) {
+  .arco-form-item-label-col {
+    .arco-form-item-label {
+      font-weight: 500;
+    }
+  }
+  
+  // 标题样式
+  .arco-form-item[data-field="basic-info"],
+  .arco-form-item[data-field="copyright-info"],
+  .arco-form-item[data-field="feature-switches"] {
+    .arco-form-item-content {
+      padding: 16px 0 8px;
+      border-bottom: 1px solid var(--color-border-2);
+      margin-bottom: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text-1);
+    }
+  }
+}
+</style>

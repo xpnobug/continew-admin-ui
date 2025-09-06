@@ -13,13 +13,38 @@
       @refresh="search"
     >
       <template #toolbar-left>
-        <a-radio-group v-model="queryForm.status" :options="common_type" @change="search" />
-        <a-input-search v-model="queryForm.createUser" placeholder="请输入创建人" allow-clear @search="search" />
-        <a-input-search v-model="queryForm.createTime" placeholder="请输入创建时间" allow-clear @search="search" />
-        <a-button @click="reset">
-          <template #icon><icon-refresh /></template>
-          <template #default>重置</template>
-        </a-button>
+        <div class="search-container">
+          <a-space wrap :size="16">
+            <div class="search-group">
+              <span class="search-label">状态：</span>
+              <a-radio-group v-model="queryForm.status" :options="common_type" @change="search" size="small" />
+            </div>
+            <div class="search-group">
+              <a-input-search 
+                v-model="queryForm.createUser" 
+                placeholder="请输入创建人" 
+                allow-clear 
+                @search="search" 
+                style="width: 160px"
+                size="small"
+              />
+            </div>
+            <div class="search-group">
+              <a-input-search 
+                v-model="queryForm.createTime" 
+                placeholder="请输入创建时间" 
+                allow-clear 
+                @search="search" 
+                style="width: 160px"
+                size="small"
+              />
+            </div>
+            <a-button @click="reset" size="small">
+              <template #icon><icon-refresh /></template>
+              <template #default>重置</template>
+            </a-button>
+          </a-space>
+        </div>
       </template>
       <template #toolbar-right>
         <a-button v-permission="['daily:appConfig:create']" type="primary" @click="onAdd">
@@ -31,29 +56,19 @@
           <template #default>导出</template>
         </a-button>
       </template>
-      <template #isActivity="{ record }">
-        <GiCellTag :value="record.isActivity" :dict="common02_type" />
-      </template>
-      <template #isWaterfall="{ record }">
-        <GiCellTag :value="record.isWaterfall" :dict="common02_type" />
-      </template>
-      <template #isClassify="{ record }">
-        <GiCellTag :value="record.isClassify" :dict="common02_type" />
-      </template>
-      <template #isNoteShop="{ record }">
-        <GiCellTag :value="record.isNoteShop" :dict="common02_type" />
-      </template>
-      <template #isNoteVideo="{ record }">
-        <GiCellTag :value="record.isNoteVideo" :dict="common02_type" />
-      </template>
-      <template #isCard="{ record }">
-        <GiCellTag :value="record.isCard" :dict="common02_type" />
-      </template>
-      <template #isLive="{ record }">
-        <GiCellTag :value="record.isLive" :dict="common02_type" />
-      </template>
-      <template #isMemo="{ record }">
-        <GiCellTag :value="record.isMemo" :dict="common02_type" />
+      <template #features="{ record }">
+        <div class="features-container">
+          <a-space wrap :size="4">
+            <a-tag v-if="record.isActivity === 1" color="blue" size="small">活动</a-tag>
+            <a-tag v-if="record.isWaterfall === 1" color="green" size="small">瀑布流</a-tag>
+            <a-tag v-if="record.isClassify === 1" color="purple" size="small">分类</a-tag>
+            <a-tag v-if="record.isNoteShop === 1" color="orange" size="small">商城</a-tag>
+            <a-tag v-if="record.isNoteVideo === 1" color="red" size="small">视频</a-tag>
+            <a-tag v-if="record.isCard === 1" color="cyan" size="small">卡片</a-tag>
+            <a-tag v-if="record.isLive === 1" color="magenta" size="small">直播</a-tag>
+            <a-tag v-if="record.isMemo === 1" color="lime" size="small">备忘录</a-tag>
+          </a-space>
+        </div>
       </template>
       <template #status="{ record }">
         <GiCellTag :value="record.status" :dict="common_type" />
@@ -109,25 +124,36 @@ const {
   handleDelete,
 } = useTable((page) => listAppConfig({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
-  { title: '应用名称', dataIndex: 'appName', slotName: 'appName' },
-  { title: '应用宣传语', dataIndex: 'appSlogan', slotName: 'appSlogan' },
-  { title: '应用公告', dataIndex: 'appNotice', slotName: 'appNotice' },
-  { title: '应用描述', dataIndex: 'appDesc', slotName: 'appDesc' },
-  { title: '版权类型', dataIndex: 'copyType', slotName: 'copyType' },
-  { title: '版权图片', dataIndex: 'copyImg', slotName: 'copyImg' },
-  { title: '版权文本', dataIndex: 'copyText', slotName: 'copyText' },
-  { title: '版权网站', dataIndex: 'copyWebsite', slotName: 'copyWebsite' },
-  { title: '版权链接', dataIndex: 'copyLink', slotName: 'copyLink' },
-  { title: '上传类型', dataIndex: 'uploadType', slotName: 'uploadType' },
-  { title: '是否开启活动功能', dataIndex: 'isActivity', slotName: 'isActivity' },
-  { title: '是否开启瀑布流', dataIndex: 'isWaterfall', slotName: 'isWaterfall' },
-  { title: '是否开启分类', dataIndex: 'isClassify', slotName: 'isClassify' },
-  { title: '是否开启商城', dataIndex: 'isNoteShop', slotName: 'isNoteShop' },
-  { title: '是否开启视频', dataIndex: 'isNoteVideo', slotName: 'isNoteVideo' },
-  { title: '是否开启卡片', dataIndex: 'isCard', slotName: 'isCard' },
-  { title: '是否开启直播', dataIndex: 'isLive', slotName: 'isLive' },
-  { title: '是否开启备忘录模式', dataIndex: 'isMemo', slotName: 'isMemo' },
-  { title: '状态（1：启用；2：禁用）', dataIndex: 'status', slotName: 'status' },
+  { 
+    title: '应用名称', 
+    dataIndex: 'appName', 
+    slotName: 'appName',
+    width: 140,
+    ellipsis: true,
+    tooltip: true 
+  },
+  { 
+    title: '应用宣传语', 
+    dataIndex: 'appSlogan', 
+    slotName: 'appSlogan',
+    width: 160,
+    ellipsis: true,
+    tooltip: true
+  },
+  { 
+    title: '功能开关', 
+    dataIndex: 'features', 
+    slotName: 'features',
+    width: 200,
+    align: 'center'
+  },
+  { 
+    title: '状态', 
+    dataIndex: 'status', 
+    slotName: 'status',
+    width: 80,
+    align: 'center'
+  },
   {
     title: '操作',
     dataIndex: 'action',
@@ -178,4 +204,41 @@ const onDetail = (record: AppConfigResp) => {
 }
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.search-container {
+  .search-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .search-label {
+      font-size: 14px;
+      color: var(--color-text-2);
+      white-space: nowrap;
+    }
+  }
+}
+
+.features-container {
+  max-width: 180px;
+  
+  :deep(.arco-tag) {
+    margin: 2px;
+    font-size: 12px;
+  }
+}
+
+// 响应式适配
+@media (max-width: 768px) {
+  .search-container {
+    .search-group {
+      flex-direction: column;
+      align-items: flex-start;
+      
+      .search-label {
+        font-size: 12px;
+      }
+    }
+  }
+}
+</style>
