@@ -381,53 +381,106 @@ defineExpose({
     min-height: 0;
 
     .left-panel {
-      width: 360px;
+      width: 420px;
       border-right: 1px solid var(--color-border-2);
       flex-shrink: 0;
     }
 
     .center-panel {
-      width: 400px;
+      width: 460px;
       border-right: 1px solid var(--color-border-2);
       flex-shrink: 0;
     }
 
     .right-panel {
       flex: 1;
-      min-width: 0;
+      min-width: 400px;
+    }
+  }
+}
+
+@media (max-width: 1400px) {
+  .ai-chat-workspace {
+    .workspace-content {
+      .left-panel {
+        width: 380px;
+      }
+
+      .center-panel {
+        width: 420px;
+      }
     }
   }
 }
 
 @media (max-width: 1200px) {
   .ai-chat-workspace {
-    .left-panel {
-      width: 320px;
-    }
+    .workspace-content {
+      .left-panel {
+        width: 340px;
+      }
 
-    .center-panel {
-      width: 360px;
+      .center-panel {
+        width: 380px;
+      }
     }
   }
 }
 
-@media (max-width: 900px) {
+// 超大屏幕优化
+@media (min-width: 1800px) {
+  .ai-chat-workspace {
+    .workspace-content {
+      .left-panel {
+        width: 480px;
+      }
+
+      .center-panel {
+        width: 520px;
+      }
+    }
+  }
+}
+
+@media (max-width: 1000px) {
+  .ai-chat-workspace {
+    .workspace-content {
+      .left-panel {
+        width: 300px;
+      }
+
+      .center-panel {
+        width: 340px;
+      }
+
+      .right-panel {
+        min-width: 320px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
   .ai-chat-workspace {
     flex-direction: column;
     height: auto;
     min-height: 100vh;
 
-    .left-panel,
-    .center-panel {
-      width: 100%;
-      height: 300px;
-      border-right: none;
-      border-bottom: 1px solid var(--color-border-2);
-    }
+    .workspace-content {
+      flex-direction: column;
 
-    .right-panel {
-      height: calc(100vh - 600px);
-      min-height: 400px;
+      .left-panel,
+      .center-panel {
+        width: 100%;
+        height: 320px;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border-2);
+      }
+
+      .right-panel {
+        height: calc(100vh - 680px);
+        min-height: 400px;
+      }
     }
   }
 }
