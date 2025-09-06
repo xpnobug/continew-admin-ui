@@ -26,9 +26,9 @@
             <div class="icon-item">
               <label>常态图标</label>
               <div class="icon-preview">
-                <img 
+                <img
                   v-if="dataDetail?.iconNormal && isImageUrl(dataDetail.iconNormal)"
-                  :src="dataDetail.iconNormal" 
+                  :src="dataDetail.iconNormal"
                   class="nav-icon-large"
                   alt="常态图标"
                 />
@@ -39,9 +39,9 @@
             <div class="icon-item">
               <label>激活图标</label>
               <div class="icon-preview">
-                <img 
+                <img
                   v-if="dataDetail?.iconActive && isImageUrl(dataDetail.iconActive)"
-                  :src="dataDetail.iconActive" 
+                  :src="dataDetail.iconActive"
                   class="nav-icon-large"
                   alt="激活图标"
                 />
@@ -138,7 +138,7 @@ const isImageUrl = (url: string) => {
   if (!url) return false
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico']
   const lowerUrl = url.toLowerCase()
-  return imageExtensions.some(ext => lowerUrl.includes(ext)) || url.startsWith('http')
+  return imageExtensions.some((ext) => lowerUrl.includes(ext)) || url.startsWith('http')
 }
 
 // 查询详情
@@ -161,7 +161,7 @@ defineExpose({ onOpen })
 .detail-container {
   .detail-card {
     margin-bottom: 16px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
@@ -188,7 +188,7 @@ defineExpose({ onOpen })
       display: flex;
       gap: 32px;
       justify-content: space-around;
-      
+
       @media (max-width: 768px) {
         flex-direction: column;
         gap: 16px;
@@ -288,7 +288,7 @@ defineExpose({ onOpen })
   .arco-card-header {
     background: var(--color-bg-1);
     border-bottom: 1px solid var(--color-border-2);
-    
+
     .arco-card-header-title {
       font-weight: 600;
       color: var(--color-text-1);

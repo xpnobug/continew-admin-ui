@@ -16,35 +16,64 @@
         </a-tab-pane>
         <a-tab-pane key="icon" title="图标配置">
           <div class="icon-config-section">
-            <GiForm ref="iconFormRef" v-model="form" :columns="iconColumns" />
+            <GiForm ref="iconFormRef" v-model="form" :columns="iconColumns">
+              <template #iconNormalSelect>
+                <a-button @click="openFileSelector('iconNormal')">
+                  <template #icon>
+                    <icon-folder />
+                  </template>
+                  选择
+                </a-button>
+              </template>
+              <template #iconActiveSelect>
+                <a-button @click="openFileSelector('iconActive')">
+                  <template #icon>
+                    <icon-folder />
+                  </template>
+                  选择
+                </a-button>
+              </template>
+            </GiForm>
             <div class="icon-preview-section">
               <div class="preview-title">图标预览</div>
               <div class="icon-preview-group">
                 <div class="preview-item">
                   <div class="preview-label">常态图标</div>
-                  <div class="preview-box">
-                    <img 
-                      v-if="form.iconNormal && isImageUrl(form.iconNormal)" 
-                      :src="form.iconNormal" 
+                  <div class="preview-box" @click="openFileSelector('iconNormal')">
+                    <img
+                      v-if="form.iconNormal && isImageUrl(form.iconNormal)"
+                      :src="form.iconNormal"
                       class="preview-icon"
                       alt="常态图标"
                     />
                     <span v-else-if="form.iconNormal" class="preview-text">{{ form.iconNormal }}</span>
-                    <span v-else class="preview-placeholder">暂无图标</span>
+                    <span v-else class="preview-placeholder">点击选择图标</span>
                   </div>
+                  <a-button size="small" @click="openFileSelector('iconNormal')">
+                    <template #icon>
+                      <icon-folder />
+                    </template>
+                    选择文件
+                  </a-button>
                 </div>
                 <div class="preview-item">
                   <div class="preview-label">激活图标</div>
-                  <div class="preview-box">
-                    <img 
-                      v-if="form.iconActive && isImageUrl(form.iconActive)" 
-                      :src="form.iconActive" 
+                  <div class="preview-box" @click="openFileSelector('iconActive')">
+                    <img
+                      v-if="form.iconActive && isImageUrl(form.iconActive)"
+                      :src="form.iconActive"
                       class="preview-icon"
                       alt="激活图标"
                     />
                     <span v-else-if="form.iconActive" class="preview-text">{{ form.iconActive }}</span>
-                    <span v-else class="preview-placeholder">暂无图标</span>
+                    <span v-else class="preview-placeholder">点击选择图标</span>
                   </div>
+                  <a-button size="small" @click="openFileSelector('iconActive')">
+                    <template #icon>
+                      <icon-folder />
+                    </template>
+                    选择文件
+                  </a-button>
                 </div>
               </div>
             </div>
@@ -67,6 +96,16 @@
         </a-tab-pane>
       </a-tabs>
     </div>
+
+    <!-- 文件选择器 -->
+    <FileSelector
+      v-model="fileSelectorVisible"
+      title="选择图标文件"
+      :only-file="true"
+      :allow-file-types="['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'ico']"
+      @select="handleFileSelect"
+      @cancel="fileSelectorVisible = false"
+    />
   </a-modal>
 </template>
 
@@ -77,6 +116,8 @@ import { addNavItems, getNavItems, updateNavItems } from '@/apis/daily/navItems'
 import { type ColumnItem, GiForm } from '@/components/GiForm'
 import { useResetReactive } from '@/hooks'
 import { useDict } from '@/hooks/app'
+import type { FileItem } from '@/apis/system/file'
+import FileSelector from '@/views/system/file/components/FileSelector/FileSelector.vue'
 
 const emit = defineEmits<{
   (e: 'save-success'): void
@@ -95,14 +136,6 @@ const permissionFormRef = ref<InstanceType<typeof GiForm>>()
 const advancedFormRef = ref<InstanceType<typeof GiForm>>()
 const { common_type, common02_type } = useDict('common_type', 'common02_type')
 
-// 判断是否为图片URL
-const isImageUrl = (url: string) => {
-  if (!url) return false
-  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico']
-  const lowerUrl = url.toLowerCase()
-  return imageExtensions.some(ext => lowerUrl.includes(ext)) || url.startsWith('http')
-}
-
 const [form, resetForm] = useResetReactive({
   itemName: '',
   itemKey: '',
@@ -118,6 +151,34 @@ const [form, resetForm] = useResetReactive({
   sort: 0,
   status: '1',
 })
+
+// 文件选择器相关
+const fileSelectorVisible = ref(false)
+const currentIconField = ref<'iconNormal' | 'iconActive'>('iconNormal')
+
+// 判断是否为图片URL
+const isImageUrl = (url: string) => {
+  if (!url) return false
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico']
+  const lowerUrl = url.toLowerCase()
+  return imageExtensions.some((ext) => lowerUrl.includes(ext)) || url.startsWith('http')
+}
+
+// 打开文件选择器
+const openFileSelector = (field: 'iconNormal' | 'iconActive') => {
+  currentIconField.value = field
+  fileSelectorVisible.value = true
+}
+
+// 处理文件选择
+const handleFileSelect = (file: FileItem) => {
+  if (file && file.url) {
+    form[currentIconField.value] = file.url
+    console.log(file)
+    Message.success('图标文件选择成功')
+  }
+  fileSelectorVisible.value = false
+}
 
 // 基本信息表单配置
 const basicColumns: ColumnItem[] = reactive([
@@ -184,19 +245,33 @@ const iconColumns: ColumnItem[] = reactive([
     label: '常态图标URL',
     field: 'iconNormal',
     type: 'input',
-    span: 24,
+    span: 20,
     props: {
       placeholder: '请输入常态图标URL，支持网络地址或本地路径',
     },
   },
   {
+    label: '',
+    field: '',
+    type: 'slot',
+    span: 4,
+    slotName: 'iconNormalSelect',
+  },
+  {
     label: '激活图标URL',
     field: 'iconActive',
     type: 'input',
-    span: 24,
+    span: 20,
     props: {
       placeholder: '请输入激活图标URL，支持网络地址或本地路径',
     },
+  },
+  {
+    label: '',
+    field: '',
+    type: 'slot',
+    span: 4,
+    slotName: 'iconActiveSelect',
   },
 ])
 
@@ -298,24 +373,24 @@ const save = async () => {
       iconFormRef.value,
       badgeFormRef.value,
       permissionFormRef.value,
-      advancedFormRef.value
+      advancedFormRef.value,
     ]
-    
+
     const validationPromises = formRefs
-      .filter(ref => ref?.formRef)
-      .map(ref => ref!.formRef!.validate())
-    
+      .filter((ref) => ref?.formRef)
+      .map((ref) => ref!.formRef!.validate())
+
     const results = await Promise.all(validationPromises)
-    const hasErrors = results.some(result => result !== undefined)
-    
+    const hasErrors = results.some((result) => result !== undefined)
+
     if (hasErrors) {
       Message.warning('请检查表单信息是否填写正确')
       return false
     }
-    
+
     // 数据预处理
     const submitData = { ...form }
-    
+
     // 处理自定义样式
     if (submitData.customStyle) {
       try {
@@ -328,7 +403,7 @@ const save = async () => {
         return false
       }
     }
-    
+
     if (isUpdate.value) {
       await updateNavItems(submitData, dataId.value)
       Message.success('修改成功')
@@ -368,17 +443,17 @@ defineExpose({ onAdd, onUpdate })
   :deep(.arco-tabs) {
     .arco-tabs-nav {
       margin-bottom: 24px;
-      
+
       .arco-tabs-tab {
         padding: 8px 16px;
         font-weight: 500;
-        
+
         &.arco-tabs-tab-active {
           color: rgb(var(--primary-6));
         }
       }
     }
-    
+
     .arco-tabs-content {
       padding-top: 0;
     }
@@ -392,37 +467,42 @@ defineExpose({ onAdd, onUpdate })
       background: var(--color-bg-1);
       border: 1px solid var(--color-border-2);
       border-radius: 6px;
-      
+
       .preview-title {
         font-size: 14px;
         font-weight: 500;
         color: var(--color-text-1);
         margin-bottom: 12px;
       }
-      
+
       .icon-preview-group {
         display: flex;
         gap: 24px;
         justify-content: center;
-        
+
         @media (max-width: 768px) {
           flex-direction: column;
           gap: 16px;
         }
       }
-      
+
       .preview-item {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 8px;
-        
+
         .preview-label {
           font-size: 12px;
           color: var(--color-text-3);
           font-weight: 500;
         }
-        
+
+        .arco-btn {
+          margin-top: 4px;
+          font-size: 12px;
+        }
+
         .preview-box {
           width: 80px;
           height: 80px;
@@ -433,20 +513,29 @@ defineExpose({ onAdd, onUpdate })
           justify-content: center;
           background: var(--color-bg-2);
           transition: all 0.3s ease;
-          
+          cursor: pointer;
+
           &:hover {
-            border-color: var(--color-border-2);
+            border-color: rgb(var(--primary-6));
             background: var(--color-bg-1);
+
+            .preview-placeholder {
+              color: rgb(var(--primary-6));
+            }
+          }
+
+          &:active {
+            transform: scale(0.98);
           }
         }
-        
+
         .preview-icon {
           width: 48px;
           height: 48px;
           object-fit: contain;
           border-radius: 4px;
         }
-        
+
         .preview-text {
           font-size: 10px;
           color: var(--color-text-2);
@@ -455,7 +544,7 @@ defineExpose({ onAdd, onUpdate })
           padding: 4px;
           max-width: 70px;
         }
-        
+
         .preview-placeholder {
           font-size: 12px;
           color: var(--color-text-4);
@@ -472,7 +561,7 @@ defineExpose({ onAdd, onUpdate })
     border: 1px solid var(--color-border-2);
     border-radius: 6px;
     text-align: center;
-    
+
     .preview-title {
       font-size: 14px;
       font-weight: 500;
@@ -487,23 +576,23 @@ defineExpose({ onAdd, onUpdate })
   .arco-modal-header {
     border-bottom: 1px solid var(--color-border-2);
     padding: 16px 24px;
-    
+
     .arco-modal-title {
       font-weight: 600;
       font-size: 16px;
     }
   }
-  
+
   .arco-modal-body {
     padding: 24px;
     max-height: 70vh;
     overflow-y: auto;
   }
-  
+
   .arco-modal-footer {
     border-top: 1px solid var(--color-border-2);
     padding: 12px 24px;
-    
+
     .arco-btn {
       min-width: 80px;
     }
@@ -514,29 +603,29 @@ defineExpose({ onAdd, onUpdate })
 :deep(.gi-form) {
   .arco-form-item {
     margin-bottom: 20px;
-    
+
     .arco-form-item-label {
       font-weight: 500;
       color: var(--color-text-1);
     }
-    
+
     .arco-form-item-content {
       .arco-input,
       .arco-select,
       .arco-textarea,
       .arco-input-number {
         transition: all 0.3s ease;
-        
+
         &:hover {
           border-color: var(--color-border-2);
         }
-        
+
         &:focus-within {
           border-color: rgb(var(--primary-6));
           box-shadow: 0 0 0 2px rgba(var(--primary-1));
         }
       }
-      
+
       .arco-radio-group {
         .arco-radio {
           margin-right: 16px;
@@ -552,17 +641,17 @@ defineExpose({ onAdd, onUpdate })
     margin: 0;
     width: 100% !important;
     height: 100%;
-    
+
     .arco-modal-container {
       height: 100%;
-      
+
       .arco-modal-wrapper {
         height: 100%;
-        
+
         .arco-modal {
           height: 100%;
           margin: 0;
-          
+
           .arco-modal-body {
             max-height: calc(100vh - 120px);
           }
@@ -570,7 +659,7 @@ defineExpose({ onAdd, onUpdate })
       }
     }
   }
-  
+
   .nav-items-form {
     :deep(.arco-tabs-nav) {
       .arco-tabs-tab {

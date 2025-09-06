@@ -177,7 +177,6 @@ import EntityAddModal from './EntityAddModal.vue'
 import EntityDetailDrawer from './EntityDetailDrawer.vue'
 import { type EntityQuery, type EntityResp, deleteEntity, exportEntity, listEntity } from '@/apis/ai/entity'
 import { useDownload, useTable } from '@/hooks'
-import PromptSelector from "@/views/ai/PromptSelector.vue";
 
 defineOptions({ name: 'Entity' })
 

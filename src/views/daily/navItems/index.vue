@@ -163,7 +163,7 @@ const isImageUrl = (url: string) => {
   if (!url) return false
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico']
   const lowerUrl = url.toLowerCase()
-  return imageExtensions.some(ext => lowerUrl.includes(ext)) || url.startsWith('http')
+  return imageExtensions.some((ext) => lowerUrl.includes(ext)) || url.startsWith('http')
 }
 
 const queryForm = reactive<NavItemsQuery>({
@@ -304,31 +304,31 @@ const onDetail = (record: NavItemsResp) => {
 // 搜索区域样式
 .search-form {
   width: 100%;
-  
+
   .search-item {
     display: flex;
     align-items: center;
   }
-  
+
   .search-input {
     width: 200px;
-    
+
     @media (max-width: 768px) {
       width: 160px;
     }
   }
-  
+
   .search-input-small {
     width: 160px;
-    
+
     @media (max-width: 768px) {
       width: 140px;
     }
   }
-  
+
   .search-select {
     width: 120px;
-    
+
     @media (max-width: 768px) {
       width: 100px;
     }
@@ -342,7 +342,7 @@ const onDetail = (record: NavItemsResp) => {
     color: var(--color-text-1);
     margin-bottom: 2px;
   }
-  
+
   .item-key {
     font-size: 12px;
     color: var(--color-text-3);
@@ -358,14 +358,14 @@ const onDetail = (record: NavItemsResp) => {
     justify-content: center;
     align-items: center;
   }
-  
+
   .icon-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 2px;
   }
-  
+
   .nav-icon {
     width: 24px;
     height: 24px;
@@ -374,7 +374,7 @@ const onDetail = (record: NavItemsResp) => {
     border: 1px solid var(--color-border-2);
     background: var(--color-bg-1);
   }
-  
+
   .icon-text {
     font-size: 10px;
     color: var(--color-text-3);
@@ -382,12 +382,12 @@ const onDetail = (record: NavItemsResp) => {
     background: var(--color-bg-2);
     border-radius: 2px;
   }
-  
+
   .icon-placeholder {
     font-size: 12px;
     color: var(--color-text-4);
   }
-  
+
   .no-icon {
     font-size: 12px;
     color: var(--color-text-4);
@@ -402,7 +402,7 @@ const onDetail = (record: NavItemsResp) => {
     align-items: center;
     gap: 4px;
   }
-  
+
   .badge-text {
     font-size: 12px;
     color: var(--color-text-2);
@@ -410,7 +410,7 @@ const onDetail = (record: NavItemsResp) => {
     text-align: center;
     word-break: break-all;
   }
-  
+
   .no-badge {
     font-size: 12px;
     color: var(--color-text-4);
@@ -432,12 +432,12 @@ const onDetail = (record: NavItemsResp) => {
       min-width: 0;
     }
   }
-  
+
   .icon-preview .icon-group {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .badge-info .badge-content {
     gap: 2px;
   }
@@ -448,12 +448,12 @@ const onDetail = (record: NavItemsResp) => {
   .arco-table-container {
     border-radius: 8px;
   }
-  
+
   .arco-table-th {
     background: var(--color-bg-2);
     font-weight: 500;
   }
-  
+
   .arco-table-tr:hover {
     .nav-icon {
       transform: scale(1.1);
