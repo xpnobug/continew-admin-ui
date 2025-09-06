@@ -144,6 +144,7 @@ const props = withDefaults(defineProps<Props>(), {
   selectMultiple: false,
   allowFileTypes: () => [],
   onlyFile: false,
+  selectedType: '0',
 })
 
 const emit = defineEmits<Emits>()
@@ -162,6 +163,8 @@ interface Props {
   allowFileTypes?: string[]
   /** 是否只允许选择文件 */
   onlyFile?: boolean
+  /** 选中的文件类型 */
+  selectedType?: string
 }
 
 interface Emits {
@@ -238,8 +241,8 @@ const getFileTypesText = () => {
 
 const queryForm = reactive<FileQuery>({
   originalName: undefined,
-  parentPath: (!route.query.type || route.query.type?.toString() === '0') ? '/' : undefined,
-  type: route.query.type?.toString() && route.query.type?.toString() !== '0' ? route.query.type?.toString() : undefined,
+  parentPath: (!props.isSelectMode && (!route.query.type || route.query.type?.toString() === '0')) || (props.isSelectMode && props.selectedType === '0') ? '/' : undefined,
+  type: props.isSelectMode ? (props.selectedType !== '0' ? props.selectedType : undefined) : (route.query.type?.toString() && route.query.type?.toString() !== '0' ? route.query.type?.toString() : undefined),
   sort: ['type,asc', 'updateTime,desc'],
 })
 
@@ -430,7 +433,22 @@ const handleUpload = (options: RequestOption) => {
   }
 }
 
+// 监听选择器模式下的类型变化
+watch(() => props.selectedType, (newType) => {
+  if (!props.isSelectMode) return
+  
+  if (newType === '0' || !newType) {
+    queryForm.type = undefined
+    queryForm.parentPath = '/'
+  } else {
+    queryForm.type = newType
+    queryForm.parentPath = undefined
+  }
+  search()
+})
+
 onBeforeRouteUpdate((to) => {
+  if (props.isSelectMode) return // 选择器模式下不响应路由变化
   if (!to.query.type) return
   if (to.query.type === '0' || !to.query.type) {
     queryForm.type = undefined

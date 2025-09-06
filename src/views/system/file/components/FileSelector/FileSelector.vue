@@ -11,13 +11,13 @@
       <!-- 左侧边栏 -->
       <div v-if="showFileTypes" class="file-selector-aside">
         <a-card :bordered="false" :body-style="{ padding: 0 }">
-          <a-menu :selected-keys="[selectedType]">
+          <a-menu :selected-keys="[selectedType]" @menu-item-click="handleTypeSelect">
             <a-sub-menu key="0">
               <template #icon>
                 <icon-apps />
               </template>
               <template #title>文件类型</template>
-              <a-menu-item v-for="item in fileTypeList" :key="item.value.toString()" @click="handleTypeSelect(item)">
+              <a-menu-item v-for="item in fileTypeList" :key="item.value.toString()">
                 <template #icon>
                   <GiSvgIcon :size="20" :name="item.icon" />
                 </template>
@@ -35,6 +35,7 @@
           :select-multiple="selectMultiple"
           :allow-file-types="allowFileTypes"
           :only-file="onlyFile"
+          :selected-type="selectedType"
           @confirm="handleConfirm"
           @cancel="handleCancel"
         />
@@ -107,8 +108,8 @@ watch(() => props.modelValue, (val) => {
 })
 
 // 处理文件类型选择
-const handleTypeSelect = (item: typeof FileTypeList[0]) => {
-  selectedType.value = item.value.toString()
+const handleTypeSelect = (key: string) => {
+  selectedType.value = key
 }
 
 // 处理确认选择
