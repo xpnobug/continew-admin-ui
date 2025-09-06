@@ -17,29 +17,29 @@
           <a-space wrap :size="16">
             <div class="search-group">
               <span class="search-label">状态：</span>
-              <a-radio-group v-model="queryForm.status" :options="common_type" @change="search" size="small" />
+              <a-radio-group v-model="queryForm.status" :options="common_type" size="small" @change="search" />
             </div>
             <div class="search-group">
-              <a-input-search 
-                v-model="queryForm.createUser" 
-                placeholder="请输入创建人" 
-                allow-clear 
-                @search="search" 
+              <a-input-search
+                v-model="queryForm.createUser"
+                placeholder="请输入创建人"
+                allow-clear
                 style="width: 160px"
                 size="small"
+                @search="search"
               />
             </div>
             <div class="search-group">
-              <a-input-search 
-                v-model="queryForm.createTime" 
-                placeholder="请输入创建时间" 
-                allow-clear 
-                @search="search" 
+              <a-input-search
+                v-model="queryForm.createTime"
+                placeholder="请输入创建时间"
+                allow-clear
                 style="width: 160px"
                 size="small"
+                @search="search"
               />
             </div>
-            <a-button @click="reset" size="small">
+            <a-button size="small" @click="reset">
               <template #icon><icon-refresh /></template>
               <template #default>重置</template>
             </a-button>
@@ -124,35 +124,35 @@ const {
   handleDelete,
 } = useTable((page) => listAppConfig({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
-  { 
-    title: '应用名称', 
-    dataIndex: 'appName', 
+  {
+    title: '应用名称',
+    dataIndex: 'appName',
     slotName: 'appName',
     width: 140,
     ellipsis: true,
-    tooltip: true 
+    tooltip: true,
   },
-  { 
-    title: '应用宣传语', 
-    dataIndex: 'appSlogan', 
+  {
+    title: '应用宣传语',
+    dataIndex: 'appSlogan',
     slotName: 'appSlogan',
     width: 160,
     ellipsis: true,
-    tooltip: true
+    tooltip: true,
   },
-  { 
-    title: '功能开关', 
-    dataIndex: 'features', 
+  {
+    title: '功能开关',
+    dataIndex: 'features',
     slotName: 'features',
     width: 200,
-    align: 'center'
+    align: 'center',
   },
-  { 
-    title: '状态', 
-    dataIndex: 'status', 
+  {
+    title: '状态',
+    dataIndex: 'status',
     slotName: 'status',
     width: 80,
-    align: 'center'
+    align: 'center',
   },
   {
     title: '操作',
@@ -210,7 +210,7 @@ const onDetail = (record: AppConfigResp) => {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .search-label {
       font-size: 14px;
       color: var(--color-text-2);
@@ -221,7 +221,7 @@ const onDetail = (record: AppConfigResp) => {
 
 .features-container {
   max-width: 180px;
-  
+
   :deep(.arco-tag) {
     margin: 2px;
     font-size: 12px;
@@ -234,7 +234,7 @@ const onDetail = (record: AppConfigResp) => {
     .search-group {
       flex-direction: column;
       align-items: flex-start;
-      
+
       .search-label {
         font-size: 12px;
       }

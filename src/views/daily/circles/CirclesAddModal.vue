@@ -12,10 +12,10 @@
     <GiForm ref="formRef" v-model="form" :columns="columns">
       <template #avatar>
         <div class="file-selector-wrapper">
-          <a-input 
-            v-model="form.avatar" 
-            placeholder="请选择头像图片" 
-            readonly 
+          <a-input
+            v-model="form.avatar"
+            placeholder="请选择头像图片"
+            readonly
             class="file-input"
           >
             <template #suffix>
@@ -32,10 +32,10 @@
       </template>
       <template #banner>
         <div class="file-selector-wrapper">
-          <a-input 
-            v-model="form.banner" 
-            placeholder="请选择横幅图片" 
-            readonly 
+          <a-input
+            v-model="form.banner"
+            placeholder="请选择横幅图片"
+            readonly
             class="file-input"
           >
             <template #suffix>
@@ -51,7 +51,7 @@
         </div>
       </template>
     </GiForm>
-    
+
     <!-- 头像选择器 -->
     <FileSelector
       ref="avatarSelectorRef"
@@ -63,7 +63,7 @@
       @select="onAvatarSelect"
       @cancel="avatarSelectorVisible = false"
     />
-    
+
     <!-- 横幅选择器 -->
     <FileSelector
       ref="bannerSelectorRef"
@@ -176,7 +176,7 @@ const columns: ColumnItem[] = reactive([
       placeholder: '请输入圈子描述',
     },
   },
-  
+
   // 媒体资源
   {
     label: '媒体资源',
@@ -198,7 +198,7 @@ const columns: ColumnItem[] = reactive([
     span: 12,
     slotName: 'banner',
   },
-  
+
   // 属性设置
   {
     label: '属性设置',
@@ -299,7 +299,7 @@ defineExpose({ onAdd, onUpdate })
       font-weight: 500;
     }
   }
-  
+
   // 标题样式
   .arco-form-item[data-field="basic-info"],
   .arco-form-item[data-field="media-resources"],
@@ -312,7 +312,7 @@ defineExpose({ onAdd, onUpdate })
       font-weight: 600;
       color: var(--color-text-1);
       position: relative;
-      
+
       &::before {
         content: '';
         position: absolute;
@@ -330,7 +330,7 @@ defineExpose({ onAdd, onUpdate })
   .file-input {
     margin-bottom: 8px;
   }
-  
+
   .file-preview {
     width: 80px;
     height: 80px;
@@ -341,17 +341,17 @@ defineExpose({ onAdd, onUpdate })
     align-items: center;
     justify-content: center;
     background: var(--color-fill-1);
-    
+
     img {
       max-width: 100%;
       max-height: 100%;
       object-fit: cover;
     }
-    
+
     &.banner {
       width: 120px;
       height: 60px;
-      
+
       img {
         width: 100%;
         height: 100%;

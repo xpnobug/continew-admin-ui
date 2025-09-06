@@ -436,7 +436,7 @@ const handleUpload = (options: RequestOption) => {
 // 监听选择器模式下的类型变化
 watch(() => props.selectedType, (newType) => {
   if (!props.isSelectMode) return
-  
+
   if (newType === '0' || !newType) {
     queryForm.type = undefined
     queryForm.parentPath = '/'

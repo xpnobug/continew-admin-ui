@@ -93,7 +93,7 @@ const columns: ColumnItem[] = reactive([
       options: common_type,
     },
   },
-  
+
   // 版权信息
   {
     label: '版权信息',
@@ -131,7 +131,7 @@ const columns: ColumnItem[] = reactive([
     type: 'input',
     span: 24,
   },
-  
+
   // 功能开关
   {
     label: '功能开关',
@@ -264,7 +264,7 @@ defineExpose({ onAdd, onUpdate })
       font-weight: 500;
     }
   }
-  
+
   // 标题样式
   .arco-form-item[data-field="basic-info"],
   .arco-form-item[data-field="copyright-info"],

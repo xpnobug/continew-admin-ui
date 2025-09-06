@@ -117,17 +117,17 @@ defineExpose({ onOpen })
 .detail-container {
   .detail-section {
     margin-bottom: 20px;
-    
+
     :deep(.arco-card-header) {
       background: var(--color-fill-1);
       border-bottom: 1px solid var(--color-border-2);
-      
+
       .arco-card-header-title {
         font-weight: 600;
         font-size: 16px;
       }
     }
-    
+
     :deep(.arco-card-body) {
       padding: 20px;
     }
@@ -139,7 +139,7 @@ defineExpose({ onOpen })
     display: flex;
     gap: 20px;
     margin-bottom: 20px;
-    
+
     .circle-avatar-large {
       width: 80px;
       height: 80px;
@@ -150,54 +150,54 @@ defineExpose({ onOpen })
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      
+
       img {
         width: 100%;
         height: 100%;
         object-fit: cover;
       }
-      
+
       .arco-icon {
         font-size: 32px;
         color: var(--color-text-3);
       }
     }
-    
+
     .circle-info {
       flex: 1;
-      
+
       .circle-name {
         font-size: 24px;
         font-weight: 600;
         margin: 0 0 12px 0;
         color: var(--color-text-1);
       }
-      
+
       .circle-tags {
         display: flex;
         gap: 8px;
         margin-bottom: 16px;
         flex-wrap: wrap;
       }
-      
+
       .circle-stats {
         display: flex;
         gap: 20px;
-        
+
         .stat-card {
           text-align: center;
           padding: 12px 16px;
           background: var(--color-fill-1);
           border-radius: 8px;
           border: 1px solid var(--color-border-2);
-          
+
           .stat-number {
             font-size: 24px;
             font-weight: 600;
             color: var(--color-primary);
             line-height: 1;
           }
-          
+
           .stat-label {
             font-size: 14px;
             color: var(--color-text-2);
@@ -207,18 +207,18 @@ defineExpose({ onOpen })
       }
     }
   }
-  
+
   .circle-description {
     border-top: 1px solid var(--color-border-2);
     padding-top: 20px;
-    
+
     h4 {
       margin: 0 0 12px 0;
       font-size: 16px;
       font-weight: 600;
       color: var(--color-text-1);
     }
-    
+
     p {
       margin: 0;
       line-height: 1.6;
@@ -234,7 +234,7 @@ defineExpose({ onOpen })
     margin-bottom: 12px;
     font-size: 14px;
   }
-  
+
   .media-preview {
     width: 100%;
     height: 120px;
@@ -245,16 +245,16 @@ defineExpose({ onOpen })
     display: flex;
     align-items: center;
     justify-content: center;
-    
+
     img {
       max-width: 100%;
       max-height: 100%;
       object-fit: cover;
     }
-    
+
     &.banner {
       height: 80px;
-      
+
       img {
         object-fit: cover;
         width: 100%;
@@ -262,7 +262,7 @@ defineExpose({ onOpen })
       }
     }
   }
-  
+
   .media-url {
     font-size: 12px;
     color: var(--color-text-3);
@@ -277,7 +277,7 @@ defineExpose({ onOpen })
     .circle-header {
       flex-direction: column;
       text-align: center;
-      
+
       .circle-info {
         .circle-stats {
           justify-content: center;
@@ -285,7 +285,7 @@ defineExpose({ onOpen })
       }
     }
   }
-  
+
   :deep(.arco-descriptions) {
     .arco-descriptions-item {
       span: 2 !important;

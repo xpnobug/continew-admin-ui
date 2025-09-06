@@ -156,33 +156,33 @@ defineExpose({ onOpen })
 .detail-container {
   .detail-section {
     margin-bottom: 20px;
-    
+
     :deep(.arco-card-header) {
       background: var(--color-fill-1);
       border-bottom: 1px solid var(--color-border-2);
-      
+
       .arco-card-header-title {
         font-weight: 600;
         font-size: 16px;
       }
     }
-    
+
     :deep(.arco-card-body) {
       padding: 20px;
     }
   }
-  
+
   .text-content {
     max-width: 400px;
     word-break: break-all;
     line-height: 1.5;
   }
-  
+
   .features-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
-    
+
     .feature-item {
       display: flex;
       align-items: center;
@@ -191,7 +191,7 @@ defineExpose({ onOpen })
       background: var(--color-fill-1);
       border-radius: 6px;
       border-left: 3px solid var(--color-primary);
-      
+
       .feature-label {
         font-weight: 500;
         color: var(--color-text-2);
@@ -206,7 +206,7 @@ defineExpose({ onOpen })
     .features-grid {
       grid-template-columns: 1fr;
     }
-    
+
     :deep(.arco-descriptions) {
       .arco-descriptions-item {
         span: 2 !important;

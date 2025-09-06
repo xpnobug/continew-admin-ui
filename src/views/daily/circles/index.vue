@@ -16,24 +16,24 @@
         <div class="search-container">
           <a-space wrap :size="16">
             <div class="search-group">
-              <a-input-search 
-                v-model="queryForm.name" 
-                placeholder="请输入圈子名称" 
-                allow-clear 
-                @search="search" 
+              <a-input-search
+                v-model="queryForm.name"
+                placeholder="请输入圈子名称"
+                allow-clear
                 style="width: 200px"
                 size="small"
+                @search="search"
               />
             </div>
             <div class="search-group">
               <span class="search-label">状态：</span>
-              <a-select 
-                v-model="queryForm.status" 
-                placeholder="请选择状态" 
-                allow-clear 
-                @change="search" 
+              <a-select
+                v-model="queryForm.status"
+                placeholder="请选择状态"
+                allow-clear
                 style="width: 120px"
                 size="small"
+                @change="search"
               >
                 <a-option :value="1">启用</a-option>
                 <a-option :value="2">禁用</a-option>
@@ -41,19 +41,19 @@
             </div>
             <div class="search-group">
               <span class="search-label">类型：</span>
-              <a-select 
-                v-model="queryForm.type" 
-                placeholder="请选择类型" 
-                allow-clear 
-                @change="search" 
+              <a-select
+                v-model="queryForm.type"
+                placeholder="请选择类型"
+                allow-clear
                 style="width: 120px"
                 size="small"
+                @change="search"
               >
                 <a-option value="hot">热门</a-option>
                 <a-option value="new">新建</a-option>
               </a-select>
             </div>
-            <a-button @click="reset" size="small">
+            <a-button size="small" @click="reset">
               <template #icon><icon-refresh /></template>
               <template #default>重置</template>
             </a-button>
@@ -162,34 +162,34 @@ const {
   handleDelete,
 } = useTable((page) => listCircles({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
-  { 
-    title: '圈子信息', 
-    dataIndex: 'circleInfo', 
+  {
+    title: '圈子信息',
+    dataIndex: 'circleInfo',
     slotName: 'circleInfo',
     width: 280,
     ellipsis: true,
-    tooltip: true
+    tooltip: true,
   },
-  { 
-    title: '标签', 
-    dataIndex: 'tags', 
+  {
+    title: '标签',
+    dataIndex: 'tags',
     slotName: 'tags',
     width: 120,
-    align: 'center'
+    align: 'center',
   },
-  { 
-    title: '统计数据', 
-    dataIndex: 'statistics', 
+  {
+    title: '统计数据',
+    dataIndex: 'statistics',
     slotName: 'statistics',
     width: 150,
-    align: 'center'
+    align: 'center',
   },
-  { 
-    title: '状态', 
-    dataIndex: 'status', 
+  {
+    title: '状态',
+    dataIndex: 'status',
     slotName: 'status',
     width: 80,
-    align: 'center'
+    align: 'center',
   },
   {
     title: '操作',
@@ -247,7 +247,7 @@ const onDetail = (record: CirclesResp) => {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .search-label {
       font-size: 14px;
       color: var(--color-text-2);
@@ -261,7 +261,7 @@ const onDetail = (record: CirclesResp) => {
     display: flex;
     align-items: center;
     gap: 12px;
-    
+
     .circle-avatar {
       width: 40px;
       height: 40px;
@@ -271,23 +271,23 @@ const onDetail = (record: CirclesResp) => {
       display: flex;
       align-items: center;
       justify-content: center;
-      
+
       img {
         width: 100%;
         height: 100%;
         object-fit: cover;
       }
-      
+
       .arco-icon {
         font-size: 18px;
         color: var(--color-text-3);
       }
     }
-    
+
     .circle-details {
       flex: 1;
       min-width: 0;
-      
+
       .circle-name {
         font-weight: 600;
         font-size: 16px;
@@ -297,7 +297,7 @@ const onDetail = (record: CirclesResp) => {
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      
+
       .circle-desc {
         font-size: 12px;
         color: var(--color-text-3);
@@ -322,18 +322,18 @@ const onDetail = (record: CirclesResp) => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  
+
   .stat-item {
     display: flex;
     align-items: center;
     gap: 6px;
     font-size: 14px;
-    
+
     .stat-icon {
       font-size: 16px;
       color: var(--color-primary);
     }
-    
+
     .stat-value {
       font-weight: 600;
       color: var(--color-text-1);
@@ -347,20 +347,20 @@ const onDetail = (record: CirclesResp) => {
     .search-group {
       flex-direction: column;
       align-items: flex-start;
-      
+
       .search-label {
         font-size: 12px;
       }
     }
   }
-  
+
   .circle-info {
     .circle-header {
       .circle-avatar {
         width: 32px;
         height: 32px;
       }
-      
+
       .circle-details {
         .circle-name {
           font-size: 14px;
