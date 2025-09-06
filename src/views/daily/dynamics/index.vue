@@ -154,7 +154,7 @@ import has from '@/utils/has'
 
 defineOptions({ name: 'Dynamics' })
 
-const { common02_type, common_type } = useDict('common02_type', 'common_type')
+const { common02_type: _common02_type, common_type: _common_type } = useDict('common02_type', 'common_type')
 
 const queryForm = reactive<DynamicsQuery>({
   sort: ['id,desc'],
