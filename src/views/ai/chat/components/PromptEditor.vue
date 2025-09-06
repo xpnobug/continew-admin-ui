@@ -808,7 +808,7 @@ defineExpose({
     }
   }
 
-  .variables-section, .templates-section, .prompts-management {
+  .variables-section, .templates-section {
     flex-shrink: 0;
     padding: 16px;
     border-top: 1px solid var(--color-border-2);
@@ -821,6 +821,46 @@ defineExpose({
       font-weight: 500;
       color: var(--color-text-1);
       margin-bottom: 12px;
+    }
+  }
+
+  .prompts-management {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    border-top: 1px solid var(--color-border-2);
+    min-height: 0;
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-1);
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+
+    .management-filters {
+      flex-shrink: 0;
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .prompts-list {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 12px;
+      min-height: 0;
+    }
+
+    .pagination {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
     }
   }
 
@@ -871,18 +911,6 @@ defineExpose({
   }
 
   .prompts-management {
-    .management-filters {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .prompts-list {
-      max-height: 300px;
-      overflow-y: auto;
-      margin-bottom: 12px;
-    }
-
     .user-prompts {
       display: flex;
       flex-direction: column;
@@ -957,11 +985,6 @@ defineExpose({
       justify-content: center;
       align-items: center;
       height: 100px;
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: center;
     }
   }
 }

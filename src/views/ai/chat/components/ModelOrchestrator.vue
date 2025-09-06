@@ -7,6 +7,14 @@
         <a-tag v-if="currentModel" color="green" size="small">
           {{ currentModel.modelName }}
         </a-tag>
+        <!-- 自动保存状态指示器 -->
+        <div v-if="saveStatusText" class="save-status" :class="saveStatus">
+          <icon-loading v-if="saveStatus === 'saving'" class="save-icon spinning" />
+          <icon-check-circle v-else-if="saveStatus === 'saved'" class="save-icon" />
+          <icon-exclamation-circle v-else-if="saveStatus === 'error'" class="save-icon" />
+          <icon-clock-circle v-else-if="saveStatus === 'pending'" class="save-icon" />
+          <span class="save-text">{{ saveStatusText }}</span>
+        </div>
       </div>
       <div class="header-actions">
         <a-dropdown @select="handleMenuSelect">
@@ -68,274 +76,281 @@
 
     <!-- 配置选项卡 -->
     <div class="config-tabs">
-      <a-tabs v-model:active-key="activeTab" type="rounded" size="small">
-        <a-tab-pane key="capability" title="模型能力">
+      <!-- 选项卡导航固定 -->
+      <div class="tabs-header">
+        <a-tabs v-model:active-key="activeTab" type="rounded" size="small" :default-active-key="activeTab">
+          <a-tab-pane key="capability" title="模型能力" />
+          <a-tab-pane key="connection" title="连接配置" />
+          <a-tab-pane key="parameters" title="参数配置" />
+          <a-tab-pane key="context" title="上下文管理" />
+          <a-tab-pane key="safety" title="安全与过滤" />
+          <a-tab-pane key="orchestration" title="模型编排" />
+        </a-tabs>
+      </div>
+      
+      <!-- 选项卡内容可滚动 -->
+      <div class="tabs-content">
+        <div v-if="activeTab === 'capability'" class="tab-content-item">
           <ModelCapabilityEditor v-model="modelCapabilityConfig" />
-        </a-tab-pane>
-
-        <a-tab-pane key="connection" title="连接配置">
+        </div>
+        
+        <div v-if="activeTab === 'connection'" class="tab-content-item">
           <ModelConnectionConfig v-model="modelConnectionConfig" />
-        </a-tab-pane>
-
-        <a-tab-pane key="parameters" title="参数配置">
-          <div class="config-content">
-            <!-- 基础参数 -->
-            <div class="config-section">
-              <div class="section-title">
-                <icon-settings />
-                基础参数
-              </div>
-              <div class="param-list">
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>温度 (Temperature)</span>
-                    <a-tooltip content="控制输出的随机性，值越高输出越随机">
-                      <icon-info-circle class="param-help" />
-                    </a-tooltip>
-                  </div>
-                  <a-slider
-                      v-model="modelConfig.temperature"
-                      :min="0"
-                      :max="2"
-                      :step="0.1"
-                      :style="{ width: '150px' }"
-                      show-input
-                  />
-                </div>
-
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>最大令牌数 (Max Tokens)</span>
-                    <a-tooltip content="限制生成内容的最大长度">
-                      <icon-info-circle class="param-help" />
-                    </a-tooltip>
-                  </div>
-                  <a-input-number
-                      v-model="modelConfig.maxTokens"
-                      :min="1"
-                      :max="8192"
-                      :step="100"
-                      style="width: 150px"
-                  />
-                </div>
-
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>Top P</span>
-                    <a-tooltip content="核采样参数，控制候选词的概率质量">
-                      <icon-info-circle class="param-help" />
-                    </a-tooltip>
-                  </div>
-                  <a-slider
-                      v-model="modelConfig.topP"
-                      :min="0"
-                      :max="1"
-                      :step="0.01"
-                      :style="{ width: '150px' }"
-                      show-input
-                  />
-                </div>
-
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>频率惩罚 (Frequency Penalty)</span>
-                    <a-tooltip content="减少重复内容的生成">
-                      <icon-info-circle class="param-help" />
-                    </a-tooltip>
-                  </div>
-                  <a-slider
-                      v-model="modelConfig.frequencyPenalty"
-                      :min="-2"
-                      :max="2"
-                      :step="0.1"
-                      :style="{ width: '150px' }"
-                      show-input
-                  />
-                </div>
-
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>存在惩罚 (Presence Penalty)</span>
-                    <a-tooltip content="鼓励谈论新话题">
-                      <icon-info-circle class="param-help" />
-                    </a-tooltip>
-                  </div>
-                  <a-slider
-                      v-model="modelConfig.presencePenalty"
-                      :min="-2"
-                      :max="2"
-                      :step="0.1"
-                      :style="{ width: '150px' }"
-                      show-input
-                  />
-                </div>
-              </div>
+        </div>
+        
+        <div v-if="activeTab === 'parameters'" class="tab-content-item">
+          <!-- 基础参数 -->
+          <div class="config-section">
+            <div class="section-title">
+              <icon-settings />
+              基础参数
             </div>
-
-            <!-- 高级配置 -->
-            <div class="config-section">
-              <div class="section-title">
-                <icon-code />
-                高级配置
+            <div class="param-list">
+              <div class="param-item">
+                <div class="param-label">
+                  <span>温度 (Temperature)</span>
+                  <a-tooltip content="控制输出的随机性，值越高输出越随机">
+                    <icon-info-circle class="param-help" />
+                  </a-tooltip>
+                </div>
+                <a-slider
+                    v-model="modelConfig.temperature"
+                    :min="0"
+                    :max="2"
+                    :step="0.1"
+                    :style="{ width: '150px' }"
+                    show-input
+                />
               </div>
-              <div class="param-list">
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>停止序列</span>
-                    <a-tooltip content="遇到这些序列时停止生成">
-                      <icon-info-circle class="param-help" />
-                    </a-tooltip>
-                  </div>
-                  <a-input
-                      v-model="modelConfig.stopSequences"
-                      placeholder="用逗号分隔多个停止序列"
-                      style="width: 200px"
-                  />
-                </div>
 
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>种子值 (Seed)</span>
-                    <a-tooltip content="固定随机种子以获得确定性输出">
-                      <icon-info-circle class="param-help" />
-                    </a-tooltip>
-                  </div>
-                  <a-input-number
-                      v-model="modelConfig.seed"
-                      :min="0"
-                      :max="999999"
-                      placeholder="留空为随机"
-                      style="width: 150px"
-                  />
+              <div class="param-item">
+                <div class="param-label">
+                  <span>最大令牌数 (Max Tokens)</span>
+                  <a-tooltip content="限制生成内容的最大长度">
+                    <icon-info-circle class="param-help" />
+                  </a-tooltip>
                 </div>
+                <a-input-number
+                    v-model="modelConfig.maxTokens"
+                    :min="1"
+                    :max="8192"
+                    :step="100"
+                    style="width: 150px"
+                />
+              </div>
 
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>流式输出</span>
-                    <a-tooltip content="启用流式输出以实时显示生成内容">
-                      <icon-info-circle class="param-help" />
-                    </a-tooltip>
-                  </div>
-                  <a-switch v-model="modelConfig.stream" />
+              <div class="param-item">
+                <div class="param-label">
+                  <span>Top P</span>
+                  <a-tooltip content="核采样参数，控制候选词的概率质量">
+                    <icon-info-circle class="param-help" />
+                  </a-tooltip>
                 </div>
+                <a-slider
+                    v-model="modelConfig.topP"
+                    :min="0"
+                    :max="1"
+                    :step="0.01"
+                    :style="{ width: '150px' }"
+                    show-input
+                />
+              </div>
+
+              <div class="param-item">
+                <div class="param-label">
+                  <span>频率惩罚 (Frequency Penalty)</span>
+                  <a-tooltip content="减少重复内容的生成">
+                    <icon-info-circle class="param-help" />
+                  </a-tooltip>
+                </div>
+                <a-slider
+                    v-model="modelConfig.frequencyPenalty"
+                    :min="-2"
+                    :max="2"
+                    :step="0.1"
+                    :style="{ width: '150px' }"
+                    show-input
+                />
+              </div>
+
+              <div class="param-item">
+                <div class="param-label">
+                  <span>存在惩罚 (Presence Penalty)</span>
+                  <a-tooltip content="鼓励谈论新话题">
+                    <icon-info-circle class="param-help" />
+                  </a-tooltip>
+                </div>
+                <a-slider
+                    v-model="modelConfig.presencePenalty"
+                    :min="-2"
+                    :max="2"
+                    :step="0.1"
+                    :style="{ width: '150px' }"
+                    show-input
+                />
               </div>
             </div>
           </div>
-        </a-tab-pane>
 
-        <a-tab-pane key="context" title="上下文管理">
-          <div class="config-content">
-            <div class="config-section">
-              <div class="section-title">
-                <icon-file />
-                上下文配置
-              </div>
-              <div class="param-list">
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>上下文窗口大小</span>
-                  </div>
-                  <a-input-number
-                      v-model="contextConfig.windowSize"
-                      :min="1"
-                      :max="50"
-                      style="width: 150px"
-                  />
-                </div>
-
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>保留系统消息</span>
-                  </div>
-                  <a-switch v-model="contextConfig.keepSystemMessage" />
-                </div>
-
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>自动摘要</span>
-                  </div>
-                  <a-switch v-model="contextConfig.autoSummary" />
-                </div>
-              </div>
+          <!-- 高级配置 -->
+          <div class="config-section">
+            <div class="section-title">
+              <icon-code />
+              高级配置
             </div>
-
-            <!-- 系统消息设置 -->
-            <div class="config-section">
-              <div class="section-title">
-                <icon-message />
-                系统消息
+            <div class="param-list">
+              <div class="param-item">
+                <div class="param-label">
+                  <span>停止序列</span>
+                  <a-tooltip content="遇到这些序列时停止生成">
+                    <icon-info-circle class="param-help" />
+                  </a-tooltip>
+                </div>
+                <a-input
+                    v-model="modelConfig.stopSequences"
+                    placeholder="用逗号分隔多个停止序列"
+                    style="width: 200px"
+                />
               </div>
-              <a-textarea
-                  v-model="contextConfig.systemMessage"
-                  placeholder="设置系统角色和行为指导..."
-                  :rows="4"
-                  show-word-limit
-                  :max-length="2000"
-              />
+
+              <div class="param-item">
+                <div class="param-label">
+                  <span>种子值 (Seed)</span>
+                  <a-tooltip content="固定随机种子以获得确定性输出">
+                    <icon-info-circle class="param-help" />
+                  </a-tooltip>
+                </div>
+                <a-input-number
+                    v-model="modelConfig.seed"
+                    :min="0"
+                    :max="999999"
+                    placeholder="留空为随机"
+                    style="width: 150px"
+                />
+              </div>
+
+              <div class="param-item">
+                <div class="param-label">
+                  <span>流式输出</span>
+                  <a-tooltip content="启用流式输出以实时显示生成内容">
+                    <icon-info-circle class="param-help" />
+                  </a-tooltip>
+                </div>
+                <a-switch v-model="modelConfig.stream" />
+              </div>
             </div>
           </div>
-        </a-tab-pane>
-
-        <a-tab-pane key="safety" title="安全与过滤">
-          <div class="config-content">
-            <div class="config-section">
-              <div class="section-title">
-                <icon-shield />
-                内容安全
-              </div>
-              <div class="param-list">
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>启用内容过滤</span>
-                  </div>
-                  <a-switch v-model="safetyConfig.enableContentFilter" />
-                </div>
-
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>敏感内容检测</span>
-                  </div>
-                  <a-switch v-model="safetyConfig.sensitiveContentDetection" />
-                </div>
-
-                <div class="param-item">
-                  <div class="param-label">
-                    <span>过滤等级</span>
-                  </div>
-                  <a-select
-                      v-model="safetyConfig.filterLevel"
-                      style="width: 150px"
-                  >
-                    <a-option value="low">宽松</a-option>
-                    <a-option value="medium">中等</a-option>
-                    <a-option value="high">严格</a-option>
-                  </a-select>
-                </div>
-              </div>
+        </div>
+        
+        <div v-if="activeTab === 'context'" class="tab-content-item">
+          <div class="config-section">
+            <div class="section-title">
+              <icon-file />
+              上下文配置
             </div>
-
-            <!-- 黑名单关键词 -->
-            <div class="config-section">
-              <div class="section-title">
-                <icon-stop />
-                黑名单关键词
+            <div class="param-list">
+              <div class="param-item">
+                <div class="param-label">
+                  <span>上下文窗口大小</span>
+                </div>
+                <a-input-number
+                    v-model="contextConfig.windowSize"
+                    :min="1"
+                    :max="50"
+                    style="width: 150px"
+                />
               </div>
-              <a-textarea
-                  v-model="safetyConfig.blacklistKeywords"
-                  placeholder="每行一个关键词..."
-                  :rows="3"
-              />
+
+              <div class="param-item">
+                <div class="param-label">
+                  <span>保留系统消息</span>
+                </div>
+                <a-switch v-model="contextConfig.keepSystemMessage" />
+              </div>
+
+              <div class="param-item">
+                <div class="param-label">
+                  <span>自动摘要</span>
+                </div>
+                <a-switch v-model="contextConfig.autoSummary" />
+              </div>
             </div>
           </div>
-        </a-tab-pane>
 
-        <a-tab-pane key="orchestration" title="模型编排">
+          <!-- 系统消息设置 -->
+          <div class="config-section">
+            <div class="section-title">
+              <icon-message />
+              系统消息
+            </div>
+            <a-textarea
+                v-model="contextConfig.systemMessage"
+                placeholder="设置系统角色和行为指导..."
+                :rows="4"
+                show-word-limit
+                :max-length="2000"
+            />
+          </div>
+        </div>
+        
+        <div v-if="activeTab === 'safety'" class="tab-content-item">
+          <div class="config-section">
+            <div class="section-title">
+              <icon-shield />
+              内容安全
+            </div>
+            <div class="param-list">
+              <div class="param-item">
+                <div class="param-label">
+                  <span>启用内容过滤</span>
+                </div>
+                <a-switch v-model="safetyConfig.enableContentFilter" />
+              </div>
+
+              <div class="param-item">
+                <div class="param-label">
+                  <span>敏感内容检测</span>
+                </div>
+                <a-switch v-model="safetyConfig.sensitiveContentDetection" />
+              </div>
+
+              <div class="param-item">
+                <div class="param-label">
+                  <span>过滤等级</span>
+                </div>
+                <a-select
+                    v-model="safetyConfig.filterLevel"
+                    style="width: 150px"
+                >
+                  <a-option value="low">宽松</a-option>
+                  <a-option value="medium">中等</a-option>
+                  <a-option value="high">严格</a-option>
+                </a-select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 黑名单关键词 -->
+          <div class="config-section">
+            <div class="section-title">
+              <icon-stop />
+              黑名单关键词
+            </div>
+            <a-textarea
+                v-model="safetyConfig.blacklistKeywords"
+                placeholder="每行一个关键词..."
+                :rows="3"
+            />
+          </div>
+        </div>
+        
+        <div v-if="activeTab === 'orchestration'" class="tab-content-item">
           <OrchestrationConfigEditor
               :available-models="availableModels"
               @save="handleOrchestrationSave"
           />
-        </a-tab-pane>
-      </a-tabs>
+        </div>
+      </div>
     </div>
 
     <!-- 配置预设 -->
@@ -560,6 +575,7 @@ import ModelCapabilityEditor from './ModelCapabilityEditor.vue'
 import ModelConnectionConfig from './ModelConnectionConfig.vue'
 import OrchestrationConfigEditor from './OrchestrationConfigEditor.vue'
 import { type MetaResp, addMeta, deleteMeta, listMeta, updateMeta } from '@/apis/ai/meta'
+import { type EntityResp, listEntity, updateEntity, addEntity } from '@/apis/ai/entity'
 
 interface Props {
   modelValue?: MetaResp | null
@@ -738,13 +754,180 @@ const configPresets = ref([
   },
 ])
 
+// 防抖保存函数
+let autoSaveTimer: NodeJS.Timeout | null = null
+const currentEntityId = ref<string>('')
+
+// 自动保存状态
+const saveStatus = ref<'idle' | 'pending' | 'saving' | 'saved' | 'error'>('idle')
+const saveStatusText = computed(() => {
+  switch (saveStatus.value) {
+    case 'idle':
+      return ''
+    case 'pending':
+      return '待保存'
+    case 'saving':
+      return '保存中...'
+    case 'saved':
+      return '已保存'
+    case 'error':
+      return '保存失败'
+    default:
+      return ''
+  }
+})
+
 // 监听父组件传入的模型变化
 watch(() => props.modelValue, (newModel) => {
   currentModel.value = newModel
+  // 重置实体ID，因为切换了模型
+  currentEntityId.value = ''
 }, { immediate: true })
+
+// 获取或创建模型实体
+const getOrCreateEntity = async (): Promise<string> => {
+  if (!currentModel.value) throw new Error('No current model')
+  
+  try {
+    // 先尝试查询是否已存在该模型的实体
+    const { data } = await listEntity({
+      metaId: currentModel.value.id,
+      current: 1,
+      size: 1,
+      sort: ['id,desc'],
+    })
+    
+    if (data.list && data.list.length > 0) {
+      return data.list[0].id
+    }
+    
+    // 如果不存在，则创建新的实体
+    const entityData = {
+      metaId: currentModel.value.id,
+      name: `${currentModel.value.modelName} - 默认配置`,
+      description: '自动生成的模型配置',
+      defaultParams: JSON.stringify({
+        temperature: modelConfig.temperature,
+        topP: modelConfig.topP,
+        maxTokens: modelConfig.maxTokens,
+        presencePenalty: modelConfig.presencePenalty,
+        frequencyPenalty: modelConfig.frequencyPenalty,
+        stream: modelConfig.stream,
+        systemPrompt: contextConfig.systemMessage,
+        stop: modelConfig.stopSequences ? modelConfig.stopSequences.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        seed: modelConfig.seed,
+        contextConfig: {
+          windowSize: contextConfig.windowSize,
+          keepSystemMessage: contextConfig.keepSystemMessage,
+          autoSummary: contextConfig.autoSummary,
+        },
+        safetyConfig: {
+          enableContentFilter: safetyConfig.enableContentFilter,
+          sensitiveContentDetection: safetyConfig.sensitiveContentDetection,
+          filterLevel: safetyConfig.filterLevel,
+          blacklistKeywords: safetyConfig.blacklistKeywords,
+        },
+      }),
+      scenario: 1, // 默认场景
+      status: 1, // 启用状态
+    }
+    
+    const createResult = await addEntity(entityData)
+    return createResult.data.id
+  } catch (error) {
+    console.error('Failed to get or create entity:', error)
+    throw error
+  }
+}
+
+const autoSaveConfig = async () => {
+  if (!currentModel.value) return
+  
+  saveStatus.value = 'saving'
+  
+  try {
+    // 1. 更新模型元数据 (capability 和 connConfig)
+    const metaData = {
+      ...currentModel.value,
+      capability: JSON.stringify(modelCapabilityConfig.value),
+      connConfig: JSON.stringify(modelConnectionConfig.value),
+    }
+    await updateMeta(metaData, currentModel.value.id)
+    
+    // 2. 获取或创建模型实体
+    if (!currentEntityId.value) {
+      currentEntityId.value = await getOrCreateEntity()
+    }
+    
+    // 3. 更新模型实体的默认参数
+    const entityData = {
+      metaId: currentModel.value.id,
+      name: `${currentModel.value.modelName} - 默认配置`,
+      description: '自动生成的模型配置',
+      defaultParams: JSON.stringify({
+        temperature: modelConfig.temperature,
+        topP: modelConfig.topP,
+        maxTokens: modelConfig.maxTokens,
+        presencePenalty: modelConfig.presencePenalty,
+        frequencyPenalty: modelConfig.frequencyPenalty,
+        stream: modelConfig.stream,
+        systemPrompt: contextConfig.systemMessage,
+        stop: modelConfig.stopSequences ? modelConfig.stopSequences.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        seed: modelConfig.seed,
+        contextConfig: {
+          windowSize: contextConfig.windowSize,
+          keepSystemMessage: contextConfig.keepSystemMessage,
+          autoSummary: contextConfig.autoSummary,
+        },
+        safetyConfig: {
+          enableContentFilter: safetyConfig.enableContentFilter,
+          sensitiveContentDetection: safetyConfig.sensitiveContentDetection,
+          filterLevel: safetyConfig.filterLevel,
+          blacklistKeywords: safetyConfig.blacklistKeywords,
+        },
+      }),
+      scenario: 1,
+      status: 1,
+    }
+    await updateEntity(entityData, currentEntityId.value)
+    
+    saveStatus.value = 'saved'
+    
+    // 2秒后隐藏"已保存"状态
+    setTimeout(() => {
+      if (saveStatus.value === 'saved') {
+        saveStatus.value = 'idle'
+      }
+    }, 2000)
+    
+  } catch (error) {
+    console.error('Auto save failed:', error)
+    saveStatus.value = 'error'
+    
+    // 3秒后隐藏错误状态
+    setTimeout(() => {
+      if (saveStatus.value === 'error') {
+        saveStatus.value = 'idle'
+      }
+    }, 3000)
+  }
+}
+
+// 防抖的自动保存函数
+const debouncedAutoSave = () => {
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer)
+  }
+  
+  // 设置待保存状态
+  saveStatus.value = 'pending'
+  
+  autoSaveTimer = setTimeout(autoSaveConfig, 1000) // 1秒延迟保存
+}
 
 // 监听配置变化
 watch([modelConfig, contextConfig, safetyConfig, modelCapabilityConfig, modelConnectionConfig], () => {
+  // 发送配置变化事件
   emit('config-change', {
     model: modelConfig,
     context: contextConfig,
@@ -752,6 +935,9 @@ watch([modelConfig, contextConfig, safetyConfig, modelCapabilityConfig, modelCon
     capability: modelCapabilityConfig.value,
     connection: modelConnectionConfig.value,
   })
+  
+  // 自动保存配置
+  debouncedAutoSave()
 }, { deep: true })
 
 // 本地存储键名
@@ -1185,6 +1371,14 @@ onMounted(() => {
   }
 })
 
+// 组件卸载时清理定时器
+onBeforeUnmount(() => {
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer)
+    autoSaveTimer = null
+  }
+})
+
 defineExpose({
   currentModel,
   modelConfig,
@@ -1224,6 +1418,68 @@ defineExpose({
         font-size: 16px;
         font-weight: 600;
         color: var(--color-text-1);
+      }
+
+      .save-status {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        transition: all 0.3s ease;
+
+        .save-icon {
+          font-size: 12px;
+        }
+
+        .save-text {
+          font-weight: 500;
+        }
+
+        &.pending {
+          color: var(--color-warning-6);
+          background: var(--color-warning-light-1);
+          border: 1px solid var(--color-warning-light-3);
+
+          .save-icon {
+            color: var(--color-warning-6);
+          }
+        }
+
+        &.saving {
+          color: var(--color-primary-6);
+          background: var(--color-primary-light-1);
+          border: 1px solid var(--color-primary-light-3);
+
+          .save-icon {
+            color: var(--color-primary-6);
+          }
+        }
+
+        &.saved {
+          color: var(--color-success-6);
+          background: var(--color-success-light-1);
+          border: 1px solid var(--color-success-light-3);
+
+          .save-icon {
+            color: var(--color-success-6);
+          }
+        }
+
+        &.error {
+          color: var(--color-danger-6);
+          background: var(--color-danger-light-1);
+          border: 1px solid var(--color-danger-light-3);
+
+          .save-icon {
+            color: var(--color-danger-6);
+          }
+        }
+
+        .spinning {
+          animation: spin 1s linear infinite;
+        }
       }
     }
 
@@ -1302,16 +1558,35 @@ defineExpose({
 
   .config-tabs {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     padding: 16px;
     min-height: 0;
+    overflow: hidden;
 
-    :deep(.arco-tabs-content) {
-      height: calc(100% - 40px);
-      overflow-y: auto;
+    .tabs-header {
+      flex-shrink: 0;
+      margin-bottom: 16px;
+      
+      :deep(.arco-tabs) {
+        margin-bottom: 0;
+      }
+      
+      :deep(.arco-tabs-content) {
+        display: none;
+      }
     }
 
-    .config-content {
-      height: 100%;
+    .tabs-content {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 8px;
+
+      .tab-content-item {
+        height: auto;
+        max-height: 500px;
+      }
     }
   }
 
@@ -1638,6 +1913,16 @@ defineExpose({
         transform: scale(1.2);
       }
     }
+  }
+}
+
+// 旋转动画
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

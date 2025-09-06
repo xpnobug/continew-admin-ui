@@ -379,22 +379,29 @@ defineExpose({
     flex: 1;
     display: flex;
     min-height: 0;
+    height: 0;
 
     .left-panel {
       width: 420px;
       border-right: 1px solid var(--color-border-2);
       flex-shrink: 0;
+      height: 100%;
+      overflow: hidden;
     }
 
     .center-panel {
       width: 460px;
       border-right: 1px solid var(--color-border-2);
       flex-shrink: 0;
+      height: 100%;
+      overflow: hidden;
     }
 
     .right-panel {
       flex: 1;
       min-width: 400px;
+      height: 100%;
+      overflow: hidden;
     }
   }
 }
