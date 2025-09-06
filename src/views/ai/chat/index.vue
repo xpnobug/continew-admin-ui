@@ -20,6 +20,14 @@
             <template #icon><icon-exclamation /></template>
             配置不完整
           </a-tag>
+          <!-- 自动保存状态指示器 -->
+          <div v-if="saveStatusText" class="save-status" :class="saveStatus">
+            <icon-loading v-if="saveStatus === 'saving'" class="save-icon spinning" />
+            <icon-check-circle v-else-if="saveStatus === 'saved'" class="save-icon" />
+            <icon-exclamation-circle v-else-if="saveStatus === 'error'" class="save-icon" />
+            <icon-clock-circle v-else-if="saveStatus === 'pending' || saveStatus === 'idle'" class="save-icon" />
+            <span class="save-text">{{ saveStatusText }}</span>
+          </div>
         </div>
       </div>
 
@@ -56,6 +64,7 @@
           v-model="currentModel"
           @change="handleModelChange"
           @config-change="handleConfigChange"
+          @save-status-change="handleSaveStatusChange"
         />
       </div>
 
@@ -108,6 +117,26 @@ const workspaceState = reactive({
   centerPanelCollapsed: false,
   activeTab: 'prompt', // prompt | model | preview
   isLoading: false,
+})
+
+// 自动保存状态
+const saveStatus = ref<'idle' | 'pending' | 'saving' | 'saved' | 'error'>('idle')
+const lastSaveTime = ref<string>('')
+const saveStatusText = computed(() => {
+  switch (saveStatus.value) {
+    case 'idle':
+      return lastSaveTime.value ? `上次保存：${lastSaveTime.value}` : ''
+    case 'pending':
+      return '待保存'
+    case 'saving':
+      return '保存中...'
+    case 'saved':
+      return `已保存 ${lastSaveTime.value}`
+    case 'error':
+      return '保存失败'
+    default:
+      return ''
+  }
 })
 
 // 从本地存储恢复状态
@@ -191,6 +220,14 @@ const handleModelChange = (model: MetaResp | null) => {
 const handleConfigChange = (config: any) => {
   Object.assign(modelConfig.value, config)
   saveToStorage()
+}
+
+// 处理保存状态变化
+const handleSaveStatusChange = (status: 'idle' | 'pending' | 'saving' | 'saved' | 'error', saveTime?: string) => {
+  saveStatus.value = status
+  if (saveTime) {
+    lastSaveTime.value = saveTime
+  }
 }
 
 // 验证工作区状态
@@ -366,6 +403,79 @@ defineExpose({
         display: flex;
         gap: 8px;
         align-items: center;
+
+        .save-status {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+
+          .save-icon {
+            font-size: 12px;
+          }
+
+          .save-text {
+            font-weight: 500;
+          }
+
+          &.idle {
+            color: var(--color-text-3);
+            background: var(--color-fill-2);
+            border: 1px solid var(--color-border-2);
+
+            .save-icon {
+              color: var(--color-text-3);
+            }
+          }
+
+          &.pending {
+            color: var(--color-warning-6);
+            background: var(--color-warning-light-1);
+            border: 1px solid var(--color-warning-light-3);
+
+            .save-icon {
+              color: var(--color-warning-6);
+            }
+          }
+
+          &.saving {
+            color: var(--color-primary-6);
+            background: var(--color-primary-light-1);
+            border: 1px solid var(--color-primary-light-3);
+
+            .save-icon {
+              color: var(--color-primary-6);
+            }
+          }
+
+          &.saved {
+            color: var(--color-success-6);
+            background: var(--color-success-light-1);
+            border: 1px solid var(--color-success-light-3);
+
+            .save-icon {
+              color: var(--color-success-6);
+            }
+          }
+
+          &.error {
+            color: var(--color-danger-6);
+            background: var(--color-danger-light-1);
+            border: 1px solid var(--color-danger-light-3);
+
+            .save-icon {
+              color: var(--color-danger-6);
+            }
+          }
+
+          .spinning {
+            animation: spin 1s linear infinite;
+          }
+        }
       }
     }
 
@@ -489,6 +599,16 @@ defineExpose({
         min-height: 400px;
       }
     }
+  }
+}
+
+// 旋转动画
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

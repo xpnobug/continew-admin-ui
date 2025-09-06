@@ -7,14 +7,6 @@
         <a-tag v-if="currentModel" color="green" size="small">
           {{ currentModel.modelName }}
         </a-tag>
-        <!-- 自动保存状态指示器 -->
-        <div v-if="saveStatusText" class="save-status" :class="saveStatus">
-          <icon-loading v-if="saveStatus === 'saving'" class="save-icon spinning" />
-          <icon-check-circle v-else-if="saveStatus === 'saved'" class="save-icon" />
-          <icon-exclamation-circle v-else-if="saveStatus === 'error'" class="save-icon" />
-          <icon-clock-circle v-else-if="saveStatus === 'pending'" class="save-icon" />
-          <span class="save-text">{{ saveStatusText }}</span>
-        </div>
       </div>
       <div class="header-actions">
         <a-dropdown @select="handleMenuSelect">
@@ -585,6 +577,7 @@ interface Emits {
   (e: 'update:modelValue', value: MetaResp | null): void
   (e: 'change', model: MetaResp | null): void
   (e: 'config-change', config: any): void
+  (e: 'save-status-change', status: 'idle' | 'pending' | 'saving' | 'saved' | 'error', saveTime?: string): void
 }
 
 const props = defineProps<Props>()
@@ -760,6 +753,7 @@ const currentEntityId = ref<string>('')
 
 // 自动保存状态
 const saveStatus = ref<'idle' | 'pending' | 'saving' | 'saved' | 'error'>('idle')
+const lastSaveTime = ref<string>('')
 const saveStatusText = computed(() => {
   switch (saveStatus.value) {
     case 'idle':
@@ -782,6 +776,11 @@ watch(() => props.modelValue, (newModel) => {
   currentModel.value = newModel
   // 重置实体ID，因为切换了模型
   currentEntityId.value = ''
+}, { immediate: true })
+
+// 监听保存状态变化，传递给父组件
+watch([saveStatus, lastSaveTime], ([newStatus, newSaveTime]) => {
+  emit('save-status-change', newStatus, newSaveTime)
 }, { immediate: true })
 
 // 获取或创建模型实体
@@ -892,13 +891,18 @@ const autoSaveConfig = async () => {
     await updateEntity(entityData, currentEntityId.value)
     
     saveStatus.value = 'saved'
+    lastSaveTime.value = new Date().toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
     
-    // 2秒后隐藏"已保存"状态
+    // 3秒后切换到"上次保存"状态
     setTimeout(() => {
       if (saveStatus.value === 'saved') {
         saveStatus.value = 'idle'
       }
-    }, 2000)
+    }, 3000)
     
   } catch (error) {
     console.error('Auto save failed:', error)
@@ -1420,67 +1424,6 @@ defineExpose({
         color: var(--color-text-1);
       }
 
-      .save-status {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        transition: all 0.3s ease;
-
-        .save-icon {
-          font-size: 12px;
-        }
-
-        .save-text {
-          font-weight: 500;
-        }
-
-        &.pending {
-          color: var(--color-warning-6);
-          background: var(--color-warning-light-1);
-          border: 1px solid var(--color-warning-light-3);
-
-          .save-icon {
-            color: var(--color-warning-6);
-          }
-        }
-
-        &.saving {
-          color: var(--color-primary-6);
-          background: var(--color-primary-light-1);
-          border: 1px solid var(--color-primary-light-3);
-
-          .save-icon {
-            color: var(--color-primary-6);
-          }
-        }
-
-        &.saved {
-          color: var(--color-success-6);
-          background: var(--color-success-light-1);
-          border: 1px solid var(--color-success-light-3);
-
-          .save-icon {
-            color: var(--color-success-6);
-          }
-        }
-
-        &.error {
-          color: var(--color-danger-6);
-          background: var(--color-danger-light-1);
-          border: 1px solid var(--color-danger-light-3);
-
-          .save-icon {
-            color: var(--color-danger-6);
-          }
-        }
-
-        .spinning {
-          animation: spin 1s linear infinite;
-        }
-      }
     }
 
     .header-actions {
