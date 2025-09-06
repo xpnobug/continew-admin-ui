@@ -13,11 +13,52 @@
       @refresh="search"
     >
       <template #toolbar-left>
-        <a-input-search v-model="queryForm.name" placeholder="请输入圈子名称" allow-clear @search="search" />
-        <a-button @click="reset">
-          <template #icon><icon-refresh /></template>
-          <template #default>重置</template>
-        </a-button>
+        <div class="search-container">
+          <a-space wrap :size="16">
+            <div class="search-group">
+              <a-input-search 
+                v-model="queryForm.name" 
+                placeholder="请输入圈子名称" 
+                allow-clear 
+                @search="search" 
+                style="width: 200px"
+                size="small"
+              />
+            </div>
+            <div class="search-group">
+              <span class="search-label">状态：</span>
+              <a-select 
+                v-model="queryForm.status" 
+                placeholder="请选择状态" 
+                allow-clear 
+                @change="search" 
+                style="width: 120px"
+                size="small"
+              >
+                <a-option :value="1">启用</a-option>
+                <a-option :value="2">禁用</a-option>
+              </a-select>
+            </div>
+            <div class="search-group">
+              <span class="search-label">类型：</span>
+              <a-select 
+                v-model="queryForm.type" 
+                placeholder="请选择类型" 
+                allow-clear 
+                @change="search" 
+                style="width: 120px"
+                size="small"
+              >
+                <a-option value="hot">热门</a-option>
+                <a-option value="new">新建</a-option>
+              </a-select>
+            </div>
+            <a-button @click="reset" size="small">
+              <template #icon><icon-refresh /></template>
+              <template #default>重置</template>
+            </a-button>
+          </a-space>
+        </div>
       </template>
       <template #toolbar-right>
         <a-button v-permission="['daily:circles:create']" type="primary" @click="onAdd">
@@ -29,11 +70,43 @@
           <template #default>导出</template>
         </a-button>
       </template>
-      <template #isHot="{ record }">
-        <GiCellTag :value="record.isHot" :dict="common_type" />
+      <template #circleInfo="{ record }">
+        <div class="circle-info">
+          <div class="circle-header">
+            <div class="circle-avatar">
+              <img v-if="record.avatar" :src="record.avatar" :alt="record.name" />
+              <icon-user v-else />
+            </div>
+            <div class="circle-details">
+              <div class="circle-name">{{ record.name }}</div>
+              <div class="circle-desc">{{ record.description || '暂无描述' }}</div>
+            </div>
+          </div>
+        </div>
       </template>
-      <template #isNew="{ record }">
-        <GiCellTag :value="record.isNew" :dict="common_type" />
+      <template #tags="{ record }">
+        <div class="tags-container">
+          <a-space direction="vertical" :size="4">
+            <a-tag v-if="record.isHot === 1" color="red" size="small">
+              <icon-fire /> 热门
+            </a-tag>
+            <a-tag v-if="record.isNew === 1" color="green" size="small">
+              <icon-plus /> 新建
+            </a-tag>
+          </a-space>
+        </div>
+      </template>
+      <template #statistics="{ record }">
+        <div class="statistics-container">
+          <div class="stat-item">
+            <icon-user-group class="stat-icon" />
+            <span class="stat-value">{{ record.membersCount || 0 }}</span>
+          </div>
+          <div class="stat-item">
+            <icon-message class="stat-icon" />
+            <span class="stat-value">{{ record.dynamicsCount || 0 }}</span>
+          </div>
+        </div>
       </template>
       <template #status="{ record }">
         <GiCellTag :value="record.status" :dict="common_type" />
@@ -76,6 +149,8 @@ const { common_type } = useDict('common_type')
 
 const queryForm = reactive<CirclesQuery>({
   name: undefined,
+  status: undefined,
+  type: undefined,
   sort: ['id,desc'],
 })
 
@@ -87,12 +162,35 @@ const {
   handleDelete,
 } = useTable((page) => listCircles({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
-  { title: '圈子名称', dataIndex: 'name', slotName: 'name' },
-  { title: '是否热门：0否，1是', dataIndex: 'isHot', slotName: 'isHot' },
-  { title: '是否新建：0否，1是', dataIndex: 'isNew', slotName: 'isNew' },
-  { title: '成员数量', dataIndex: 'membersCount', slotName: 'membersCount' },
-  { title: '动态数量', dataIndex: 'dynamicsCount', slotName: 'dynamicsCount' },
-  { title: '状态（1：启用；2：禁用）', dataIndex: 'status', slotName: 'status' },
+  { 
+    title: '圈子信息', 
+    dataIndex: 'circleInfo', 
+    slotName: 'circleInfo',
+    width: 280,
+    ellipsis: true,
+    tooltip: true
+  },
+  { 
+    title: '标签', 
+    dataIndex: 'tags', 
+    slotName: 'tags',
+    width: 120,
+    align: 'center'
+  },
+  { 
+    title: '统计数据', 
+    dataIndex: 'statistics', 
+    slotName: 'statistics',
+    width: 150,
+    align: 'center'
+  },
+  { 
+    title: '状态', 
+    dataIndex: 'status', 
+    slotName: 'status',
+    width: 80,
+    align: 'center'
+  },
   {
     title: '操作',
     dataIndex: 'action',
@@ -107,6 +205,8 @@ const columns: TableInstance['columns'] = [
 // 重置
 const reset = () => {
   queryForm.name = undefined
+  queryForm.status = undefined
+  queryForm.type = undefined
   search()
 }
 
@@ -141,4 +241,132 @@ const onDetail = (record: CirclesResp) => {
 }
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.search-container {
+  .search-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .search-label {
+      font-size: 14px;
+      color: var(--color-text-2);
+      white-space: nowrap;
+    }
+  }
+}
+
+.circle-info {
+  .circle-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    .circle-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: var(--color-fill-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .arco-icon {
+        font-size: 18px;
+        color: var(--color-text-3);
+      }
+    }
+    
+    .circle-details {
+      flex: 1;
+      min-width: 0;
+      
+      .circle-name {
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--color-text-1);
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .circle-desc {
+        font-size: 12px;
+        color: var(--color-text-3);
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+    }
+  }
+}
+
+.tags-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.statistics-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    
+    .stat-icon {
+      font-size: 16px;
+      color: var(--color-primary);
+    }
+    
+    .stat-value {
+      font-weight: 600;
+      color: var(--color-text-1);
+    }
+  }
+}
+
+// 响应式适配
+@media (max-width: 768px) {
+  .search-container {
+    .search-group {
+      flex-direction: column;
+      align-items: flex-start;
+      
+      .search-label {
+        font-size: 12px;
+      }
+    }
+  }
+  
+  .circle-info {
+    .circle-header {
+      .circle-avatar {
+        width: 32px;
+        height: 32px;
+      }
+      
+      .circle-details {
+        .circle-name {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
+</style>
