@@ -339,13 +339,6 @@
           <div class="preset-desc">{{ preset.description }}</div>
         </div>
       </div>
-
-      <div class="preset-actions">
-        <a-button size="small" @click="saveAsPreset">
-          <template #icon><icon-save /></template>
-          保存为预设
-        </a-button>
-      </div>
     </div>
 
     <!-- 模型选择器弹窗 -->
@@ -1293,12 +1286,6 @@ const resetConfig = () => {
 const applyPreset = (preset: any) => {
   Object.assign(modelConfig, preset.config)
   Message.success(`已应用预设: ${preset.name}`)
-}
-
-// 保存为预设
-const saveAsPreset = () => {
-  // 这里可以实现保存自定义预设的逻辑
-  Message.info('保存预设功能待实现')
 }
 
 // 处理编排配置保存
