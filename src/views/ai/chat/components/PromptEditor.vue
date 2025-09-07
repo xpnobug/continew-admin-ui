@@ -101,7 +101,7 @@
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
 import PromptLibrary from './PromptLibrary.vue'
-import { type PromptResourceResp, addPromptResource, getPromptResource, updatePromptResource } from '@/apis/ai/promptResource'
+import { type PromptResourceResp, getPromptResource, updatePromptResource } from '@/apis/ai/promptResource'
 
 interface Props {
   modelValue?: PromptResourceResp | null
@@ -225,38 +225,37 @@ const onPromptLibrarySelect = async (prompt: PromptResourceResp | null) => {
 
 // 保存提示词
 const savePrompt = async () => {
-  if (!promptForm.name || !promptForm.promptText) {
-    Message.warning('请填写提示词名称和内容')
+  if (!promptForm.promptText) {
+    Message.warning('请填写提示词内容')
+    return
+  }
+
+  if (!currentPrompt.value?.id) {
+    Message.warning('请先从提示词库中选择或创建一个提示词')
     return
   }
 
   saving.value = true
   try {
-    if (currentPrompt.value?.id) {
-      // 更新现有提示词
-      await updatePromptResource({
-        name: promptForm.name,
-        description: promptForm.description,
-        promptText: promptForm.promptText,
-        spaceId: promptForm.spaceId,
-        status: promptForm.status,
-      }, currentPrompt.value.id)
-      Message.success('提示词更新成功')
-    } else {
-      // 创建新提示词
-      const { data } = await addPromptResource({
-        name: promptForm.name,
-        description: promptForm.description,
-        promptText: promptForm.promptText,
-        spaceId: promptForm.spaceId,
-        status: promptForm.status,
-      })
-      const newPrompt = { ...promptForm, id: data.id } as PromptResourceResp
-      currentPrompt.value = newPrompt
-      emit('update:modelValue', newPrompt)
-      emit('change', newPrompt)
-      Message.success('提示词创建成功')
+    // 更新现有提示词的内容
+    await updatePromptResource({
+      name: currentPrompt.value.name,
+      description: currentPrompt.value.description || promptForm.description,
+      promptText: promptForm.promptText,
+      spaceId: currentPrompt.value.spaceId,
+      status: currentPrompt.value.status,
+    }, currentPrompt.value.id)
+
+    // 更新本地状态
+    const updatedPrompt = {
+      ...currentPrompt.value,
+      promptText: promptForm.promptText,
+      description: promptForm.description,
     }
+    currentPrompt.value = updatedPrompt
+    emit('update:modelValue', updatedPrompt)
+    emit('change', updatedPrompt)
+    Message.success('提示词内容已保存')
   } catch (error) {
     console.error('Failed to save prompt:', error)
     Message.error('保存失败')

@@ -288,6 +288,10 @@ const showCreateModal = () => {
   editingPrompt.value = null
   resetForm()
   showPromptInfoModal.value = true
+  // 清除表单验证状态
+  nextTick(() => {
+    formRef.value?.clearValidate()
+  })
 }
 
 // 显示编辑提示词弹窗
@@ -304,6 +308,11 @@ const showEditModal = async (prompt: PromptResourceResp) => {
     promptForm.spaceId = prompt.spaceId
 
     showPromptInfoModal.value = true
+
+    // 清除表单验证状态
+    nextTick(() => {
+      formRef.value?.clearValidate()
+    })
   } catch (error) {
     console.error('Failed to load prompt details:', error)
     Message.error('加载提示词详情失败')
@@ -313,46 +322,65 @@ const showEditModal = async (prompt: PromptResourceResp) => {
 // 保存提示词
 const handleSavePrompt = async () => {
   try {
-    const isValid = await formRef.value?.validate()
-    if (isValid) {
-      if (isEditing.value && editingPrompt.value) {
-        // 编辑现有提示词
-        await updatePromptResource({
-          name: promptForm.name,
-          description: promptForm.description,
-          promptText: promptForm.promptText,
-          status: promptForm.status,
-          spaceId: promptForm.spaceId,
-        }, editingPrompt.value.id)
+    // 表单验证
+    await formRef.value?.validate()
 
-        Message.success('提示词更新成功')
+    if (isEditing.value && editingPrompt.value) {
+      // 编辑现有提示词
+      await updatePromptResource({
+        name: promptForm.name,
+        description: promptForm.description,
+        promptText: promptForm.promptText,
+        status: promptForm.status,
+        spaceId: promptForm.spaceId,
+      }, editingPrompt.value.id)
 
-        // 如果编辑的是当前选中的提示词，触发选择事件
-        if (props.currentPrompt?.id === editingPrompt.value.id) {
-          const updatedPrompt = { ...editingPrompt.value, ...promptForm }
-          emit('select', updatedPrompt)
-        }
-      } else {
-        // 创建新提示词
-        const { data } = await addPromptResource({
-          name: promptForm.name,
-          description: promptForm.description,
-          promptText: promptForm.promptText,
-          status: promptForm.status,
-          spaceId: promptForm.spaceId,
-        })
+      Message.success('提示词更新成功')
 
-        Message.success('提示词创建成功')
-
-        // 创建成功后选择新提示词
-        const newPrompt = { ...promptForm, id: data.id } as PromptResourceResp
-        emit('select', newPrompt)
+      // 如果编辑的是当前选中的提示词，触发选择事件
+      if (props.currentPrompt?.id === editingPrompt.value.id) {
+        const updatedPrompt = { ...editingPrompt.value, ...promptForm }
+        emit('select', updatedPrompt)
       }
+    } else {
+      // 创建新提示词
+      const { data } = await addPromptResource({
+        name: promptForm.name,
+        description: promptForm.description,
+        promptText: promptForm.promptText,
+        status: promptForm.status,
+        spaceId: promptForm.spaceId,
+      })
 
-      showPromptInfoModal.value = false
-      loadPrompts()
+      Message.success('提示词创建成功')
+
+      // 创建成功后选择新提示词
+      const newPrompt = {
+        id: data.id,
+        name: promptForm.name,
+        description: promptForm.description,
+        promptText: promptForm.promptText,
+        status: promptForm.status,
+        spaceId: promptForm.spaceId,
+        createTime: new Date().toISOString(),
+        updateTime: new Date().toISOString(),
+        createUser: '',
+        updateUser: '',
+        createUserString: '',
+        updateUserString: '',
+        disabled: false,
+      } as PromptResourceResp
+      emit('select', newPrompt)
     }
+
+    showPromptInfoModal.value = false
+    loadPrompts()
   } catch (error) {
+    // 如果是表单验证错误，不显示通用错误消息
+    if (error && typeof error === 'object' && 'errorFields' in error) {
+      // 表单验证失败，不关闭弹窗
+      return
+    }
     console.error('Failed to save prompt:', error)
     Message.error('保存失败')
   }
