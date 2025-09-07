@@ -43,29 +43,6 @@
       </div>
     </div>
 
-    <!-- 模型信息展示 -->
-    <div v-if="currentModel" class="model-info-card">
-      <div class="model-header">
-        <div class="model-icon">
-          <img v-if="currentModel.iconUrl" :src="currentModel.iconUrl" :alt="currentModel.modelName" />
-          <icon-desktop v-else />
-        </div>
-        <div class="model-details">
-          <div class="model-name">{{ currentModel.modelName }}</div>
-          <div class="model-protocol">{{ currentModel.protocol?.toUpperCase() }}</div>
-          <div class="model-capability">{{ currentModel.capability || '通用模型' }}</div>
-        </div>
-        <div class="model-status">
-          <a-tag :color="currentModel.status === 1 ? 'green' : 'red'" size="small">
-            {{ currentModel.status === 1 ? '可用' : '不可用' }}
-          </a-tag>
-        </div>
-      </div>
-      <div v-if="currentModel.description" class="model-description">
-        {{ currentModel.description }}
-      </div>
-    </div>
-
     <!-- 配置选项卡 -->
     <div class="config-tabs">
       <!-- 选项卡导航固定 -->
@@ -1416,73 +1393,6 @@ defineExpose({
     .header-actions {
       display: flex;
       gap: 8px;
-    }
-  }
-
-  .model-info-card {
-    padding: 16px;
-    border-bottom: 1px solid var(--color-border-2);
-    flex-shrink: 0;
-
-    .model-header {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 8px;
-
-      .model-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        background: var(--color-primary-light-1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--color-primary);
-        flex-shrink: 0;
-        overflow: hidden;
-
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-      }
-
-      .model-details {
-        flex: 1;
-        min-width: 0;
-
-        .model-name {
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--color-text-1);
-          margin-bottom: 2px;
-        }
-
-        .model-protocol {
-          font-size: 11px;
-          color: var(--color-text-3);
-          text-transform: uppercase;
-          margin-bottom: 2px;
-        }
-
-        .model-capability {
-          font-size: 12px;
-          color: var(--color-text-2);
-        }
-      }
-
-      .model-status {
-        flex-shrink: 0;
-      }
-    }
-
-    .model-description {
-      font-size: 12px;
-      color: var(--color-text-3);
-      line-height: 1.4;
-      margin-left: 44px;
     }
   }
 
