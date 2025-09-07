@@ -599,6 +599,8 @@ const modelCapabilityConfig = ref({
   maxTokens: 2048,
   supportedFormats: ['text'],
   languages: ['zh-CN', 'en-US'],
+  // 当前选择的提示词
+  currentPrompt: null,
 })
 
 const modelConnectionConfig = ref({
@@ -1122,6 +1124,10 @@ const loadModelOrchestrationConfig = async (modelId: string) => {
     if (metaData.data.capability) {
       try {
         const capability = JSON.parse(metaData.data.capability)
+        // 确保currentPrompt字段存在
+        if (capability.currentPrompt === undefined) {
+          capability.currentPrompt = null
+        }
         Object.assign(modelCapabilityConfig.value, capability)
       } catch (e) {
         console.warn('Failed to parse capability:', e)

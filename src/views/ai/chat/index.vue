@@ -62,6 +62,7 @@
       <!-- 中间模型配置编排面板 -->
       <div class="center-panel">
         <ModelOrchestrator
+          ref="modelOrchestratorRef"
           v-model="currentModel"
           @change="handleModelChange"
           @config-change="handleConfigChange"
@@ -104,6 +105,7 @@ const currentModel = ref<MetaDetailResp | null>(null)
 const currentEntity = ref<any>(null)
 const currentEntityId = ref<string>('')
 const isNewModel = ref(false)
+const modelOrchestratorRef = ref<any>(null)
 const modelConfig = ref<any>({
   temperature: 0.7,
   maxTokens: 2000,
@@ -161,6 +163,15 @@ const saveStatusText = computed(() => {
 const handlePromptChange = (prompt: PromptResourceResp | null) => {
   currentPrompt.value = prompt
 
+  // 将选中的提示词保存到模型capability配置中
+  if (modelOrchestratorRef.value && currentModel.value) {
+    // 更新ModelOrchestrator中的capability配置
+    const orchestrator = modelOrchestratorRef.value
+    if (orchestrator.modelCapabilityConfig) {
+      orchestrator.modelCapabilityConfig.currentPrompt = prompt
+    }
+  }
+
   if (prompt) {
     Message.success(`已加载提示词: ${prompt.name}`)
   } else {
@@ -216,6 +227,15 @@ const handleModelChange = async (model: MetaResp | null) => {
 // 处理配置变化
 const handleConfigChange = (config: any) => {
   Object.assign(modelConfig.value, config)
+
+  // 如果配置中包含currentPrompt，恢复到PromptEditor
+  if (config.capability && config.capability.currentPrompt) {
+    const savedPrompt = config.capability.currentPrompt
+    if (savedPrompt && savedPrompt.id) {
+      currentPrompt.value = savedPrompt
+      // 不需要再次调用handlePromptChange，避免循环更新
+    }
+  }
 }
 
 // 处理模型配置保存状态变化
@@ -379,9 +399,9 @@ const initializeFromRoute = async () => {
         Message.success(`已加载新模型 "${entityData.name}" 的默认配置，请选择合适的模型元数据并配置参数`)
       } else if (modelId) {
         // 已有关联的模型元数据，正常加载
-        if (modelName && entityName) {
-          Message.info(`正在加载模型配置: ${entityName} (${modelName})`)
-        }
+        // if (modelName && entityName) {
+        //   Message.info(`正在加载模型配置: ${entityName} (${modelName})`)
+        // }
 
         // 获取模型元数据
         const metaResponse = await getMeta(modelId as string)

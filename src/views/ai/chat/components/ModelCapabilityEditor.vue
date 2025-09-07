@@ -143,6 +143,8 @@ interface ModelCapability {
   maxTokens: number
   supportedFormats: string[]
   languages: string[]
+  // 当前选择的提示词
+  currentPrompt: any
 }
 
 interface Props {
@@ -176,6 +178,8 @@ const defaultCapabilities: ModelCapability = {
   maxTokens: 2048,
   supportedFormats: ['text'],
   languages: ['zh-CN', 'en-US'],
+  // 当前选择的提示词
+  currentPrompt: null,
 }
 
 // 初始化默认值
