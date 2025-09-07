@@ -89,7 +89,7 @@ import PromptEditor from './components/PromptEditor.vue'
 import ModelOrchestrator from './components/ModelOrchestrator.vue'
 import ChatPreview from './components/ChatPreview.vue'
 import type { PromptResourceResp } from '@/apis/ai/promptResource'
-import type { MetaResp } from '@/apis/ai/meta'
+import type { MetaDetailResp, MetaResp } from '@/apis/ai/meta'
 import { getMeta } from '@/apis/ai/meta'
 import { getEntity, updateEntity } from '@/apis/ai/entity'
 
@@ -99,7 +99,7 @@ const route = useRoute()
 
 // 响应式数据
 const currentPrompt = ref<PromptResourceResp | null>(null)
-const currentModel = ref<MetaResp | null>(null)
+const currentModel = ref<MetaDetailResp | null>(null)
 const currentEntityId = ref<string>('')
 const isNewModel = ref(false)
 const modelConfig = ref<any>({
@@ -323,16 +323,15 @@ const importWorkspace = () => {
 
 // 从路由参数初始化模型数据
 const initializeFromRoute = async () => {
-  const { modelId, entityId, modelName, entityName, isNewModel } = route.query
+  const { modelId, entityId, modelName, entityName, isNewModel: isNewModelParam } = route.query
 
-  console.log('初始化模型数据:', { modelId, entityId, modelName, entityName, isNewModel })
   if (entityId) {
     try {
       // 获取模型实体配置
       const entityResponse = await getEntity(entityId as string)
       const entityData = entityResponse.data
 
-      if (isNewModel === 'true') {
+      if (isNewModelParam === 'true') {
         // 新创建的模型，没有关联的元数据
         Message.info(`正在为新模型 "${entityData.name}" 设置默认配置...`)
 
