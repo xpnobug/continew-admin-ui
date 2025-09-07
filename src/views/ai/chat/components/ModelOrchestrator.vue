@@ -1482,7 +1482,6 @@ defineExpose({
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin-bottom: 12px;
 
       .preset-item {
         padding: 8px 12px;
