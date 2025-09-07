@@ -32,7 +32,7 @@
             <template #icon><icon-refresh /></template>
             刷新
           </a-button>
-          <a-button type="primary" @click="handleCreate">
+          <a-button type="primary" @click="showCreateModal">
             <template #icon><icon-plus /></template>
             新建提示词
           </a-button>
@@ -93,7 +93,7 @@
               <template #image>
                 <icon-file style="font-size: 64px; color: var(--color-text-4)" />
               </template>
-              <a-button type="primary" @click="handleCreate">
+              <a-button type="primary" @click="showCreateModal">
                 <template #icon><icon-plus /></template>
                 创建第一个提示词
               </a-button>
@@ -116,12 +116,62 @@
         />
       </div>
     </div>
+
+    <!-- 新建/编辑提示词弹窗 -->
+    <a-modal
+      v-model:visible="showPromptInfoModal"
+      :title="isEditing ? '编辑提示词' : '新建提示词'"
+      width="600px"
+      @ok="handleSavePrompt"
+      @cancel="handleCancelPrompt"
+    >
+      <div class="prompt-info-form">
+        <a-form ref="formRef" :model="promptForm" :rules="formRules" layout="vertical">
+          <a-form-item label="名称" field="name">
+            <a-input
+              v-model="promptForm.name"
+              placeholder="请输入提示词名称"
+              :max-length="100"
+              show-word-limit
+            />
+          </a-form-item>
+
+          <a-form-item label="描述" field="description">
+            <a-textarea
+              v-model="promptForm.description"
+              placeholder="请输入提示词描述"
+              :rows="3"
+              :max-length="500"
+              show-word-limit
+            />
+          </a-form-item>
+
+          <a-form-item label="提示词内容" field="promptText">
+            <a-textarea
+              v-model="promptForm.promptText"
+              placeholder="请输入提示词内容"
+              :rows="8"
+              :max-length="10000"
+              show-word-limit
+            />
+          </a-form-item>
+
+          <a-form-item label="状态" field="status">
+            <a-radio-group v-model="promptForm.status">
+              <a-radio :value="1">有效</a-radio>
+              <a-radio :value="0">无效</a-radio>
+            </a-radio-group>
+          </a-form-item>
+        </a-form>
+      </div>
+    </a-modal>
   </a-modal>
 </template>
 
 <script setup lang="ts">
 import { Message, Modal } from '@arco-design/web-vue'
-import { type PromptResourceResp, addPromptResource, deletePromptResource, getPromptResource, listPromptResource } from '@/apis/ai/promptResource'
+import type { FormInstance } from '@arco-design/web-vue'
+import { type PromptResourceResp, addPromptResource, deletePromptResource, getPromptResource, listPromptResource, updatePromptResource } from '@/apis/ai/promptResource'
 
 interface Props {
   visible?: boolean
@@ -148,6 +198,33 @@ const filterStatus = ref<number | undefined>(undefined)
 const currentPage = ref(1)
 const pageSize = ref(12)
 const total = ref(0)
+
+// 提示词信息编辑弹窗相关
+const showPromptInfoModal = ref(false)
+const isEditing = ref(false)
+const editingPrompt = ref<PromptResourceResp | null>(null)
+const formRef = ref<FormInstance>()
+
+// 表单数据
+const promptForm = reactive({
+  name: '',
+  description: '',
+  promptText: '',
+  status: 1,
+  spaceId: 1,
+})
+
+// 表单验证规则
+const formRules = {
+  name: [
+    { required: true, message: '请输入提示词名称' },
+    { minLength: 1, maxLength: 100, message: '名称长度应在1-100个字符之间' },
+  ],
+  promptText: [
+    { required: true, message: '请输入提示词内容' },
+    { minLength: 1, maxLength: 10000, message: '提示词内容长度应在1-10000个字符之间' },
+  ],
+}
 
 // 控制弹窗显示
 const visible = computed({
@@ -190,17 +267,101 @@ const refreshPromptsList = () => {
   loadPrompts()
 }
 
+// 重置表单
+const resetForm = () => {
+  promptForm.name = ''
+  promptForm.description = ''
+  promptForm.promptText = ''
+  promptForm.status = 1
+  promptForm.spaceId = 1
+}
+
 // 选择提示词
 const handleSelect = (prompt: PromptResourceResp) => {
   emit('select', prompt)
   visible.value = false
 }
 
-// 创建新提示词
-const handleCreate = () => {
-  visible.value = false
-  // 这里可以触发创建事件，或者直接在父组件中处理
-  emit('select', null) // 传null表示创建新的
+// 显示创建提示词弹窗
+const showCreateModal = () => {
+  isEditing.value = false
+  editingPrompt.value = null
+  resetForm()
+  showPromptInfoModal.value = true
+}
+
+// 显示编辑提示词弹窗
+const showEditModal = async (prompt: PromptResourceResp) => {
+  try {
+    const { data } = await getPromptResource(prompt.id)
+    isEditing.value = true
+    editingPrompt.value = prompt
+
+    promptForm.name = prompt.name
+    promptForm.description = data.description || ''
+    promptForm.promptText = data.promptText || ''
+    promptForm.status = prompt.status
+    promptForm.spaceId = prompt.spaceId
+
+    showPromptInfoModal.value = true
+  } catch (error) {
+    console.error('Failed to load prompt details:', error)
+    Message.error('加载提示词详情失败')
+  }
+}
+
+// 保存提示词
+const handleSavePrompt = async () => {
+  try {
+    const isValid = await formRef.value?.validate()
+    if (isValid) {
+      if (isEditing.value && editingPrompt.value) {
+        // 编辑现有提示词
+        await updatePromptResource({
+          name: promptForm.name,
+          description: promptForm.description,
+          promptText: promptForm.promptText,
+          status: promptForm.status,
+          spaceId: promptForm.spaceId,
+        }, editingPrompt.value.id)
+
+        Message.success('提示词更新成功')
+
+        // 如果编辑的是当前选中的提示词，触发选择事件
+        if (props.currentPrompt?.id === editingPrompt.value.id) {
+          const updatedPrompt = { ...editingPrompt.value, ...promptForm }
+          emit('select', updatedPrompt)
+        }
+      } else {
+        // 创建新提示词
+        const { data } = await addPromptResource({
+          name: promptForm.name,
+          description: promptForm.description,
+          promptText: promptForm.promptText,
+          status: promptForm.status,
+          spaceId: promptForm.spaceId,
+        })
+
+        Message.success('提示词创建成功')
+
+        // 创建成功后选择新提示词
+        const newPrompt = { ...promptForm, id: data.id } as PromptResourceResp
+        emit('select', newPrompt)
+      }
+
+      showPromptInfoModal.value = false
+      loadPrompts()
+    }
+  } catch (error) {
+    console.error('Failed to save prompt:', error)
+    Message.error('保存失败')
+  }
+}
+
+// 取消编辑
+const handleCancelPrompt = () => {
+  showPromptInfoModal.value = false
+  resetForm()
 }
 
 // 克隆提示词
@@ -274,7 +435,7 @@ const deletePrompt = (prompt: PromptResourceResp) => {
 const handleAction = (action: string, prompt: PromptResourceResp) => {
   switch (action) {
     case 'edit':
-      handleSelect(prompt)
+      showEditModal(prompt)
       break
     case 'clone':
       clonePrompt(prompt)
@@ -453,5 +614,9 @@ defineExpose({
     padding-top: 16px;
     border-top: 1px solid var(--color-border-2);
   }
+}
+
+.prompt-info-form {
+  padding: 8px 0;
 }
 </style>

@@ -43,27 +43,6 @@
       </div>
     </div>
 
-    <!-- 提示词信息 -->
-    <div v-if="currentPrompt" class="prompt-info">
-      <div class="info-item">
-        <label class="info-label">名称：</label>
-        <a-input
-          v-model="promptForm.name"
-          placeholder="输入提示词名称"
-          size="small"
-        />
-      </div>
-      <div class="info-item">
-        <label class="info-label">描述：</label>
-        <a-textarea
-          v-model="promptForm.description"
-          placeholder="输入提示词描述"
-          :rows="2"
-          size="small"
-        />
-      </div>
-    </div>
-
     <!-- 提示词内容编辑器 -->
     <div class="prompt-content">
       <div class="content-header">
@@ -505,31 +484,6 @@ defineExpose({
     .header-actions {
       display: flex;
       gap: 8px;
-    }
-  }
-
-  .prompt-info {
-    padding: 16px;
-    border-bottom: 1px solid var(--color-border-2);
-    flex-shrink: 0;
-
-    .info-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 12px;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-
-      .info-label {
-        min-width: 40px;
-        font-size: 12px;
-        color: var(--color-text-3);
-        line-height: 32px;
-        flex-shrink: 0;
-      }
     }
   }
 
