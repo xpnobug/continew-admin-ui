@@ -28,8 +28,20 @@
           <icon-robot />
         </div>
         <div class="welcome-text">
-          <h4>开始对话测试</h4>
-          <p>选择模型和提示词，然后在下方输入消息开始测试</p>
+          <h4>AI 对话测试</h4>
+          <div v-if="configurationStatus.isValid" class="config-status success">
+            <icon-check-circle />
+            <p>配置完成，可以开始对话测试</p>
+          </div>
+          <div v-else class="config-status warning">
+            <icon-exclamation-triangle />
+            <div class="config-issues">
+              <p>请完成以下配置：</p>
+              <ul>
+                <li v-for="issue in configurationStatus.issues" :key="issue">{{ issue }}</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -119,12 +131,18 @@
           :rows="3"
           :max-length="5000"
           show-word-limit
-          :disabled="isLoading"
+          :disabled="isLoading || !configurationStatus.isValid"
           class="message-input"
           @keydown="handleKeyDown"
         />
         <div class="input-actions">
-          <a-button size="small" :loading="isLoading" type="primary" @click="sendMessage">
+          <a-button
+            size="small"
+            :loading="isLoading"
+            :disabled="!configurationStatus.isValid"
+            type="primary"
+            @click="sendMessage"
+          >
             <template #icon><icon-send /></template>
             发送
           </a-button>
@@ -162,6 +180,7 @@
 import { Message } from '@arco-design/web-vue'
 import type { PromptResourceResp } from '@/apis/ai/promptResource'
 import type { MetaResp } from '@/apis/ai/meta'
+import { type ChatMessage as APIChatMessage, type ChatRequest, sendChatMessage } from '@/apis/ai/chat'
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -174,6 +193,7 @@ interface Props {
   currentModel?: MetaResp | null
   currentPrompt?: PromptResourceResp | null
   modelConfig?: any
+  isLoading?: boolean
 }
 
 interface Emits {
@@ -191,6 +211,24 @@ const isThinking = ref(false)
 const lastResponseTime = ref<number | null>(null)
 const chatContainer = ref<HTMLElement>()
 
+// 配置状态检查
+const configurationStatus = computed(() => {
+  const issues = []
+
+  if (!props.currentModel) {
+    issues.push('未选择模型')
+  }
+
+  if (!props.modelConfig) {
+    issues.push('未配置模型参数')
+  }
+
+  return {
+    isValid: issues.length === 0,
+    issues,
+  }
+})
+
 // 辅助函数
 // 清空对话
 const clearChat = () => {
@@ -206,49 +244,77 @@ const scrollToBottom = () => {
   }
 }
 
-// 获取模拟响应内容
-const getSimulatedResponse = (_userMessage: string): string => {
-  const responses = [
-    '这是一个很好的问题。基于您提供的信息，我认为可以从以下几个角度来分析：\n\n1. 首先，我们需要了解问题的核心\n2. 然后考虑可能的解决方案\n3. 最后评估每种方案的优缺点\n\n您希望我详细展开某个方面吗？',
-    '感谢您的提问。这个话题确实值得深入讨论。\n\n根据我的理解，主要有以下几点需要注意：\n\n• 考虑整体的上下文环境\n• 分析潜在的影响因素\n• 制定合适的应对策略\n\n如果您需要更具体的建议，请告诉我更多细节。',
-    '您提出了一个很有意思的观点。让我来帮您分析一下：\n\n从技术角度来看，这种方法有其优势，比如效率高、成本低。但同时也存在一些挑战，需要谨慎考虑。\n\n您希望我重点分析哪个方面呢？',
-    '理解您的需求。这种情况下，我建议采用分步骤的方法：\n\n第一步：明确目标和预期结果\n第二步：评估现有资源和限制\n第三步：制定详细的执行计划\n第四步：实施并监控进度\n\n您觉得这个框架如何？需要我详细解释某个步骤吗？',
-  ]
+// 真实AI响应
+const getRealAIResponse = async (userMessage: string): Promise<void> => {
+  if (!props.currentModel?.id) {
+    throw new Error('未选择模型')
+  }
 
-  return responses[Math.floor(Math.random() * responses.length)]
-}
+  // 准备聊天历史（最近10条消息）
+  const chatHistory: APIChatMessage[] = []
 
-// 模拟AI响应 (实际项目中应该替换为真实的API调用)
-const simulateAIResponse = async (_userMessage: string) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 创建响应消息
-      const responseMessage: ChatMessage = {
-        role: 'assistant',
-        content: '',
-        timestamp: Date.now(),
-        streaming: true,
-      }
+  // 如果有提示词，添加系统消息
+  if (props.currentPrompt?.promptText) {
+    chatHistory.push({
+      role: 'system',
+      content: props.currentPrompt.promptText,
+    })
+  }
 
-      messages.value.push(responseMessage)
+  // 添加历史消息（取最后10条对话）
+  const recentMessages = messages.value.slice(-10).map((msg) => ({
+    role: msg.role,
+    content: msg.content,
+  } as APIChatMessage))
 
-      // 模拟流式响应
-      const fullResponse = getSimulatedResponse(_userMessage)
-      let currentIndex = 0
+  chatHistory.push(...recentMessages)
 
-      const streamInterval = setInterval(() => {
-        if (currentIndex < fullResponse.length) {
-          responseMessage.content += fullResponse[currentIndex]
-          currentIndex++
-          scrollToBottom()
-        } else {
-          responseMessage.streaming = false
-          clearInterval(streamInterval)
-          resolve(true)
-        }
-      }, 30)
-    }, 1000)
+  // 添加当前用户消息
+  chatHistory.push({
+    role: 'user',
+    content: userMessage,
   })
+
+  // 准备请求数据
+  const chatRequest: ChatRequest = {
+    messages: chatHistory,
+    modelId: props.currentModel.id,
+    promptId: props.currentPrompt?.id,
+    config: {
+      temperature: props.modelConfig?.temperature || 0.7,
+      maxTokens: props.modelConfig?.maxTokens || 2000,
+      topP: props.modelConfig?.topP || 1,
+      frequencyPenalty: props.modelConfig?.frequencyPenalty || 0,
+      presencePenalty: props.modelConfig?.presencePenalty || 0,
+    },
+  }
+
+  try {
+    // 发送请求
+    const response = await sendChatMessage(chatRequest)
+
+    // 创建并添加AI响应消息
+    const assistantMessage: ChatMessage = {
+      role: 'assistant',
+      content: response.data.message.content,
+      timestamp: Date.now(),
+    }
+
+    messages.value.push(assistantMessage)
+
+    // 返回响应时间用于显示
+    return response.data.responseTime
+  } catch (error) {
+    console.error('AI response error:', error)
+    // 添加错误消息
+    const errorMessage: ChatMessage = {
+      role: 'assistant',
+      content: '抱歉，在处理您的请求时遇到了问题。请检查模型配置或稍后再试。',
+      timestamp: Date.now(),
+    }
+    messages.value.push(errorMessage)
+    throw error
+  }
 }
 
 // 监听模型或提示词变化，重置对话
@@ -265,8 +331,8 @@ const sendMessage = async () => {
     return
   }
 
-  if (!props.currentModel) {
-    Message.warning('请先选择模型')
+  if (!configurationStatus.value.isValid) {
+    Message.warning(`配置不完整: ${configurationStatus.value.issues.join(', ')}`)
     return
   }
 
@@ -291,19 +357,21 @@ const sendMessage = async () => {
   try {
     const startTime = Date.now()
 
-    // 模拟AI响应 - 实际项目中应该调用真实的AI API
-    await simulateAIResponse(messageToSend)
-
-    lastResponseTime.value = Date.now() - startTime
+    // 使用真实AI API
+    const responseTime = await getRealAIResponse(messageToSend)
+    lastResponseTime.value = responseTime || (Date.now() - startTime)
   } catch (error) {
     console.error('Failed to get AI response:', error)
-    const errorMessage: ChatMessage = {
-      role: 'assistant',
-      content: '抱歉，生成回复时出现错误，请稍后再试。',
-      timestamp: Date.now(),
+
+    // API错误已经在getRealAIResponse中添加了错误消息，这里只需要显示用户提示
+    let errorMsg = 'AI回复失败'
+    if (error.response?.data?.message) {
+      errorMsg = error.response.data.message
+    } else if (error.message) {
+      errorMsg = error.message
     }
-    messages.value.push(errorMessage)
-    Message.error('获取AI回复失败')
+
+    Message.error(errorMsg)
   } finally {
     isLoading.value = false
     isThinking.value = false
@@ -463,6 +531,49 @@ defineExpose({
           margin: 0;
           font-size: 14px;
           line-height: 1.5;
+        }
+
+        .config-status {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 12px;
+          padding: 12px 16px;
+          border-radius: 8px;
+          font-size: 14px;
+
+          &.success {
+            background: var(--color-success-light-1);
+            border: 1px solid var(--color-success-light-3);
+            color: var(--color-success-dark-1);
+
+            .arco-icon {
+              color: var(--color-success);
+            }
+          }
+
+          &.warning {
+            background: var(--color-warning-light-1);
+            border: 1px solid var(--color-warning-light-3);
+            color: var(--color-warning-dark-1);
+
+            .arco-icon {
+              color: var(--color-warning);
+              margin-top: 2px;
+              align-self: flex-start;
+            }
+          }
+
+          .config-issues {
+            ul {
+              margin: 4px 0 0 0;
+              padding-left: 16px;
+
+              li {
+                margin: 2px 0;
+              }
+            }
+          }
         }
       }
     }
