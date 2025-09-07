@@ -79,17 +79,17 @@
           <a-tab-pane key="orchestration" title="模型编排" />
         </a-tabs>
       </div>
-      
+
       <!-- 选项卡内容可滚动 -->
       <div class="tabs-content">
         <div v-if="activeTab === 'capability'" class="tab-content-item">
           <ModelCapabilityEditor v-model="modelCapabilityConfig" />
         </div>
-        
+
         <div v-if="activeTab === 'connection'" class="tab-content-item">
           <ModelConnectionConfig v-model="modelConnectionConfig" />
         </div>
-        
+
         <div v-if="activeTab === 'parameters'" class="tab-content-item">
           <!-- 基础参数 -->
           <div class="config-section">
@@ -106,12 +106,12 @@
                   </a-tooltip>
                 </div>
                 <a-slider
-                    v-model="modelConfig.temperature"
-                    :min="0"
-                    :max="2"
-                    :step="0.1"
-                    :style="{ width: '150px' }"
-                    show-input
+                  v-model="modelConfig.temperature"
+                  :min="0"
+                  :max="2"
+                  :step="0.1"
+                  :style="{ width: '150px' }"
+                  show-input
                 />
               </div>
 
@@ -123,11 +123,11 @@
                   </a-tooltip>
                 </div>
                 <a-input-number
-                    v-model="modelConfig.maxTokens"
-                    :min="1"
-                    :max="8192"
-                    :step="100"
-                    style="width: 150px"
+                  v-model="modelConfig.maxTokens"
+                  :min="1"
+                  :max="8192"
+                  :step="100"
+                  style="width: 150px"
                 />
               </div>
 
@@ -139,12 +139,12 @@
                   </a-tooltip>
                 </div>
                 <a-slider
-                    v-model="modelConfig.topP"
-                    :min="0"
-                    :max="1"
-                    :step="0.01"
-                    :style="{ width: '150px' }"
-                    show-input
+                  v-model="modelConfig.topP"
+                  :min="0"
+                  :max="1"
+                  :step="0.01"
+                  :style="{ width: '150px' }"
+                  show-input
                 />
               </div>
 
@@ -156,12 +156,12 @@
                   </a-tooltip>
                 </div>
                 <a-slider
-                    v-model="modelConfig.frequencyPenalty"
-                    :min="-2"
-                    :max="2"
-                    :step="0.1"
-                    :style="{ width: '150px' }"
-                    show-input
+                  v-model="modelConfig.frequencyPenalty"
+                  :min="-2"
+                  :max="2"
+                  :step="0.1"
+                  :style="{ width: '150px' }"
+                  show-input
                 />
               </div>
 
@@ -173,12 +173,12 @@
                   </a-tooltip>
                 </div>
                 <a-slider
-                    v-model="modelConfig.presencePenalty"
-                    :min="-2"
-                    :max="2"
-                    :step="0.1"
-                    :style="{ width: '150px' }"
-                    show-input
+                  v-model="modelConfig.presencePenalty"
+                  :min="-2"
+                  :max="2"
+                  :step="0.1"
+                  :style="{ width: '150px' }"
+                  show-input
                 />
               </div>
             </div>
@@ -199,9 +199,9 @@
                   </a-tooltip>
                 </div>
                 <a-input
-                    v-model="modelConfig.stopSequences"
-                    placeholder="用逗号分隔多个停止序列"
-                    style="width: 200px"
+                  v-model="modelConfig.stopSequences"
+                  placeholder="用逗号分隔多个停止序列"
+                  style="width: 200px"
                 />
               </div>
 
@@ -213,11 +213,11 @@
                   </a-tooltip>
                 </div>
                 <a-input-number
-                    v-model="modelConfig.seed"
-                    :min="0"
-                    :max="999999"
-                    placeholder="留空为随机"
-                    style="width: 150px"
+                  v-model="modelConfig.seed"
+                  :min="0"
+                  :max="999999"
+                  placeholder="留空为随机"
+                  style="width: 150px"
                 />
               </div>
 
@@ -233,7 +233,7 @@
             </div>
           </div>
         </div>
-        
+
         <div v-if="activeTab === 'context'" class="tab-content-item">
           <div class="config-section">
             <div class="section-title">
@@ -246,10 +246,10 @@
                   <span>上下文窗口大小</span>
                 </div>
                 <a-input-number
-                    v-model="contextConfig.windowSize"
-                    :min="1"
-                    :max="50"
-                    style="width: 150px"
+                  v-model="contextConfig.windowSize"
+                  :min="1"
+                  :max="50"
+                  style="width: 150px"
                 />
               </div>
 
@@ -276,15 +276,15 @@
               系统消息
             </div>
             <a-textarea
-                v-model="contextConfig.systemMessage"
-                placeholder="设置系统角色和行为指导..."
-                :rows="4"
-                show-word-limit
-                :max-length="2000"
+              v-model="contextConfig.systemMessage"
+              placeholder="设置系统角色和行为指导..."
+              :rows="4"
+              show-word-limit
+              :max-length="2000"
             />
           </div>
         </div>
-        
+
         <div v-if="activeTab === 'safety'" class="tab-content-item">
           <div class="config-section">
             <div class="section-title">
@@ -311,8 +311,8 @@
                   <span>过滤等级</span>
                 </div>
                 <a-select
-                    v-model="safetyConfig.filterLevel"
-                    style="width: 150px"
+                  v-model="safetyConfig.filterLevel"
+                  style="width: 150px"
                 >
                   <a-option value="low">宽松</a-option>
                   <a-option value="medium">中等</a-option>
@@ -329,17 +329,17 @@
               黑名单关键词
             </div>
             <a-textarea
-                v-model="safetyConfig.blacklistKeywords"
-                placeholder="每行一个关键词..."
-                :rows="3"
+              v-model="safetyConfig.blacklistKeywords"
+              placeholder="每行一个关键词..."
+              :rows="3"
             />
           </div>
         </div>
-        
+
         <div v-if="activeTab === 'orchestration'" class="tab-content-item">
           <OrchestrationConfigEditor
-              :available-models="availableModels"
-              @save="handleOrchestrationSave"
+            :available-models="availableModels"
+            @save="handleOrchestrationSave"
           />
         </div>
       </div>
@@ -353,10 +353,10 @@
       </div>
       <div class="presets-list">
         <div
-            v-for="preset in configPresets"
-            :key="preset.id"
-            class="preset-item"
-            @click="applyPreset(preset)"
+          v-for="preset in configPresets"
+          :key="preset.id"
+          class="preset-item"
+          @click="applyPreset(preset)"
         >
           <div class="preset-name">{{ preset.name }}</div>
           <div class="preset-desc">{{ preset.description }}</div>
@@ -373,18 +373,18 @@
 
     <!-- 模型选择器弹窗 -->
     <a-modal
-        v-model:visible="showModelSelector"
-        title="选择模型"
-        :width="800"
-        :footer="false"
+      v-model:visible="showModelSelector"
+      title="选择模型"
+      :width="800"
+      :footer="false"
     >
       <div class="model-selector">
         <div class="model-grid">
           <div
-              v-for="model in availableModels"
-              :key="model.id"
-              class="model-card" :class="[{ selected: currentModel?.id === model.id }]"
-              @click="selectModel(model)"
+            v-for="model in availableModels"
+            :key="model.id"
+            class="model-card" :class="[{ selected: currentModel?.id === model.id }]"
+            @click="selectModel(model)"
           >
             <div class="card-header">
               <div class="model-icon">
@@ -411,11 +411,11 @@
 
     <!-- 模型编辑器弹窗 -->
     <a-modal
-        v-model:visible="showModelEditor"
-        :title="isEditMode ? '编辑模型' : '新建模型'"
-        :width="600"
-        @ok="saveModel"
-        @cancel="showModelEditor = false"
+      v-model:visible="showModelEditor"
+      :title="isEditMode ? '编辑模型' : '新建模型'"
+      :width="600"
+      @ok="saveModel"
+      @cancel="showModelEditor = false"
     >
       <div class="model-editor">
         <a-form :model="editingModel" layout="vertical">
@@ -449,9 +449,9 @@
 
           <a-form-item label="描述">
             <a-textarea
-                v-model="editingModel.description"
-                placeholder="详细描述模型的功能和特性"
-                :rows="3"
+              v-model="editingModel.description"
+              placeholder="详细描述模型的功能和特性"
+              :rows="3"
             />
           </a-form-item>
         </a-form>
@@ -460,10 +460,10 @@
 
     <!-- 分组管理弹窗 -->
     <a-modal
-        v-model:visible="showGroupManager"
-        title="模型分组管理"
-        :width="700"
-        :footer="false"
+      v-model:visible="showGroupManager"
+      title="模型分组管理"
+      :width="700"
+      :footer="false"
     >
       <div class="group-manager">
         <div class="manager-header">
@@ -475,9 +475,9 @@
 
         <div class="groups-list">
           <div
-              v-for="group in modelGroups"
-              :key="group.id"
-              class="group-item"
+            v-for="group in modelGroups"
+            :key="group.id"
+            class="group-item"
           >
             <div class="group-header">
               <div class="group-info">
@@ -496,9 +496,9 @@
             </div>
             <div v-if="group.models?.length" class="group-models">
               <div
-                  v-for="model in group.models.slice(0, 3)"
-                  :key="model.id"
-                  class="model-tag"
+                v-for="model in group.models.slice(0, 3)"
+                :key="model.id"
+                class="model-tag"
               >
                 {{ model.modelName }}
               </div>
@@ -513,11 +513,11 @@
 
     <!-- 分组编辑弹窗 -->
     <a-modal
-        v-model:visible="showGroupEditor"
-        :title="editingGroup.id ? '编辑分组' : '新建分组'"
-        :width="500"
-        @ok="saveGroup"
-        @cancel="closeGroupEditor"
+      v-model:visible="showGroupEditor"
+      :title="editingGroup.id ? '编辑分组' : '新建分组'"
+      :width="500"
+      @ok="saveGroup"
+      @cancel="closeGroupEditor"
     >
       <div class="group-editor">
         <a-form :model="editingGroup" layout="vertical">
@@ -527,32 +527,32 @@
 
           <a-form-item label="分组描述">
             <a-textarea
-                v-model="editingGroup.description"
-                placeholder="描述这个分组的用途和特点"
-                :rows="3"
+              v-model="editingGroup.description"
+              placeholder="描述这个分组的用途和特点"
+              :rows="3"
             />
           </a-form-item>
 
           <a-form-item label="分组颜色">
             <div class="color-picker">
               <div
-                  v-for="color in groupColors"
-                  :key="color"
-                  class="color-option"
-                  :class="{ active: editingGroup.color === color }"
-                  :style="{ backgroundColor: color }"
-                  @click="editingGroup.color = color"
+                v-for="color in groupColors"
+                :key="color"
+                class="color-option"
+                :class="{ active: editingGroup.color === color }"
+                :style="{ backgroundColor: color }"
+                @click="editingGroup.color = color"
               />
             </div>
           </a-form-item>
 
           <a-form-item label="排序权重">
             <a-input-number
-                v-model="editingGroup.sort"
-                :min="0"
-                :max="999"
-                placeholder="数字越小排序越靠前"
-                style="width: 100%"
+              v-model="editingGroup.sort"
+              :min="0"
+              :max="999"
+              placeholder="数字越小排序越靠前"
+              style="width: 100%"
             />
           </a-form-item>
         </a-form>
@@ -566,8 +566,8 @@ import { Message, Modal } from '@arco-design/web-vue'
 import ModelCapabilityEditor from './ModelCapabilityEditor.vue'
 import ModelConnectionConfig from './ModelConnectionConfig.vue'
 import OrchestrationConfigEditor from './OrchestrationConfigEditor.vue'
-import { type MetaResp, addMeta, deleteMeta, listMeta, updateMeta } from '@/apis/ai/meta'
-import { type EntityResp, listEntity, updateEntity, addEntity } from '@/apis/ai/entity'
+import { type MetaResp, addMeta, deleteMeta, getMeta, listMeta, updateMeta } from '@/apis/ai/meta'
+import { addEntity, listEntity, updateEntity } from '@/apis/ai/entity'
 
 interface Props {
   modelValue?: MetaResp | null
@@ -754,29 +754,6 @@ const currentEntityId = ref<string>('')
 // 自动保存状态
 const saveStatus = ref<'idle' | 'pending' | 'saving' | 'saved' | 'error'>('idle')
 const lastSaveTime = ref<string>('')
-const saveStatusText = computed(() => {
-  switch (saveStatus.value) {
-    case 'idle':
-      return ''
-    case 'pending':
-      return '待保存'
-    case 'saving':
-      return '保存中...'
-    case 'saved':
-      return '已保存'
-    case 'error':
-      return '保存失败'
-    default:
-      return ''
-  }
-})
-
-// 监听父组件传入的模型变化
-watch(() => props.modelValue, (newModel) => {
-  currentModel.value = newModel
-  // 重置实体ID，因为切换了模型
-  currentEntityId.value = ''
-}, { immediate: true })
 
 // 监听保存状态变化，传递给父组件
 watch([saveStatus, lastSaveTime], ([newStatus, newSaveTime]) => {
@@ -786,20 +763,25 @@ watch([saveStatus, lastSaveTime], ([newStatus, newSaveTime]) => {
 // 获取或创建模型实体
 const getOrCreateEntity = async (): Promise<string> => {
   if (!currentModel.value) throw new Error('No current model')
-  
+
   try {
     // 先尝试查询是否已存在该模型的实体
     const { data } = await listEntity({
       metaId: currentModel.value.id,
-      current: 1,
+      name: undefined,
+      scenario: undefined,
+      status: undefined,
+      createUser: undefined,
+      createTime: undefined,
+      page: 1,
       size: 1,
       sort: ['id,desc'],
     })
-    
+
     if (data.list && data.list.length > 0) {
       return data.list[0].id
     }
-    
+
     // 如果不存在，则创建新的实体
     const entityData = {
       metaId: currentModel.value.id,
@@ -830,7 +812,7 @@ const getOrCreateEntity = async (): Promise<string> => {
       scenario: 1, // 默认场景
       status: 1, // 启用状态
     }
-    
+
     const createResult = await addEntity(entityData)
     return createResult.data.id
   } catch (error) {
@@ -841,9 +823,9 @@ const getOrCreateEntity = async (): Promise<string> => {
 
 const autoSaveConfig = async () => {
   if (!currentModel.value) return
-  
+
   saveStatus.value = 'saving'
-  
+
   try {
     // 1. 更新模型元数据 (capability 和 connConfig)
     const metaData = {
@@ -852,12 +834,12 @@ const autoSaveConfig = async () => {
       connConfig: JSON.stringify(modelConnectionConfig.value),
     }
     await updateMeta(metaData, currentModel.value.id)
-    
+
     // 2. 获取或创建模型实体
     if (!currentEntityId.value) {
       currentEntityId.value = await getOrCreateEntity()
     }
-    
+
     // 3. 更新模型实体的默认参数
     const entityData = {
       metaId: currentModel.value.id,
@@ -889,25 +871,24 @@ const autoSaveConfig = async () => {
       status: 1,
     }
     await updateEntity(entityData, currentEntityId.value)
-    
+
     saveStatus.value = 'saved'
     lastSaveTime.value = new Date().toLocaleTimeString('zh-CN', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
     })
-    
+
     // 3秒后切换到"上次保存"状态
     setTimeout(() => {
       if (saveStatus.value === 'saved') {
         saveStatus.value = 'idle'
       }
     }, 3000)
-    
   } catch (error) {
     console.error('Auto save failed:', error)
     saveStatus.value = 'error'
-    
+
     // 3秒后隐藏错误状态
     setTimeout(() => {
       if (saveStatus.value === 'error') {
@@ -922,10 +903,10 @@ const debouncedAutoSave = () => {
   if (autoSaveTimer) {
     clearTimeout(autoSaveTimer)
   }
-  
+
   // 设置待保存状态
   saveStatus.value = 'pending'
-  
+
   autoSaveTimer = setTimeout(autoSaveConfig, 1000) // 1秒延迟保存
 }
 
@@ -939,26 +920,10 @@ watch([modelConfig, contextConfig, safetyConfig, modelCapabilityConfig, modelCon
     capability: modelCapabilityConfig.value,
     connection: modelConnectionConfig.value,
   })
-  
+
   // 自动保存配置
   debouncedAutoSave()
 }, { deep: true })
-
-// 本地存储键名
-const STORAGE_KEYS = {
-  MODEL_GROUPS: 'ai-model-groups',
-  MODEL_ORCHESTRATION: 'ai-model-orchestration',
-}
-
-// 保存分组数据
-const saveGroups = () => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.MODEL_GROUPS, JSON.stringify(modelGroups.value))
-  } catch (error) {
-    console.error('Failed to save groups:', error)
-    Message.error('保存分组数据失败')
-  }
-}
 
 // 关闭分组编辑器
 const closeGroupEditor = () => {
@@ -966,32 +931,21 @@ const closeGroupEditor = () => {
   editingGroup.value = {}
 }
 
-// 加载分组数据
+// 加载分组数据（暂时保留空实现，用于后续扩展）
 const loadGroups = () => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.MODEL_GROUPS)
-    if (stored) {
-      modelGroups.value = JSON.parse(stored)
-    } else {
-      // 初始化默认分组
-      modelGroups.value = [
-        {
-          id: 'default',
-          name: '默认分组',
-          description: '系统默认分组',
-          color: '#1890ff',
-          sort: 0,
-          models: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ]
-      saveGroups()
-    }
-  } catch (error) {
-    console.error('Failed to load groups:', error)
-    Message.error('加载分组数据失败')
-  }
+  // 初始化默认分组
+  modelGroups.value = [
+    {
+      id: 'default',
+      name: '默认分组',
+      description: '系统默认分组',
+      color: '#1890ff',
+      sort: 0,
+      models: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ]
 }
 
 // 处理分组变化（暂时保留用于后续扩展）
@@ -1019,13 +973,11 @@ const deleteGroup = (group: ModelGroup) => {
       const index = modelGroups.value.findIndex((g) => g.id === group.id)
       if (index > -1) {
         modelGroups.value.splice(index, 1)
-        saveGroups()
         Message.success('分组删除成功')
 
         // 如果删除的是当前选中的分组，切换到默认分组
         if (currentGroupId.value === group.id) {
           currentGroupId.value = 'default'
-          loadApiConfig()
         }
       }
     },
@@ -1065,7 +1017,6 @@ const saveGroup = () => {
       modelGroups.value.push(newGroup)
     }
 
-    saveGroups()
     closeGroupEditor()
     Message.success('分组保存成功')
   } catch (error) {
@@ -1078,8 +1029,15 @@ const saveGroup = () => {
 const loadModels = async () => {
   try {
     const { data } = await listMeta({
+      modelName: undefined,
+      protocol: undefined,
+      iconUri: undefined,
       status: 1,
-      current: 1,
+      description: undefined,
+      createUser: undefined,
+      createTime: undefined,
+      iconUrl: undefined,
+      page: 1,
       size: 100,
       sort: ['id,desc'],
     })
@@ -1186,58 +1144,119 @@ const saveModel = async () => {
 }
 
 // 加载模型编排配置
-const loadModelOrchestrationConfig = (modelId: number) => {
+const loadModelOrchestrationConfig = async (modelId: string) => {
   try {
-    const storageKey = `model-orchestration-${modelId}`
-    const stored = localStorage.getItem(storageKey)
-    if (stored) {
-      const config = JSON.parse(stored)
+    // 1. 加载模型元数据（capability 和 connConfig）
+    const metaData = await getMeta(modelId)
 
-      // 恢复模型能力配置
-      if (config.modelMeta?.capability) {
-        Object.assign(modelCapabilityConfig.value, config.modelMeta.capability)
+    if (metaData.data.capability) {
+      try {
+        const capability = JSON.parse(metaData.data.capability)
+        Object.assign(modelCapabilityConfig.value, capability)
+      } catch (e) {
+        console.warn('Failed to parse capability:', e)
       }
+    }
 
-      // 恢复连接配置
-      if (config.modelMeta?.connConfig) {
-        Object.assign(modelConnectionConfig.value, config.modelMeta.connConfig)
+    if (metaData.data.connConfig) {
+      try {
+        const connConfig = JSON.parse(metaData.data.connConfig)
+        Object.assign(modelConnectionConfig.value, connConfig)
+      } catch (e) {
+        console.warn('Failed to parse connConfig:', e)
       }
+    }
 
-      // 恢复模型参数配置
-      if (config.modelEntity?.defaultParams) {
-        const params = config.modelEntity.defaultParams
-        Object.assign(modelConfig, {
-          temperature: params.temperature || 0.7,
-          topP: params.topP || 0.9,
-          maxTokens: params.maxTokens || 2048,
-          presencePenalty: params.presencePenalty || 0,
-          frequencyPenalty: params.frequencyPenalty || 0,
-          stream: params.stream !== undefined ? params.stream : true,
-          stopSequences: params.stop?.join(',') || '',
-          seed: params.seed,
-        })
+    // 2. 查找并加载模型实体配置（defaultParams）
+    const { data: entityList } = await listEntity({
+      metaId: modelId,
+      name: undefined,
+      scenario: undefined,
+      status: undefined,
+      createUser: undefined,
+      createTime: undefined,
+      page: 1,
+      size: 1,
+      sort: ['id,desc'],
+    })
 
-        if (params.systemPrompt) {
-          contextConfig.systemMessage = params.systemPrompt
+    if (entityList.list && entityList.list.length > 0) {
+      const entity = entityList.list[0]
+      currentEntityId.value = entity.id
+
+      if (entity.defaultParams) {
+        try {
+          const params = JSON.parse(entity.defaultParams)
+
+          // 恢复模型参数配置
+          Object.assign(modelConfig, {
+            temperature: params.temperature || 0.7,
+            topP: params.topP || 0.9,
+            maxTokens: params.maxTokens || 2048,
+            presencePenalty: params.presencePenalty || 0,
+            frequencyPenalty: params.frequencyPenalty || 0,
+            stream: params.stream !== undefined ? params.stream : true,
+            stopSequences: params.stop?.join(',') || '',
+            seed: params.seed,
+          })
+
+          // 恢复上下文配置
+          if (params.contextConfig) {
+            Object.assign(contextConfig, {
+              windowSize: params.contextConfig.windowSize || 10,
+              keepSystemMessage: params.contextConfig.keepSystemMessage !== false,
+              autoSummary: params.contextConfig.autoSummary || false,
+            })
+          }
+
+          // 恢复安全配置
+          if (params.safetyConfig) {
+            Object.assign(safetyConfig, {
+              enableContentFilter: params.safetyConfig.enableContentFilter !== false,
+              sensitiveContentDetection: params.safetyConfig.sensitiveContentDetection !== false,
+              filterLevel: params.safetyConfig.filterLevel || 'medium',
+              blacklistKeywords: params.safetyConfig.blacklistKeywords || '',
+            })
+          }
+
+          // 恢复系统消息
+          if (params.systemPrompt) {
+            contextConfig.systemMessage = params.systemPrompt
+          }
+        } catch (e) {
+          console.warn('Failed to parse defaultParams:', e)
         }
       }
-
-      Message.success('已加载模型编排配置')
     }
+
+    // 静默加载，不显示成功消息
   } catch (error) {
     console.error('加载模型编排配置失败:', error)
+    // 加载失败时使用默认配置，不显示错误消息
   }
 }
 
+// 监听父组件传入的模型变化
+watch(() => props.modelValue, async (newModel) => {
+  currentModel.value = newModel || null
+  // 重置实体ID，因为切换了模型
+  currentEntityId.value = ''
+
+  // 如果有新模型，加载其配置
+  if (newModel?.id) {
+    await loadModelOrchestrationConfig(newModel.id)
+  }
+}, { immediate: true })
+
 // 选择模型
-const selectModel = (model: MetaResp) => {
+const selectModel = async (model: MetaResp) => {
   currentModel.value = model
   emit('update:modelValue', model)
   emit('change', model)
   showModelSelector.value = false
 
   // 加载模型的编排配置
-  loadModelOrchestrationConfig(model.id)
+  await loadModelOrchestrationConfig(model.id)
 
   Message.success(`已选择模型: ${model.modelName}`)
 }
@@ -1306,46 +1325,15 @@ const saveAsPreset = () => {
 }
 
 // 处理编排配置保存
-const handleOrchestrationSave = async (orchestrationConfig: any) => {
+const handleOrchestrationSave = async (_orchestrationConfig: any) => {
   try {
     if (!currentModel.value) {
       Message.warning('请先选择一个模型')
       return
     }
 
-    // 构建完整的模型编排配置
-    const fullConfig = {
-      modelMeta: {
-        id: currentModel.value.id,
-        modelName: currentModel.value.modelName,
-        protocol: currentModel.value.protocol,
-        capability: modelCapabilityConfig.value,
-        connConfig: modelConnectionConfig.value,
-      },
-      modelEntity: {
-        defaultParams: {
-          temperature: modelConfig.temperature,
-          topP: modelConfig.topP,
-          maxTokens: modelConfig.maxTokens,
-          presencePenalty: modelConfig.presencePenalty,
-          frequencyPenalty: modelConfig.frequencyPenalty,
-          stream: modelConfig.stream,
-          systemPrompt: contextConfig.systemMessage,
-          stop: modelConfig.stopSequences ? modelConfig.stopSequences.split(',').map((s) => s.trim()).filter(Boolean) : [],
-          seed: modelConfig.seed,
-        },
-      },
-      orchestration: orchestrationConfig,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-
-    // 保存到本地存储
-    const storageKey = `model-orchestration-${currentModel.value.id}`
-    localStorage.setItem(storageKey, JSON.stringify(fullConfig))
-
-    // 这里可以添加后端API调用来保存配置
-    // await saveModelOrchestration(fullConfig)
+    // 触发自动保存函数来保存所有配置到数据库
+    await autoSaveConfig()
 
     Message.success('模型编排配置保存成功')
   } catch (error) {
@@ -1366,12 +1354,12 @@ const getFullConfig = () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   loadGroups()
   loadModels()
   // 如果有当前模型，加载其编排配置
   if (currentModel.value?.id) {
-    loadModelOrchestrationConfig(currentModel.value.id)
+    await loadModelOrchestrationConfig(currentModel.value.id)
   }
 })
 
@@ -1423,7 +1411,6 @@ defineExpose({
         font-weight: 600;
         color: var(--color-text-1);
       }
-
     }
 
     .header-actions {
@@ -1510,11 +1497,11 @@ defineExpose({
     .tabs-header {
       flex-shrink: 0;
       margin-bottom: 16px;
-      
+
       :deep(.arco-tabs) {
         margin-bottom: 0;
       }
-      
+
       :deep(.arco-tabs-content) {
         display: none;
       }
@@ -1528,7 +1515,7 @@ defineExpose({
 
       .tab-content-item {
         height: auto;
-        max-height: 500px;
+        max-height: 100px;
       }
     }
   }

@@ -84,25 +84,24 @@
 
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
+import { useRoute } from 'vue-router'
 import PromptEditor from './components/PromptEditor.vue'
 import ModelOrchestrator from './components/ModelOrchestrator.vue'
 import ChatPreview from './components/ChatPreview.vue'
 import type { PromptResourceResp } from '@/apis/ai/promptResource'
 import type { MetaResp } from '@/apis/ai/meta'
+import { getMeta } from '@/apis/ai/meta'
+import { getEntity, updateEntity } from '@/apis/ai/entity'
 
 defineOptions({ name: 'AIChatWorkspace' })
 
-// 本地存储键名
-const STORAGE_KEYS = {
-  CURRENT_PROMPT: 'ai-chat-current-prompt',
-  CURRENT_MODEL: 'ai-chat-current-model',
-  MODEL_CONFIG: 'ai-chat-model-config',
-  WORKSPACE_LAYOUT: 'ai-chat-workspace-layout',
-}
+const route = useRoute()
 
 // 响应式数据
 const currentPrompt = ref<PromptResourceResp | null>(null)
 const currentModel = ref<MetaResp | null>(null)
+const currentEntityId = ref<string>('')
+const isNewModel = ref(false)
 const modelConfig = ref<any>({
   temperature: 0.7,
   maxTokens: 2000,
@@ -139,63 +138,9 @@ const saveStatusText = computed(() => {
   }
 })
 
-// 从本地存储恢复状态
-const restoreFromStorage = () => {
-  try {
-    // 恢复当前提示词
-    const savedPrompt = localStorage.getItem(STORAGE_KEYS.CURRENT_PROMPT)
-    if (savedPrompt) {
-      currentPrompt.value = JSON.parse(savedPrompt)
-    }
-
-    // 恢复当前模型
-    const savedModel = localStorage.getItem(STORAGE_KEYS.CURRENT_MODEL)
-    if (savedModel) {
-      currentModel.value = JSON.parse(savedModel)
-    }
-
-    // 恢复模型配置
-    const savedConfig = localStorage.getItem(STORAGE_KEYS.MODEL_CONFIG)
-    if (savedConfig) {
-      Object.assign(modelConfig.value, JSON.parse(savedConfig))
-    }
-
-    // 恢复工作区布局
-    const savedLayout = localStorage.getItem(STORAGE_KEYS.WORKSPACE_LAYOUT)
-    if (savedLayout) {
-      Object.assign(workspaceState, JSON.parse(savedLayout))
-    }
-  } catch (error) {
-    console.warn('Failed to restore workspace state:', error)
-  }
-}
-
-// 保存状态到本地存储
-const saveToStorage = () => {
-  try {
-    if (currentPrompt.value) {
-      localStorage.setItem(STORAGE_KEYS.CURRENT_PROMPT, JSON.stringify(currentPrompt.value))
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.CURRENT_PROMPT)
-    }
-
-    if (currentModel.value) {
-      localStorage.setItem(STORAGE_KEYS.CURRENT_MODEL, JSON.stringify(currentModel.value))
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.CURRENT_MODEL)
-    }
-
-    localStorage.setItem(STORAGE_KEYS.MODEL_CONFIG, JSON.stringify(modelConfig.value))
-    localStorage.setItem(STORAGE_KEYS.WORKSPACE_LAYOUT, JSON.stringify(workspaceState))
-  } catch (error) {
-    console.warn('Failed to save workspace state:', error)
-  }
-}
-
 // 处理提示词变化
 const handlePromptChange = (prompt: PromptResourceResp | null) => {
   currentPrompt.value = prompt
-  saveToStorage()
 
   if (prompt) {
     Message.success(`已加载提示词: ${prompt.name}`)
@@ -204,13 +149,46 @@ const handlePromptChange = (prompt: PromptResourceResp | null) => {
   }
 }
 
+// 保存模型关联关系
+const saveModelAssociation = async (metaId: string) => {
+  try {
+    if (!currentEntityId.value) {
+      throw new Error('缺少实体ID')
+    }
+
+    // 获取当前实体数据
+    const entityResponse = await getEntity(currentEntityId.value)
+    const entityData = entityResponse.data
+
+    // 更新实体，设置 metaId
+    const updateData = {
+      ...entityData,
+      metaId,
+    }
+
+    await updateEntity(updateData, currentEntityId.value)
+
+    // 更新本地状态
+    isNewModel.value = false
+
+    Message.success('模型关联关系已保存')
+  } catch (error) {
+    console.error('保存模型关联关系失败:', error)
+    Message.error('保存模型关联关系失败，请稍后重试')
+  }
+}
+
 // 处理模型变化
-const handleModelChange = (model: MetaResp | null) => {
+const handleModelChange = async (model: MetaResp | null) => {
   currentModel.value = model
-  saveToStorage()
 
   if (model) {
-    Message.success(`已选择模型: ${model.name}`)
+    Message.success(`已选择模型: ${model.modelName}`)
+
+    // 如果是新模型，保存关联关系
+    if (isNewModel.value && currentEntityId.value) {
+      await saveModelAssociation(model.id)
+    }
   } else {
     Message.info('已清空当前模型')
   }
@@ -219,7 +197,6 @@ const handleModelChange = (model: MetaResp | null) => {
 // 处理配置变化
 const handleConfigChange = (config: any) => {
   Object.assign(modelConfig.value, config)
-  saveToStorage()
 }
 
 // 处理保存状态变化
@@ -291,11 +268,6 @@ const resetWorkspace = () => {
     presencePenalty: 0,
   }
 
-  // 清除本地存储
-  Object.values(STORAGE_KEYS).forEach((key) => {
-    localStorage.removeItem(key)
-  })
-
   Message.success('工作区已重置')
 }
 
@@ -349,15 +321,85 @@ const importWorkspace = () => {
   input.click()
 }
 
-// 组件挂载时恢复状态
+// 从路由参数初始化模型数据
+const initializeFromRoute = async () => {
+  const { modelId, entityId, modelName, entityName, isNewModel } = route.query
+
+  console.log('初始化模型数据:', { modelId, entityId, modelName, entityName, isNewModel })
+  if (entityId) {
+    try {
+      // 获取模型实体配置
+      const entityResponse = await getEntity(entityId as string)
+      const entityData = entityResponse.data
+
+      if (isNewModel === 'true') {
+        // 新创建的模型，没有关联的元数据
+        Message.info(`正在为新模型 "${entityData.name}" 设置默认配置...`)
+
+        // 设置状态
+        currentEntityId.value = entityId as string
+        isNewModel.value = true
+        currentModel.value = null // 暂时没有关联的模型元数据
+
+        // 使用默认参数
+        Object.assign(modelConfig.value, {
+          temperature: 0.7,
+          maxTokens: 2000,
+          topP: 1,
+          frequencyPenalty: 0,
+          presencePenalty: 0,
+        })
+
+        Message.success(`已加载新模型 "${entityData.name}" 的默认配置，请选择合适的模型元数据并配置参数`)
+      } else if (modelId) {
+        // 已有关联的模型元数据，正常加载
+        if (modelName && entityName) {
+          Message.info(`正在加载模型配置: ${entityName} (${modelName})`)
+        }
+
+        // 获取模型元数据
+        const metaResponse = await getMeta(modelId as string)
+        const modelMeta = metaResponse.data
+
+        // 设置状态
+        currentEntityId.value = entityId as string
+        isNewModel.value = false
+        currentModel.value = modelMeta
+
+        // 如果有默认参数配置，应用到模型配置中
+        if (entityData.defaultParams) {
+          try {
+            const params = JSON.parse(entityData.defaultParams)
+            Object.assign(modelConfig.value, {
+              temperature: params.temperature || 0.7,
+              maxTokens: params.maxTokens || 2000,
+              topP: params.topP || 1,
+              frequencyPenalty: params.frequencyPenalty || 0,
+              presencePenalty: params.presencePenalty || 0,
+            })
+          } catch (e) {
+            console.warn('解析模型默认参数失败:', e)
+          }
+        }
+
+        Message.success(`已加载模型配置: ${entityData.name} (${modelMeta.modelName})`)
+      }
+    } catch (error) {
+      console.error('初始化模型数据失败:', error)
+      Message.error('加载模型配置失败，请稍后重试')
+    }
+  }
+}
+
+// 页面加载时初始化
 onMounted(() => {
-  restoreFromStorage()
+  initializeFromRoute()
 })
 
-// 页面卸载时保存状态
-onBeforeUnmount(() => {
-  saveToStorage()
-})
+// 监听路由变化，支持在同一页面切换不同模型
+watch(() => route.query, () => {
+  initializeFromRoute()
+}, { deep: true })
 
 // 导出工作区控制方法
 defineExpose({
