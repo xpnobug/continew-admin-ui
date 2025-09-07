@@ -12,9 +12,9 @@
             <template #icon><icon-message /></template>
             {{ currentPrompt.name }}
           </a-tag>
-          <a-tag v-if="currentModel" color="green" size="small">
+          <a-tag v-if="modelDisplayName" color="green" size="small">
             <template #icon><icon-settings /></template>
-            {{ currentModel.name }}
+            {{ modelDisplayName }}
           </a-tag>
           <a-tag v-if="!validateWorkspace().isValid" color="orange" size="small">
             <template #icon><icon-exclamation /></template>
@@ -100,6 +100,7 @@ const route = useRoute()
 // 响应式数据
 const currentPrompt = ref<PromptResourceResp | null>(null)
 const currentModel = ref<MetaDetailResp | null>(null)
+const currentEntity = ref<any>(null)
 const currentEntityId = ref<string>('')
 const isNewModel = ref(false)
 const modelConfig = ref<any>({
@@ -116,6 +117,23 @@ const workspaceState = reactive({
   centerPanelCollapsed: false,
   activeTab: 'prompt', // prompt | model | preview
   isLoading: false,
+})
+
+// 计算模型显示名称
+const modelDisplayName = computed(() => {
+  if (isNewModel.value && currentEntity.value) {
+    return `${currentEntity.value.name} (新模型)`
+  }
+  if (currentEntity.value && currentModel.value) {
+    return `${currentEntity.value.name} (${currentModel.value.modelName})`
+  }
+  if (currentModel.value) {
+    return currentModel.value.modelName
+  }
+  if (currentEntity.value) {
+    return currentEntity.value.name
+  }
+  return ''
 })
 
 // 自动保存状态
@@ -330,6 +348,7 @@ const initializeFromRoute = async () => {
       // 获取模型实体配置
       const entityResponse = await getEntity(entityId as string)
       const entityData = entityResponse.data
+      currentEntity.value = entityData
 
       if (isNewModelParam === 'true') {
         // 新创建的模型，没有关联的元数据
