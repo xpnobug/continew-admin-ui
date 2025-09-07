@@ -3,12 +3,16 @@
     <!-- 头部工具栏 -->
     <div class="editor-header">
       <div class="header-left">
-        <h3 class="panel-title">提示词管理</h3>
+        <h3 class="panel-title">提示词编辑器</h3>
         <a-tag v-if="currentPrompt" color="blue" size="small">
           {{ currentPrompt.name }}
         </a-tag>
       </div>
       <div class="header-actions">
+        <a-button size="small" @click="showPromptLibrary">
+          <template #icon><icon-database /></template>
+          提示词库
+        </a-button>
         <a-dropdown @select="handleMenuSelect">
           <a-button size="small">
             <template #icon><icon-more /></template>
@@ -110,107 +114,6 @@
       </div>
     </div>
 
-    <!-- 提示词管理 -->
-    <div class="prompts-management">
-      <div class="section-title">
-        <icon-list />
-        我的提示词
-        <a-button size="mini" type="text" @click="refreshPromptsList">
-          <template #icon><icon-refresh /></template>
-        </a-button>
-      </div>
-
-      <!-- 筛选和搜索 -->
-      <div class="management-filters">
-        <a-input-search
-          v-model="searchKeyword"
-          placeholder="搜索提示词..."
-          size="small"
-          @search="handleSearch"
-        />
-        <a-select
-          v-model="filterStatus"
-          placeholder="状态"
-          size="small"
-          style="width: 80px;"
-          allow-clear
-          @change="handleSearch"
-        >
-          <a-option :value="1">有效</a-option>
-          <a-option :value="0">无效</a-option>
-        </a-select>
-      </div>
-
-      <!-- 提示词列表 -->
-      <div class="prompts-list">
-        <a-spin :loading="loadingPrompts">
-          <div v-if="userPrompts.length > 0" class="user-prompts">
-            <div
-              v-for="prompt in userPrompts"
-              :key="prompt.id"
-              class="prompt-item"
-              :class="{ active: currentPrompt?.id === prompt.id }"
-              @click="loadPrompt(prompt)"
-            >
-              <div class="prompt-header">
-                <span class="prompt-name">{{ prompt.name }}</span>
-                <div class="prompt-actions" @click.stop>
-                  <a-dropdown @select="(value) => handlePromptAction(value, prompt)">
-                    <a-button size="mini" type="text">
-                      <template #icon><icon-more /></template>
-                    </a-button>
-                    <template #content>
-                      <a-doption value="edit">
-                        <template #icon><icon-edit /></template>
-                        编辑
-                      </a-doption>
-                      <a-doption value="clone">
-                        <template #icon><icon-copy /></template>
-                        克隆
-                      </a-doption>
-                      <a-doption value="export">
-                        <template #icon><icon-export /></template>
-                        导出
-                      </a-doption>
-                      <a-doption value="delete" class="danger">
-                        <template #icon><icon-delete /></template>
-                        删除
-                      </a-doption>
-                    </template>
-                  </a-dropdown>
-                </div>
-              </div>
-              <div class="prompt-desc">{{ prompt.description || '暂无描述' }}</div>
-              <div class="prompt-meta">
-                <a-tag :color="prompt.status === 1 ? 'green' : 'red'" size="small">
-                  {{ prompt.status === 1 ? '有效' : '无效' }}
-                </a-tag>
-                <span class="create-time">{{ formatTime(prompt.createTime) }}</span>
-              </div>
-            </div>
-          </div>
-          <div v-else class="empty-prompts">
-            <a-empty description="暂无提示词" />
-          </div>
-        </a-spin>
-      </div>
-
-      <!-- 分页 -->
-      <div v-if="total > 0" class="pagination">
-        <a-pagination
-          v-model:current="currentPage"
-          v-model:page-size="pageSize"
-          :total="total"
-          size="small"
-          :show-total="false"
-          :show-jumper="false"
-          :show-page-size="false"
-          simple
-          @change="loadUserPrompts"
-        />
-      </div>
-    </div>
-
     <!-- 提示词模板 -->
     <div class="templates-section">
       <div class="section-title">
@@ -236,13 +139,21 @@
       :multiple="false"
       @select="onPromptSelect"
     />
+
+    <!-- 提示词库管理弹窗 -->
+    <PromptLibrary
+      v-model:visible="showPromptLibraryModal"
+      :current-prompt="currentPrompt"
+      @select="onPromptLibrarySelect"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { Message, Modal } from '@arco-design/web-vue'
+import { Message } from '@arco-design/web-vue'
 import PromptSelector from './PromptSelector.vue'
-import { type PromptResourceResp, addPromptResource, deletePromptResource, getPromptResource, listPromptResource, updatePromptResource } from '@/apis/ai/promptResource'
+import PromptLibrary from './PromptLibrary.vue'
+import { type PromptResourceResp, addPromptResource, getPromptResource, updatePromptResource } from '@/apis/ai/promptResource'
 
 interface Props {
   modelValue?: PromptResourceResp | null
@@ -259,16 +170,8 @@ const emit = defineEmits<Emits>()
 // 响应式数据
 const currentPrompt = ref<PromptResourceResp | null>(props.modelValue)
 const showPromptSelector = ref(false)
+const showPromptLibraryModal = ref(false)
 const saving = ref(false)
-
-// 提示词管理相关状态
-const loadingPrompts = ref(false)
-const userPrompts = ref<PromptResourceResp[]>([])
-const searchKeyword = ref('')
-const filterStatus = ref<number | undefined>(undefined)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
 
 // 表单数据
 const promptForm = reactive({
@@ -345,6 +248,11 @@ const getWordCount = (text: string) => {
 // 打开提示词选择器
 const openPromptSelector = () => {
   showPromptSelector.value = true
+}
+
+// 显示提示词库
+const showPromptLibrary = () => {
+  showPromptLibraryModal.value = true
 }
 
 // 创建新提示词
@@ -434,6 +342,28 @@ const onPromptSelect = async (prompts: PromptResourceResp[]) => {
   try {
     const { data } = await getPromptResource(selectedPrompt.id)
     const fullPrompt = { ...selectedPrompt, ...data }
+    currentPrompt.value = fullPrompt
+    initPromptForm(fullPrompt)
+    emit('update:modelValue', fullPrompt)
+    emit('change', fullPrompt)
+    Message.success('提示词加载成功')
+  } catch (error) {
+    console.error('Failed to load prompt:', error)
+    Message.error('提示词加载失败')
+  }
+}
+
+// 提示词库选择回调
+const onPromptLibrarySelect = async (prompt: PromptResourceResp | null) => {
+  if (!prompt) {
+    // 创建新提示词
+    createNewPrompt()
+    return
+  }
+
+  try {
+    const { data } = await getPromptResource(prompt.id)
+    const fullPrompt = { ...prompt, ...data }
     currentPrompt.value = fullPrompt
     initPromptForm(fullPrompt)
     emit('update:modelValue', fullPrompt)
@@ -535,164 +465,6 @@ const useTemplate = (template: any) => {
     promptForm.description = template.description
   }
 }
-
-// 加载用户提示词列表
-const loadUserPrompts = async () => {
-  loadingPrompts.value = true
-  try {
-    const params = {
-      name: searchKeyword.value || undefined,
-      status: filterStatus.value,
-      current: currentPage.value,
-      size: pageSize.value,
-      sort: ['updateTime,desc'],
-    }
-
-    const { data } = await listPromptResource(params)
-    userPrompts.value = data.list || []
-    total.value = data.total || 0
-  } catch (error) {
-    console.error('Failed to load user prompts:', error)
-    Message.error('加载提示词列表失败')
-  } finally {
-    loadingPrompts.value = false
-  }
-}
-
-// 处理搜索
-const handleSearch = () => {
-  currentPage.value = 1
-  loadUserPrompts()
-}
-
-// 刷新提示词列表
-const refreshPromptsList = () => {
-  loadUserPrompts()
-}
-
-// 加载提示词
-const loadPrompt = async (prompt: PromptResourceResp) => {
-  try {
-    const { data } = await getPromptResource(prompt.id)
-    const fullPrompt = { ...prompt, ...data }
-    currentPrompt.value = fullPrompt
-    initPromptForm(fullPrompt)
-    emit('update:modelValue', fullPrompt)
-    emit('change', fullPrompt)
-  } catch (error) {
-    console.error('Failed to load prompt:', error)
-    Message.error('加载提示词失败')
-  }
-}
-
-// 克隆提示词
-const clonePrompt = async (prompt: PromptResourceResp) => {
-  try {
-    const { data } = await getPromptResource(prompt.id)
-    const clonedData = {
-      name: `${prompt.name} (副本)`,
-      description: data.description,
-      promptText: data.promptText,
-      spaceId: data.spaceId,
-      status: 1,
-    }
-
-    await addPromptResource(clonedData)
-    Message.success('提示词克隆成功')
-    loadUserPrompts()
-  } catch (error) {
-    console.error('Failed to clone prompt:', error)
-    Message.error('克隆失败')
-  }
-}
-
-// 导出提示词
-const exportPrompt = async (prompt: PromptResourceResp) => {
-  try {
-    const { data } = await getPromptResource(prompt.id)
-    const exportData = {
-      name: prompt.name,
-      description: data.description || '',
-      promptText: data.promptText || '',
-      exportTime: new Date().toISOString(),
-    }
-
-    const dataStr = JSON.stringify(exportData, null, 2)
-    const blob = new Blob([dataStr], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `prompt-${prompt.name}-${Date.now()}.json`
-    a.click()
-
-    URL.revokeObjectURL(url)
-    Message.success('提示词已导出')
-  } catch (error) {
-    console.error('Failed to export prompt:', error)
-    Message.error('导出失败')
-  }
-}
-
-// 删除提示词
-const deletePrompt = (prompt: PromptResourceResp) => {
-  Modal.confirm({
-    title: '确认删除',
-    content: `确定要删除提示词"${prompt.name}"吗？删除后无法恢复。`,
-    onOk: async () => {
-      try {
-        await deletePromptResource(prompt.id)
-        Message.success('提示词删除成功')
-
-        // 如果删除的是当前提示词，清空编辑器
-        if (currentPrompt.value?.id === prompt.id) {
-          currentPrompt.value = null
-          resetPromptForm()
-          emit('update:modelValue', null)
-          emit('change', null)
-        }
-
-        loadUserPrompts()
-      } catch (error) {
-        console.error('Failed to delete prompt:', error)
-        Message.error('删除失败')
-      }
-    },
-  })
-}
-
-// 处理提示词操作
-const handlePromptAction = async (action: string, prompt: PromptResourceResp) => {
-  switch (action) {
-    case 'edit':
-      await loadPrompt(prompt)
-      break
-    case 'clone':
-      await clonePrompt(prompt)
-      break
-    case 'export':
-      await exportPrompt(prompt)
-      break
-    case 'delete':
-      await deletePrompt(prompt)
-      break
-  }
-}
-
-// 时间格式化
-const formatTime = (time: string) => {
-  return new Date(time).toLocaleDateString('zh-CN', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-// 组件挂载时加载提示词列表
-onMounted(() => {
-  loadUserPrompts()
-})
 
 defineExpose({
   currentPrompt,
@@ -824,46 +596,6 @@ defineExpose({
     }
   }
 
-  .prompts-management {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    border-top: 1px solid var(--color-border-2);
-    min-height: 0;
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--color-text-1);
-      margin-bottom: 12px;
-      flex-shrink: 0;
-    }
-
-    .management-filters {
-      flex-shrink: 0;
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .prompts-list {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 12px;
-      min-height: 0;
-    }
-
-    .pagination {
-      flex-shrink: 0;
-      display: flex;
-      justify-content: center;
-    }
-  }
-
   .variables-list {
     display: flex;
     flex-wrap: wrap;
@@ -910,82 +642,5 @@ defineExpose({
     }
   }
 
-  .prompts-management {
-    .user-prompts {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .prompt-item {
-      padding: 10px 12px;
-      border: 1px solid var(--color-border-2);
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: var(--color-bg-2);
-
-      &:hover {
-        border-color: var(--color-primary-light-3);
-        background: var(--color-primary-light-1);
-      }
-
-      &.active {
-        border-color: var(--color-primary);
-        background: var(--color-primary-light-1);
-      }
-
-      .prompt-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 6px;
-
-        .prompt-name {
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--color-text-1);
-          flex: 1;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .prompt-actions {
-          flex-shrink: 0;
-          margin-left: 8px;
-        }
-      }
-
-      .prompt-desc {
-        font-size: 12px;
-        color: var(--color-text-3);
-        line-height: 1.4;
-        margin-bottom: 8px;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      .prompt-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .create-time {
-          font-size: 11px;
-          color: var(--color-text-4);
-        }
-      }
-    }
-
-    .empty-prompts {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100px;
-    }
-  }
 }
 </style>
