@@ -79,3 +79,14 @@ export function deleteMeta(id: string) {
 export function exportMeta(query: MetaQuery) {
   return http.download(`${BASE_URL}/export`, query)
 }
+
+/** @desc 测试模型连接 */
+export function testConnection(config: {
+  provider: string
+  baseUrl: string
+  apiKey: string
+  model: string
+  timeout?: number
+}) {
+  return http.post(`${BASE_URL}/test-connection`, config)
+}
