@@ -13,10 +13,10 @@
           <template #icon><icon-database /></template>
           提示词库
         </a-button>
-<!--        <a-button size="small" :loading="saving" @click="savePrompt">
+        <!--        <a-button size="small" :loading="saving" @click="savePrompt">
           <template #icon><icon-save /></template>
           保存
-        </a-button>-->
+        </a-button> -->
       </div>
     </div>
 

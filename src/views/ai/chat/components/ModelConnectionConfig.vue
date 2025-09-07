@@ -3,11 +3,31 @@
     <div class="config-header">
       <h4>连接配置</h4>
       <div class="header-actions">
+        <a-button size="small" type="outline" :loading="testingConnection" @click="testConnection">
+          <template #icon><icon-link v-if="!testingConnection" /></template>
+          测试连接
+        </a-button>
         <a-button size="small" type="outline" @click="resetToDefaults">
           <template #icon><icon-refresh /></template>
           重置
         </a-button>
       </div>
+    </div>
+
+    <!-- 连接状态指示器 -->
+    <div v-if="connectionStatus" class="connection-status" :class="connectionStatus.type">
+      <div class="status-content">
+        <icon-check-circle v-if="connectionStatus.type === 'success'" class="status-icon" />
+        <icon-exclamation-circle v-else-if="connectionStatus.type === 'error'" class="status-icon" />
+        <icon-info-circle v-else class="status-icon" />
+        <div class="status-text">
+          <div class="status-title">{{ connectionStatus.title }}</div>
+          <div v-if="connectionStatus.message" class="status-message">{{ connectionStatus.message }}</div>
+        </div>
+      </div>
+      <a-button size="mini" type="text" @click="connectionStatus = null">
+        <template #icon><icon-close /></template>
+      </a-button>
     </div>
 
     <div class="config-form">
@@ -222,6 +242,9 @@
 </template>
 
 <script setup lang="ts">
+import { Message } from '@arco-design/web-vue'
+import { testConnection as testConnectionAPI } from '@/apis/ai/meta'
+
 interface RateLimit {
   rpm: number
   tpm: number
@@ -269,6 +292,14 @@ const config = computed({
   set: (value) => emit('update:modelValue', value),
 })
 
+// 连接测试相关状态
+const testingConnection = ref(false)
+const connectionStatus = ref<{
+  type: 'success' | 'error' | 'info'
+  title: string
+  message?: string
+} | null>(null)
+
 // 默认配置
 const defaultConfig: ConnectionConfig = {
   provider: 'openai',
@@ -293,6 +324,74 @@ const defaultConfig: ConnectionConfig = {
     verify: true,
     certPath: '',
   },
+}
+
+// 测试连接
+const testConnection = async () => {
+  // 验证必填字段
+  if (!config.value.baseUrl || !config.value.apiKey || !config.value.model) {
+    connectionStatus.value = {
+      type: 'error',
+      title: '配置不完整',
+      message: '请填写API基础URL、API密钥和模型名称',
+    }
+    return
+  }
+
+  testingConnection.value = true
+  connectionStatus.value = null
+
+  try {
+    const testConfig = {
+      provider: config.value.provider,
+      baseUrl: config.value.baseUrl,
+      apiKey: config.value.apiKey,
+      model: config.value.model,
+      timeout: config.value.timeout,
+    }
+
+    const response = await testConnectionAPI(testConfig)
+
+    // 根据后端返回的实际数据结构处理结果
+    if (response.data.success) {
+      const responseTime = response.data.responseTime
+      const speedInfo = responseTime < 2000 ? '(快速)' : responseTime < 5000 ? '(正常)' : '(较慢)'
+
+      connectionStatus.value = {
+        type: 'success',
+        title: '连接成功',
+        message: `${response.data.message}，响应时间: ${responseTime}ms ${speedInfo}`,
+      }
+      Message.success('连接测试成功')
+    } else {
+      connectionStatus.value = {
+        type: 'error',
+        title: '连接失败',
+        message: response.data.message,
+      }
+      Message.error('连接测试失败')
+    }
+  } catch (error: any) {
+    console.error('Connection test failed:', error)
+
+    let errorMessage = '网络请求失败'
+    if (error.response?.data?.msg) {
+      errorMessage = error.response.data.msg
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+
+    connectionStatus.value = {
+      type: 'error',
+      title: '请求失败',
+      message: errorMessage,
+    }
+    Message.error(`连接测试失败: ${errorMessage}`)
+  } finally {
+    testingConnection.value = false
+  }
 }
 
 // 添加请求头
@@ -339,6 +438,61 @@ onMounted(() => {
     .header-actions {
       display: flex;
       gap: 8px;
+    }
+  }
+
+  .connection-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border: 1px solid;
+
+    &.success {
+      background-color: var(--color-success-light-1);
+      border-color: var(--color-success-light-3);
+      color: var(--color-success-dark-1);
+    }
+
+    &.error {
+      background-color: var(--color-danger-light-1);
+      border-color: var(--color-danger-light-3);
+      color: var(--color-danger-dark-1);
+    }
+
+    &.info {
+      background-color: var(--color-primary-light-1);
+      border-color: var(--color-primary-light-3);
+      color: var(--color-primary-dark-1);
+    }
+
+    .status-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      flex: 1;
+
+      .status-icon {
+        font-size: 16px;
+        margin-top: 1px;
+        flex-shrink: 0;
+      }
+
+      .status-text {
+        .status-title {
+          font-size: 14px;
+          font-weight: 500;
+          margin-bottom: 2px;
+        }
+
+        .status-message {
+          font-size: 13px;
+          opacity: 0.8;
+          line-height: 1.4;
+        }
+      }
     }
   }
 
