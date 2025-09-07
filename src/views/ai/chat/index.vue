@@ -55,6 +55,7 @@
         <PromptEditor
           v-model="currentPrompt"
           @change="handlePromptChange"
+          @save-status-change="handlePromptSaveStatusChange"
         />
       </div>
 
@@ -217,8 +218,16 @@ const handleConfigChange = (config: any) => {
   Object.assign(modelConfig.value, config)
 }
 
-// 处理保存状态变化
+// 处理模型配置保存状态变化
 const handleSaveStatusChange = (status: 'idle' | 'pending' | 'saving' | 'saved' | 'error', saveTime?: string) => {
+  saveStatus.value = status
+  if (saveTime) {
+    lastSaveTime.value = saveTime
+  }
+}
+
+// 处理提示词保存状态变化
+const handlePromptSaveStatusChange = (status: 'idle' | 'pending' | 'saving' | 'saved' | 'error', saveTime?: string) => {
   saveStatus.value = status
   if (saveTime) {
     lastSaveTime.value = saveTime
@@ -227,7 +236,7 @@ const handleSaveStatusChange = (status: 'idle' | 'pending' | 'saving' | 'saved' 
 
 // 验证工作区状态
 const validateWorkspace = () => {
-  const issues = []
+  const issues: string[] = []
 
   if (!currentPrompt.value) {
     issues.push('请选择或创建一个提示词')
@@ -328,7 +337,6 @@ const importWorkspace = () => {
         if (data.model) currentModel.value = data.model
         if (data.config) Object.assign(modelConfig.value, data.config)
 
-        saveToStorage()
         Message.success('工作区配置导入成功')
       } catch (error) {
         console.error('Import failed:', error)

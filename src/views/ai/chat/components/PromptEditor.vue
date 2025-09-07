@@ -13,10 +13,10 @@
           <template #icon><icon-database /></template>
           提示词库
         </a-button>
-        <a-button size="small" :loading="saving" @click="savePrompt">
+<!--        <a-button size="small" :loading="saving" @click="savePrompt">
           <template #icon><icon-save /></template>
           保存
-        </a-button>
+        </a-button>-->
       </div>
     </div>
 
@@ -110,6 +110,7 @@ interface Props {
 interface Emits {
   (e: 'update:modelValue', value: PromptResourceResp | null): void
   (e: 'change', prompt: PromptResourceResp | null): void
+  (e: 'save-status-change', status: 'idle' | 'pending' | 'saving' | 'saved' | 'error', saveTime?: string): void
 }
 
 const props = defineProps<Props>()
@@ -119,6 +120,11 @@ const emit = defineEmits<Emits>()
 const currentPrompt = ref<PromptResourceResp | null>(props.modelValue)
 const showPromptLibraryModal = ref(false)
 const saving = ref(false)
+
+// 自动保存相关
+const autoSaveTimer = ref<NodeJS.Timeout | null>(null)
+const hasUnsavedChanges = ref(false)
+const lastSaveTime = ref<string>('')
 
 // 表单数据
 const promptForm = reactive({
@@ -176,6 +182,91 @@ const resetPromptForm = () => {
   promptForm.status = 1
 }
 
+// 发送保存状态变化事件
+const emitSaveStatus = (status: 'idle' | 'pending' | 'saving' | 'saved' | 'error', saveTime?: string) => {
+  emit('save-status-change', status, saveTime)
+}
+
+// 自动保存函数
+const autoSave = async () => {
+  if (!currentPrompt.value?.id || !hasUnsavedChanges.value) {
+    return
+  }
+
+  // 清除定时器
+  if (autoSaveTimer.value) {
+    clearTimeout(autoSaveTimer.value)
+    autoSaveTimer.value = null
+  }
+
+  // 设置保存状态
+  saving.value = true
+  emitSaveStatus('saving')
+
+  try {
+    await updatePromptResource({
+      name: currentPrompt.value.name,
+      description: currentPrompt.value.description || promptForm.description,
+      promptText: promptForm.promptText,
+      spaceId: currentPrompt.value.spaceId,
+      status: currentPrompt.value.status,
+    }, currentPrompt.value.id)
+
+    // 更新本地状态
+    const updatedPrompt = {
+      ...currentPrompt.value,
+      promptText: promptForm.promptText,
+      description: promptForm.description,
+    }
+    currentPrompt.value = updatedPrompt
+    emit('update:modelValue', updatedPrompt)
+    emit('change', updatedPrompt)
+
+    // 保存成功
+    hasUnsavedChanges.value = false
+    const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    lastSaveTime.value = now
+    emitSaveStatus('saved', now)
+
+    // 2秒后切换到idle状态
+    setTimeout(() => {
+      emitSaveStatus('idle', now)
+    }, 2000)
+  } catch (error) {
+    console.error('Auto save failed:', error)
+    emitSaveStatus('error')
+
+    // 3秒后切换到pending状态重试
+    setTimeout(() => {
+      if (hasUnsavedChanges.value) {
+        emitSaveStatus('pending')
+      }
+    }, 3000)
+  } finally {
+    saving.value = false
+  }
+}
+
+// 触发自动保存（防抖）
+const triggerAutoSave = () => {
+  if (!currentPrompt.value?.id) {
+    return
+  }
+
+  hasUnsavedChanges.value = true
+  emitSaveStatus('pending')
+
+  // 清除之前的定时器
+  if (autoSaveTimer.value) {
+    clearTimeout(autoSaveTimer.value)
+  }
+
+  // 设置新的定时器，2秒后执行自动保存
+  autoSaveTimer.value = setTimeout(() => {
+    autoSave()
+  }, 2000)
+}
+
 // 监听父组件传入的提示词变化
 watch(() => props.modelValue, (newPrompt) => {
   currentPrompt.value = newPrompt
@@ -184,7 +275,31 @@ watch(() => props.modelValue, (newPrompt) => {
   } else {
     resetPromptForm()
   }
+  // 重置自动保存状态
+  hasUnsavedChanges.value = false
+  if (autoSaveTimer.value) {
+    clearTimeout(autoSaveTimer.value)
+    autoSaveTimer.value = null
+  }
+  if (newPrompt) {
+    emitSaveStatus('idle')
+  }
 }, { immediate: true })
+
+// 监听提示词内容变化，触发自动保存
+watch(() => promptForm.promptText, (newText, oldText) => {
+  // 只有在用户编辑时才触发自动保存（避免初始化时触发）
+  if (oldText !== undefined && newText !== oldText && currentPrompt.value?.id) {
+    triggerAutoSave()
+  }
+})
+
+// 组件卸载时清除定时器
+onUnmounted(() => {
+  if (autoSaveTimer.value) {
+    clearTimeout(autoSaveTimer.value)
+  }
+})
 
 // 获取字数统计
 const getWordCount = (text: string) => {
@@ -223,7 +338,7 @@ const onPromptLibrarySelect = async (prompt: PromptResourceResp | null) => {
   }
 }
 
-// 保存提示词
+// 手动保存提示词
 const savePrompt = async () => {
   if (!promptForm.promptText) {
     Message.warning('请填写提示词内容')
@@ -235,7 +350,15 @@ const savePrompt = async () => {
     return
   }
 
+  // 清除自动保存定时器
+  if (autoSaveTimer.value) {
+    clearTimeout(autoSaveTimer.value)
+    autoSaveTimer.value = null
+  }
+
   saving.value = true
+  emitSaveStatus('saving')
+
   try {
     // 更新现有提示词的内容
     await updatePromptResource({
@@ -255,9 +378,21 @@ const savePrompt = async () => {
     currentPrompt.value = updatedPrompt
     emit('update:modelValue', updatedPrompt)
     emit('change', updatedPrompt)
+
+    // 保存成功
+    hasUnsavedChanges.value = false
+    const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    lastSaveTime.value = now
+    emitSaveStatus('saved', now)
     Message.success('提示词内容已保存')
+
+    // 2秒后切换到idle状态
+    setTimeout(() => {
+      emitSaveStatus('idle', now)
+    }, 2000)
   } catch (error) {
     console.error('Failed to save prompt:', error)
+    emitSaveStatus('error')
     Message.error('保存失败')
   } finally {
     saving.value = false
