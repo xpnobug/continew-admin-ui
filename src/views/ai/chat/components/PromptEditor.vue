@@ -13,29 +13,6 @@
           <template #icon><icon-database /></template>
           提示词库
         </a-button>
-        <a-dropdown @select="handleMenuSelect">
-          <a-button size="small">
-            <template #icon><icon-more /></template>
-          </a-button>
-          <template #content>
-            <a-doption value="select">
-              <template #icon><icon-search /></template>
-              选择提示词
-            </a-doption>
-            <a-doption value="create">
-              <template #icon><icon-plus /></template>
-              新建提示词
-            </a-doption>
-            <a-doption value="import">
-              <template #icon><icon-import /></template>
-              导入提示词
-            </a-doption>
-            <a-doption value="export" :disabled="!currentPrompt">
-              <template #icon><icon-export /></template>
-              导出当前提示词
-            </a-doption>
-          </template>
-        </a-dropdown>
         <a-button size="small" :loading="saving" @click="savePrompt">
           <template #icon><icon-save /></template>
           保存
@@ -112,13 +89,6 @@
       </div>
     </div>
 
-    <!-- 提示词选择器 -->
-    <PromptSelector
-      v-model="showPromptSelector"
-      :multiple="false"
-      @select="onPromptSelect"
-    />
-
     <!-- 提示词库管理弹窗 -->
     <PromptLibrary
       v-model:visible="showPromptLibraryModal"
@@ -130,7 +100,6 @@
 
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
-import PromptSelector from './PromptSelector.vue'
 import PromptLibrary from './PromptLibrary.vue'
 import { type PromptResourceResp, addPromptResource, getPromptResource, updatePromptResource } from '@/apis/ai/promptResource'
 
@@ -148,7 +117,6 @@ const emit = defineEmits<Emits>()
 
 // 响应式数据
 const currentPrompt = ref<PromptResourceResp | null>(props.modelValue)
-const showPromptSelector = ref(false)
 const showPromptLibraryModal = ref(false)
 const saving = ref(false)
 
@@ -224,119 +192,20 @@ const getWordCount = (text: string) => {
   return text.replace(/\s+/g, '').length
 }
 
-// 打开提示词选择器
-const openPromptSelector = () => {
-  showPromptSelector.value = true
-}
-
 // 显示提示词库
 const showPromptLibrary = () => {
   showPromptLibraryModal.value = true
-}
-
-// 创建新提示词
-const createNewPrompt = () => {
-  currentPrompt.value = null
-  resetPromptForm()
-  emit('update:modelValue', null)
-  emit('change', null)
-  Message.info('已切换到新提示词编辑模式')
-}
-
-// 导入提示词
-const importPrompt = () => {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = '.json'
-  input.onchange = async (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (file) {
-      try {
-        const text = await file.text()
-        const data = JSON.parse(text)
-        if (data.name && data.promptText) {
-          promptForm.name = data.name
-          promptForm.description = data.description || ''
-          promptForm.promptText = data.promptText
-          Message.success('提示词导入成功')
-        } else {
-          Message.error('文件格式不正确')
-        }
-      } catch (error) {
-        console.error('Import failed:', error)
-        Message.error('导入失败')
-      }
-    }
-  }
-  input.click()
-}
-
-// 导出当前提示词
-const exportCurrentPrompt = () => {
-  if (!currentPrompt.value) return
-
-  const data = {
-    name: promptForm.name,
-    description: promptForm.description,
-    promptText: promptForm.promptText,
-    exportTime: new Date().toISOString(),
-  }
-
-  const dataStr = JSON.stringify(data, null, 2)
-  const blob = new Blob([dataStr], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `prompt-${promptForm.name}-${Date.now()}.json`
-  a.click()
-
-  URL.revokeObjectURL(url)
-  Message.success('提示词已导出')
-}
-
-// 处理菜单选择
-const handleMenuSelect = (value: string) => {
-  switch (value) {
-    case 'select':
-      openPromptSelector()
-      break
-    case 'create':
-      createNewPrompt()
-      break
-    case 'import':
-      importPrompt()
-      break
-    case 'export':
-      exportCurrentPrompt()
-      break
-  }
-}
-
-// 提示词选择回调
-const onPromptSelect = async (prompts: PromptResourceResp[]) => {
-  if (prompts.length === 0) return
-
-  const selectedPrompt = prompts[0]
-  try {
-    const { data } = await getPromptResource(selectedPrompt.id)
-    const fullPrompt = { ...selectedPrompt, ...data }
-    currentPrompt.value = fullPrompt
-    initPromptForm(fullPrompt)
-    emit('update:modelValue', fullPrompt)
-    emit('change', fullPrompt)
-    Message.success('提示词加载成功')
-  } catch (error) {
-    console.error('Failed to load prompt:', error)
-    Message.error('提示词加载失败')
-  }
 }
 
 // 提示词库选择回调
 const onPromptLibrarySelect = async (prompt: PromptResourceResp | null) => {
   if (!prompt) {
     // 创建新提示词
-    createNewPrompt()
+    currentPrompt.value = null
+    resetPromptForm()
+    emit('update:modelValue', null)
+    emit('change', null)
+    Message.info('已切换到新提示词编辑模式')
     return
   }
 
