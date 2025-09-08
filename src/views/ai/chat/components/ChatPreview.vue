@@ -107,6 +107,20 @@
 
     <!-- 输入区域 -->
     <div class="chat-input-area">
+      <!-- 聊天模式选择 -->
+      <div class="chat-mode-selector">
+        <a-switch
+          v-model="enableStreamChat"
+          size="small"
+          :disabled="isLoading || isStreaming"
+        >
+          <template #checked-icon><icon-thunderbolt /></template>
+          <template #unchecked-icon><icon-loading /></template>
+        </a-switch>
+        <span class="mode-label">
+          {{ enableStreamChat ? '流式对话' : '普通对话' }}
+        </span>
+      </div>
       <!-- 快速操作 -->
       <div class="quick-actions">
         <a-button size="mini" type="text" @click="insertQuickText('请帮我分析')">
@@ -131,15 +145,25 @@
           :rows="3"
           :max-length="5000"
           show-word-limit
-          :disabled="isLoading || !configurationStatus.isValid"
+          :disabled="(isLoading || isStreaming) || !configurationStatus.isValid"
           class="message-input"
           @keydown="handleKeyDown"
         />
         <div class="input-actions">
           <a-button
+            v-if="isStreaming"
+            size="small"
+            status="danger"
+            @click="cancelStream"
+          >
+            <template #icon><icon-stop /></template>
+            停止
+          </a-button>
+          <a-button
+            v-else
             size="small"
             :loading="isLoading"
-            :disabled="!configurationStatus.isValid"
+            :disabled="isLoading || !configurationStatus.isValid"
             type="primary"
             @click="sendMessage"
           >
@@ -161,6 +185,10 @@
           <icon-clock />
           上次响应: {{ lastResponseTime || '--' }}ms
         </span>
+        <span v-if="isStreaming" class="status-item streaming">
+          <icon-loading class="spinning" />
+          流式传输中...
+        </span>
       </div>
       <div class="status-right">
         <span v-if="currentPrompt" class="status-item">
@@ -177,16 +205,18 @@
 </template>
 
 <script setup lang="ts">
+import { onBeforeUnmount } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import type { PromptResourceResp } from '@/apis/ai/promptResource'
 import type { MetaResp } from '@/apis/ai/meta'
-import { type ChatMessage as APIChatMessage, type ChatRequest, sendChatMessage } from '@/apis/ai/chat'
+import { type ChatMessage as APIChatMessage, type ChatRequest, type StreamChatResponse, createStreamChatController, sendChatMessage, sendStreamChatMessage } from '@/apis/ai/chat'
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
   content: string
   timestamp: number
   streaming?: boolean
+  completed?: boolean
 }
 
 interface Props {
@@ -208,8 +238,16 @@ const messages = ref<ChatMessage[]>([])
 const inputMessage = ref('')
 const isLoading = ref(false)
 const isThinking = ref(false)
+const isStreaming = ref(false)
 const lastResponseTime = ref<number | null>(null)
 const chatContainer = ref<HTMLElement>()
+const enableStreamChat = ref(true) // 启用流式聊天
+const streamController = ref<ReturnType<typeof createStreamChatController> | null>(null)
+
+// 打字机效果相关状态
+const typewriterBuffer = ref('')
+const typewriterTimer = ref<number | null>(null)
+const typewriterSpeed = ref(50) // 打字速度，毫秒每字符
 
 // 配置状态检查
 const configurationStatus = computed(() => {
@@ -244,13 +282,41 @@ const scrollToBottom = () => {
   }
 }
 
-// 真实AI响应
-const getRealAIResponse = async (userMessage: string): Promise<void> => {
-  if (!props.currentModel?.id) {
-    throw new Error('未选择模型')
+// 打字机效果函数
+const stopTypewriter = () => {
+  if (typewriterTimer.value) {
+    window.clearInterval(typewriterTimer.value)
+    typewriterTimer.value = null
+  }
+}
+
+const addToTypewriterBuffer = (content: string) => {
+  typewriterBuffer.value += content
+}
+
+const startTypewriter = (targetMessage: ChatMessage) => {
+  if (typewriterTimer.value) {
+    window.clearInterval(typewriterTimer.value)
   }
 
-  // 准备聊天历史（最近10条消息）
+  typewriterTimer.value = window.setInterval(() => {
+    if (typewriterBuffer.value.length > 0) {
+      // 逐字符添加到消息内容中
+      const char = typewriterBuffer.value.charAt(0)
+      targetMessage.content += char
+      typewriterBuffer.value = typewriterBuffer.value.slice(1)
+
+      // 滚动到底部
+      nextTick(() => scrollToBottom())
+    } else if (!isStreaming.value) {
+      // 如果缓冲区为空且不再流式传输，停止打字机
+      stopTypewriter()
+    }
+  }, typewriterSpeed.value)
+}
+
+// 构建聊天请求
+const buildChatRequest = (userMessage: string): ChatRequest => {
   const chatHistory: APIChatMessage[] = []
 
   // 如果有提示词，添加系统消息
@@ -262,10 +328,13 @@ const getRealAIResponse = async (userMessage: string): Promise<void> => {
   }
 
   // 添加历史消息（取最后10条对话）
-  const recentMessages = messages.value.slice(-10).map((msg) => ({
-    role: msg.role,
-    content: msg.content,
-  } as APIChatMessage))
+  const recentMessages = messages.value
+    .filter((msg) => !msg.streaming) // 过滤掉正在流式传输的消息
+    .slice(-10)
+    .map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    } as APIChatMessage))
 
   chatHistory.push(...recentMessages)
 
@@ -275,10 +344,9 @@ const getRealAIResponse = async (userMessage: string): Promise<void> => {
     content: userMessage,
   })
 
-  // 准备请求数据
-  const chatRequest: ChatRequest = {
+  return {
     messages: chatHistory,
-    modelId: props.currentModel.id,
+    modelId: props.currentModel!.id,
     promptId: props.currentPrompt?.id,
     config: {
       temperature: props.modelConfig?.temperature || 0.7,
@@ -288,6 +356,11 @@ const getRealAIResponse = async (userMessage: string): Promise<void> => {
       presencePenalty: props.modelConfig?.presencePenalty || 0,
     },
   }
+}
+
+// 真实AI响应（普通模式）
+const getRealAIResponse = async (userMessage: string): Promise<number | undefined> => {
+  const chatRequest = buildChatRequest(userMessage)
 
   try {
     // 发送请求
@@ -314,6 +387,165 @@ const getRealAIResponse = async (userMessage: string): Promise<void> => {
     }
     messages.value.push(errorMessage)
     throw error
+  }
+}
+
+// 流式聊天处理
+const handleStreamChat = async (userMessage: string) => {
+  if (!props.currentModel?.id) {
+    Message.error('未选择模型')
+    return
+  }
+
+  isStreaming.value = true
+  isThinking.value = false
+
+  const startTime = Date.now()
+
+  // 创建AI响应消息
+  const assistantMessage: ChatMessage = {
+    role: 'assistant',
+    content: '',
+    timestamp: Date.now(),
+    streaming: true,
+    completed: false,
+  }
+
+  messages.value.push(assistantMessage)
+  await nextTick()
+  scrollToBottom()
+
+  // 清空打字机缓冲区并启动打字机效果
+  typewriterBuffer.value = ''
+  startTypewriter(assistantMessage)
+
+  try {
+    // 准备聊天请求
+    const chatRequest = buildChatRequest(userMessage)
+
+    // 创建流式控制器
+    streamController.value = createStreamChatController()
+
+    // 发送流式聊天请求
+    await sendStreamChatMessage(chatRequest, {
+      // 处理每个流式响应块
+      onMessage: (chunk: StreamChatResponse) => {
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log('📨 收到流式消息块:', chunk)
+        }
+
+        if (chunk.content) {
+          // 将内容添加到打字机缓冲区，而不是直接添加到消息
+          addToTypewriterBuffer(chunk.content)
+        }
+      },
+      // 处理错误
+      onError: (error: Error) => {
+        console.error('❌ Stream chat error:', error)
+        // 停止打字机效果
+        stopTypewriter()
+        // 将剩余缓冲区内容立即添加到消息
+        if (typewriterBuffer.value) {
+          assistantMessage.content += typewriterBuffer.value
+          typewriterBuffer.value = ''
+        }
+        assistantMessage.streaming = false
+        assistantMessage.completed = true
+        assistantMessage.content += '\n\n[流式响应中断]'
+        Message.error(`流式对话失败: ${error.message}`)
+      },
+      // 完成回调
+      onComplete: () => {
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log('✅ 流式聊天完成')
+        }
+        assistantMessage.streaming = false
+        assistantMessage.completed = true
+        lastResponseTime.value = Date.now() - startTime
+
+        // 等待打字机完成显示所有内容
+        const finishTypewriter = () => {
+          if (typewriterBuffer.value.length > 0) {
+            // 如果还有未显示的内容，稍后再检查
+            window.setTimeout(finishTypewriter, 100)
+          } else {
+            // 所有内容已显示完毕，停止打字机
+            stopTypewriter()
+          }
+        }
+        finishTypewriter()
+      },
+      // 取消信号
+      signal: streamController.value.signal,
+    })
+  } catch (error) {
+    console.error('Failed to start stream chat:', error)
+    // 停止打字机效果
+    stopTypewriter()
+    // 将剩余缓冲区内容立即添加到消息
+    if (typewriterBuffer.value) {
+      assistantMessage.content += typewriterBuffer.value
+      typewriterBuffer.value = ''
+    }
+    assistantMessage.streaming = false
+    assistantMessage.completed = true
+    assistantMessage.content = '抱歉，流式对话启动失败。请检查网络连接或稍后重试。'
+    Message.error('流式对话启动失败')
+  } finally {
+    isStreaming.value = false
+    streamController.value = null
+    await nextTick()
+    scrollToBottom()
+  }
+}
+
+// 取消流式聊天
+const cancelStream = () => {
+  if (streamController.value) {
+    streamController.value.cancel()
+    // 停止打字机效果
+    stopTypewriter()
+    // 将剩余缓冲区内容立即添加到当前正在流式传输的消息
+    if (typewriterBuffer.value && messages.value.length > 0) {
+      const lastMessage = messages.value[messages.value.length - 1]
+      if (lastMessage.role === 'assistant' && lastMessage.streaming) {
+        lastMessage.content += typewriterBuffer.value
+        lastMessage.streaming = false
+        lastMessage.completed = true
+        typewriterBuffer.value = ''
+      }
+    }
+    Message.info('已停止流式对话')
+  }
+}
+
+// 普通聊天处理
+const handleNormalChat = async (userMessage: string) => {
+  isLoading.value = true
+  isThinking.value = true
+
+  try {
+    const startTime = Date.now()
+    const responseTime = await getRealAIResponse(userMessage)
+    lastResponseTime.value = responseTime || (Date.now() - startTime)
+  } catch (error: any) {
+    console.error('Failed to get AI response:', error)
+
+    let errorMsg = 'AI回复失败'
+    if (error?.response?.data?.message) {
+      errorMsg = error.response.data.message
+    } else if (error?.message) {
+      errorMsg = error.message
+    }
+
+    Message.error(errorMsg)
+  } finally {
+    isLoading.value = false
+    isThinking.value = false
+    await nextTick()
+    scrollToBottom()
   }
 }
 
@@ -350,33 +582,11 @@ const sendMessage = async () => {
   await nextTick()
   scrollToBottom()
 
-  // 开始生成响应
-  isLoading.value = true
-  isThinking.value = true
-
-  try {
-    const startTime = Date.now()
-
-    // 使用真实AI API
-    const responseTime = await getRealAIResponse(messageToSend)
-    lastResponseTime.value = responseTime || (Date.now() - startTime)
-  } catch (error) {
-    console.error('Failed to get AI response:', error)
-
-    // API错误已经在getRealAIResponse中添加了错误消息，这里只需要显示用户提示
-    let errorMsg = 'AI回复失败'
-    if (error.response?.data?.message) {
-      errorMsg = error.response.data.message
-    } else if (error.message) {
-      errorMsg = error.message
-    }
-
-    Message.error(errorMsg)
-  } finally {
-    isLoading.value = false
-    isThinking.value = false
-    await nextTick()
-    scrollToBottom()
+  // 根据模式选择聊天方式
+  if (enableStreamChat.value) {
+    await handleStreamChat(messageToSend)
+  } else {
+    await handleNormalChat(messageToSend)
   }
 
   emit('send', messageToSend)
@@ -455,6 +665,16 @@ const formatTime = (timestamp: number) => {
     minute: '2-digit',
   })
 }
+
+// 组件卸载清理
+onBeforeUnmount(() => {
+  // 停止打字机效果，防止内存泄漏
+  stopTypewriter()
+  // 取消流式聊天
+  if (streamController.value) {
+    streamController.value.cancel()
+  }
+})
 
 defineExpose({
   messages,
@@ -713,6 +933,23 @@ defineExpose({
     padding: 16px;
     border-top: 1px solid var(--color-border-2);
 
+    .chat-mode-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background: var(--color-fill-1);
+      border-radius: 6px;
+      border: 1px solid var(--color-border-2);
+
+      .mode-label {
+        font-size: 12px;
+        color: var(--color-text-2);
+        font-weight: 500;
+      }
+    }
+
     .quick-actions {
       display: flex;
       gap: 8px;
@@ -764,6 +1001,15 @@ defineExpose({
 
       .arco-icon {
         font-size: 12px;
+      }
+
+      &.streaming {
+        color: var(--color-primary-6);
+        font-weight: 500;
+
+        .spinning {
+          animation: spin 1s linear infinite;
+        }
       }
     }
   }
