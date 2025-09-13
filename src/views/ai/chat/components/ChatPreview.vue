@@ -21,7 +21,7 @@
     </div>
 
     <!-- 对话区域 -->
-    <div ref="chatContainer" class="chat-container">
+    <div ref="chatContainer" class="chat-container" @scroll="handleScroll">
       <!-- 欢迎消息 -->
       <div v-if="messages.length === 0" class="welcome-message">
         <div class="welcome-icon">
@@ -275,11 +275,44 @@ const clearChat = () => {
   Message.success('对话已清空')
 }
 
-// 滚动到底部
-const scrollToBottom = () => {
-  if (chatContainer.value) {
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+// 滚动相关状态和功能
+const isUserScrolling = ref(false)
+const scrollTimeout = ref<number | null>(null)
+
+// 检查是否应该自动滚动
+const shouldAutoScroll = () => {
+  if (!chatContainer.value || isUserScrolling.value) {
+    return false
   }
+
+  const { scrollTop, scrollHeight, clientHeight } = chatContainer.value
+  const threshold = 100 // 距离底部100px内认为在底部
+  return scrollHeight - scrollTop - clientHeight <= threshold
+}
+
+// 平滑滚动到底部
+const scrollToBottom = (force = false) => {
+  if (!chatContainer.value) return
+
+  if (force || shouldAutoScroll()) {
+    chatContainer.value.scrollTo({
+      top: chatContainer.value.scrollHeight,
+      behavior: 'smooth',
+    })
+  }
+}
+
+// 监听用户滚动
+const handleScroll = () => {
+  isUserScrolling.value = true
+
+  if (scrollTimeout.value) {
+    window.clearTimeout(scrollTimeout.value)
+  }
+
+  scrollTimeout.value = window.setTimeout(() => {
+    isUserScrolling.value = false
+  }, 1000) // 1秒后认为用户停止滚动
 }
 
 // 打字机效果函数
@@ -306,7 +339,7 @@ const startTypewriter = (targetMessage: ChatMessage) => {
       targetMessage.content += char
       typewriterBuffer.value = typewriterBuffer.value.slice(1)
 
-      // 滚动到底部
+      // 平滑滚动到底部
       nextTick(() => scrollToBottom())
     } else if (!isStreaming.value) {
       // 如果缓冲区为空且不再流式传输，停止打字机
@@ -413,7 +446,7 @@ const handleStreamChat = async (userMessage: string) => {
 
   messages.value.push(assistantMessage)
   await nextTick()
-  scrollToBottom()
+  scrollToBottom(true) // 强制滚动
 
   // 清空打字机缓冲区并启动打字机效果
   typewriterBuffer.value = ''
@@ -497,7 +530,7 @@ const handleStreamChat = async (userMessage: string) => {
     isStreaming.value = false
     streamController.value = null
     await nextTick()
-    scrollToBottom()
+    scrollToBottom(true) // 完成时强制滚动
   }
 }
 
@@ -545,7 +578,7 @@ const handleNormalChat = async (userMessage: string) => {
     isLoading.value = false
     isThinking.value = false
     await nextTick()
-    scrollToBottom()
+    scrollToBottom(true) // 完成时强制滚动
   }
 }
 
@@ -578,9 +611,9 @@ const sendMessage = async () => {
   const messageToSend = inputMessage.value.trim()
   inputMessage.value = ''
 
-  // 滚动到底部
+  // 强制滚动到底部
   await nextTick()
-  scrollToBottom()
+  scrollToBottom(true)
 
   // 根据模式选择聊天方式
   if (enableStreamChat.value) {
@@ -674,6 +707,10 @@ onBeforeUnmount(() => {
   if (streamController.value) {
     streamController.value.cancel()
   }
+  // 清理滚动相关定时器
+  if (scrollTimeout.value) {
+    window.clearTimeout(scrollTimeout.value)
+  }
 })
 
 defineExpose({
@@ -721,8 +758,30 @@ defineExpose({
   .chat-container {
     flex: 1;
     overflow-y: auto;
-    padding: 16px;
+    overflow-x: hidden;
+    padding: 0;
     min-height: 0;
+    position: relative;
+    scroll-behavior: smooth;
+
+    // 自定义滚动条样式
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--color-fill-2);
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-fill-4);
+      border-radius: 3px;
+
+      &:hover {
+        background: var(--color-fill-3);
+      }
+    }
 
     .welcome-message {
       display: flex;
@@ -730,6 +789,7 @@ defineExpose({
       align-items: center;
       justify-content: center;
       height: 100%;
+      padding: 16px;
       color: var(--color-text-3);
 
       .welcome-icon {
@@ -802,11 +862,22 @@ defineExpose({
       display: flex;
       flex-direction: column;
       gap: 16px;
+      padding: 16px;
+      min-height: 100%;
+
+      // 确保消息列表底部有足够间距
+      &::after {
+        content: '';
+        flex: 1;
+        min-height: 20px;
+      }
     }
 
     .message-item {
       display: flex;
       gap: 12px;
+      margin-bottom: 4px;
+      animation: fadeInUp 0.3s ease-out;
 
       &.user {
         flex-direction: row-reverse;
@@ -814,6 +885,11 @@ defineExpose({
         .message-content {
           background: var(--color-primary-light-1);
           border: 1px solid var(--color-primary-light-3);
+          margin-left: 20%;
+
+          @media (max-width: 768px) {
+            margin-left: 10%;
+          }
         }
       }
 
@@ -821,6 +897,11 @@ defineExpose({
         .message-content {
           background: var(--color-bg-2);
           border: 1px solid var(--color-border-2);
+          margin-right: 20%;
+
+          @media (max-width: 768px) {
+            margin-right: 10%;
+          }
         }
       }
 
@@ -904,15 +985,17 @@ defineExpose({
     }
 
     .thinking-indicator {
+      animation: fadeInUp 0.3s ease-out;
+
       .thinking-dots {
         display: flex;
         gap: 4px;
         align-items: center;
 
         span {
-          width: 6px;
-          height: 6px;
-          background: var(--color-text-3);
+          width: 8px;
+          height: 8px;
+          background: var(--color-primary-6);
           border-radius: 50%;
           animation: thinking 1.4s infinite;
 
@@ -932,6 +1015,11 @@ defineExpose({
     flex-shrink: 0;
     padding: 16px;
     border-top: 1px solid var(--color-border-2);
+    background: var(--color-bg-1);
+
+    @media (max-width: 768px) {
+      padding: 12px;
+    }
 
     .chat-mode-selector {
       display: flex;
@@ -942,6 +1030,10 @@ defineExpose({
       background: var(--color-fill-1);
       border-radius: 6px;
       border: 1px solid var(--color-border-2);
+
+      @media (max-width: 480px) {
+        padding: 6px 10px;
+      }
 
       .mode-label {
         font-size: 12px;
@@ -955,6 +1047,16 @@ defineExpose({
       gap: 8px;
       margin-bottom: 12px;
       flex-wrap: wrap;
+
+      @media (max-width: 480px) {
+        gap: 6px;
+        margin-bottom: 10px;
+
+        .arco-btn {
+          font-size: 12px;
+          padding: 2px 6px;
+        }
+      }
     }
 
     .input-container {
@@ -962,11 +1064,22 @@ defineExpose({
       gap: 12px;
       align-items: flex-end;
 
+      @media (max-width: 480px) {
+        gap: 8px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
       .message-input {
         flex: 1;
 
         :deep(.arco-textarea) {
           resize: none;
+          min-height: 80px;
+
+          @media (max-width: 480px) {
+            min-height: 60px;
+          }
         }
       }
 
@@ -974,6 +1087,11 @@ defineExpose({
         display: flex;
         flex-direction: column;
         gap: 8px;
+
+        @media (max-width: 480px) {
+          flex-direction: row;
+          justify-content: flex-end;
+        }
       }
     }
   }
@@ -982,22 +1100,43 @@ defineExpose({
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 16px;
+    padding: 10px 16px;
     background: var(--color-fill-2);
     border-top: 1px solid var(--color-border-2);
     font-size: 12px;
     color: var(--color-text-3);
     flex-shrink: 0;
 
+    @media (max-width: 768px) {
+      padding: 6px 12px;
+      font-size: 11px;
+    }
+
+    @media (max-width: 480px) {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
     .status-left, .status-right {
       display: flex;
       gap: 16px;
+
+      @media (max-width: 768px) {
+        gap: 12px;
+      }
+
+      @media (max-width: 480px) {
+        gap: 8px;
+        flex-wrap: wrap;
+      }
     }
 
     .status-item {
       display: flex;
       align-items: center;
       gap: 4px;
+      white-space: nowrap;
 
       .arco-icon {
         font-size: 12px;
@@ -1032,6 +1171,26 @@ defineExpose({
   30% {
     transform: scale(1.2);
     opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>
