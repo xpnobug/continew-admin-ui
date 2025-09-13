@@ -724,9 +724,10 @@ defineExpose({
 <style scoped lang="scss">
 .chat-preview {
   height: 100%;
+  position: relative;
+  background: var(--color-bg-1);
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-1);
 
   .chat-header {
     display: flex;
@@ -756,13 +757,22 @@ defineExpose({
   }
 
   .chat-container {
-    flex: 1;
+    position: absolute;
+    top: 61px; // 头部高度
+    bottom: 200px; // 输入区域高度 (大约150px + 状态栏50px)
+    left: 0;
+    right: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 0;
-    min-height: 0;
-    position: relative;
     scroll-behavior: smooth;
+
+    @media (max-width: 768px) {
+      bottom: 180px; // 移动端输入区域稍小
+    }
+
+    @media (max-width: 480px) {
+      bottom: 160px; // 小屏幕进一步压缩
+    }
 
     // 自定义滚动条样式
     &::-webkit-scrollbar {
@@ -862,14 +872,17 @@ defineExpose({
       display: flex;
       flex-direction: column;
       gap: 16px;
-      padding: 16px;
-      min-height: 100%;
+      padding: 16px 16px 20px 16px; // 只需要很小的底部间距
+      min-height: calc(100% - 32px); // 减去内边距
 
-      // 确保消息列表底部有足够间距
-      &::after {
-        content: '';
-        flex: 1;
-        min-height: 20px;
+      @media (max-width: 768px) {
+        padding: 12px 12px 16px 12px;
+        gap: 12px;
+      }
+
+      @media (max-width: 480px) {
+        padding: 10px 10px 12px 10px;
+        gap: 10px;
       }
     }
 
@@ -1012,13 +1025,22 @@ defineExpose({
   }
 
   .chat-input-area {
-    flex-shrink: 0;
+    position: absolute;
+    bottom: 50px; // 状态栏高度
+    left: 0;
+    right: 0;
     padding: 16px;
     border-top: 1px solid var(--color-border-2);
     background: var(--color-bg-1);
+    z-index: 10;
 
     @media (max-width: 768px) {
       padding: 12px;
+      bottom: 40px; // 移动端状态栏稍小
+    }
+
+    @media (max-width: 480px) {
+      bottom: 30px; // 小屏幕进一步压缩
     }
 
     .chat-mode-selector {
@@ -1097,6 +1119,10 @@ defineExpose({
   }
 
   .status-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1105,16 +1131,19 @@ defineExpose({
     border-top: 1px solid var(--color-border-2);
     font-size: 12px;
     color: var(--color-text-3);
-    flex-shrink: 0;
+    z-index: 10;
 
     @media (max-width: 768px) {
       padding: 6px 12px;
       font-size: 11px;
+      height: 40px;
     }
 
     @media (max-width: 480px) {
+      height: 30px;
+      padding: 4px 8px;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
       align-items: flex-start;
     }
 
