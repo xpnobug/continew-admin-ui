@@ -23,81 +23,135 @@
     <!-- 对话区域 -->
     <div ref="chatContainer" class="chat-container" @scroll="handleScroll">
       <!-- 欢迎消息 -->
-      <div v-if="messages.length === 0" class="welcome-message">
-        <div class="welcome-icon">
-          <icon-robot />
-        </div>
-        <div class="welcome-text">
-          <h4>AI 对话测试</h4>
-          <div v-if="configurationStatus.isValid" class="config-status success">
-            <icon-check-circle />
-            <p>配置完成，可以开始对话测试</p>
+      <div v-if="messages.length === 0" class="welcome-container">
+        <div class="welcome-content">
+          <div class="welcome-avatar">
+            <div class="avatar-ring">
+              <div class="avatar-icon">
+                <icon-robot />
+              </div>
+            </div>
           </div>
-          <div v-else class="config-status warning">
-            <icon-exclamation-triangle />
-            <div class="config-issues">
-              <p>请完成以下配置：</p>
-              <ul>
-                <li v-for="issue in configurationStatus.issues" :key="issue">{{ issue }}</li>
-              </ul>
+          
+          <div class="welcome-message">
+            <div class="welcome-title">
+              <h3>AI 对话助手</h3>
+              <p class="welcome-subtitle">智能对话，即时响应</p>
+            </div>
+            
+            <div class="config-status-card">
+              <div v-if="configurationStatus.isValid" class="status-success">
+                <div class="status-icon">
+                  <icon-check-circle />
+                </div>
+                <div class="status-content">
+                  <h4>配置完成</h4>
+                  <p>已准备就绪，可以开始对话测试</p>
+                </div>
+              </div>
+              
+              <div v-else class="status-warning">
+                <div class="status-icon">
+                  <icon-exclamation-triangle />
+                </div>
+                <div class="status-content">
+                  <h4>配置未完成</h4>
+                  <div class="config-checklist">
+                    <p>请完成以下配置：</p>
+                    <ul class="issue-list">
+                      <li v-for="issue in configurationStatus.issues" :key="issue" class="issue-item">
+                        <icon-close-circle class="issue-icon" />
+                        <span>{{ issue }}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="welcome-tips">
+              <div class="tip-item">
+                <span class="tip-key">Ctrl + Enter</span>
+                <span class="tip-desc">快速发送消息</span>
+              </div>
+              <div class="tip-item">
+                <span class="tip-key">流式模式</span>
+                <span class="tip-desc">实时响应体验</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- 消息列表 -->
-      <div v-else class="message-list">
-        <div
-          v-for="(message, index) in messages"
-          :key="index"
-          class="message-item" :class="[message.role]"
-        >
-          <div class="message-avatar">
-            <icon-user v-if="message.role === 'user'" />
-            <icon-robot v-else />
-          </div>
-          <div class="message-content">
-            <div class="message-header">
-              <span class="message-role">
-                {{ message.role === 'user' ? '用户' : 'AI助手' }}
-              </span>
-              <span class="message-time">{{ formatTime(message.timestamp) }}</span>
-            </div>
-            <div class="message-text">
-              <div v-if="message.role === 'assistant' && message.streaming" class="streaming-text">
-                {{ message.content }}
-                <span class="cursor">|</span>
+      <div v-else class="message-list-wrapper">
+        <div class="message-list">
+          <!-- 消息项组件化 -->
+          <div
+            v-for="(message, index) in messages"
+            :key="`msg-${index}-${message.timestamp}`"
+            class="message-wrapper"
+            :class="[`message-${message.role}`]"
+          >
+            <div class="message-bubble">
+              <div class="message-avatar">
+                <div class="avatar-icon" :class="[message.role]">
+                  <icon-user v-if="message.role === 'user'" />
+                  <icon-robot v-else />
+                </div>
               </div>
-              <div v-else class="static-text">
-                <pre>{{ message.content }}</pre>
+              
+              <div class="message-main">
+                <div class="message-meta">
+                  <span class="message-sender">
+                    {{ message.role === 'user' ? '您' : 'AI助手' }}
+                  </span>
+                  <span class="message-timestamp">{{ formatTime(message.timestamp) }}</span>
+                </div>
+                
+                <div class="message-body">
+                  <div v-if="message.role === 'assistant' && message.streaming" class="content streaming">
+                    <div class="text">{{ message.content }}<span class="typing-cursor">|</span></div>
+                  </div>
+                  <div v-else class="content static">
+                    <div class="text" v-html="formatMessageContent(message.content)"></div>
+                  </div>
+                </div>
+                
+                <div class="message-actions" v-show="!message.streaming">
+                  <a-button type="text" size="mini" class="action-btn" @click="copyMessage(message.content)">
+                    <template #icon><icon-copy /></template>
+                  </a-button>
+                  <a-button type="text" size="mini" class="action-btn" @click="deleteMessage(index)">
+                    <template #icon><icon-delete /></template>
+                  </a-button>
+                </div>
               </div>
             </div>
           </div>
-          <div class="message-actions">
-            <a-button type="text" size="mini" @click="copyMessage(message.content)">
-              <template #icon><icon-copy /></template>
-            </a-button>
-            <a-button type="text" size="mini" @click="deleteMessage(index)">
-              <template #icon><icon-delete /></template>
-            </a-button>
-          </div>
-        </div>
 
-        <!-- 正在思考指示器 -->
-        <div v-if="isThinking" class="thinking-indicator">
-          <div class="message-item assistant">
-            <div class="message-avatar">
-              <icon-robot />
-            </div>
-            <div class="message-content">
-              <div class="message-header">
-                <span class="message-role">AI助手</span>
-                <span class="message-time">正在思考...</span>
+          <!-- 正在思考指示器 -->
+          <div v-if="isThinking" class="thinking-wrapper">
+            <div class="message-bubble thinking">
+              <div class="message-avatar">
+                <div class="avatar-icon assistant">
+                  <icon-robot />
+                </div>
               </div>
-              <div class="thinking-dots">
-                <span></span>
-                <span></span>
-                <span></span>
+              
+              <div class="message-main">
+                <div class="message-meta">
+                  <span class="message-sender">AI助手</span>
+                  <span class="message-timestamp">正在思考</span>
+                </div>
+                
+                <div class="message-body">
+                  <div class="thinking-animation">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -339,11 +393,29 @@ const startTypewriter = (targetMessage: ChatMessage) => {
       targetMessage.content += char
       typewriterBuffer.value = typewriterBuffer.value.slice(1)
 
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log('⌨️ 打字机输出字符:', char, '消息内容长度:', targetMessage.content.length, '缓冲区剩余:', typewriterBuffer.value.length)
+      }
+
       // 平滑滚动到底部
       nextTick(() => scrollToBottom())
     } else if (!isStreaming.value) {
       // 如果缓冲区为空且不再流式传输，停止打字机
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log('⏹️ 停止打字机 - 缓冲区为空且流式已结束')
+      }
       stopTypewriter()
+      // 确保消息状态更新
+      if (targetMessage.streaming) {
+        targetMessage.streaming = false
+        targetMessage.completed = true
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log('✅ 消息状态已更新为完成:', targetMessage.content)
+        }
+      }
     }
   }, typewriterSpeed.value)
 }
@@ -471,6 +543,10 @@ const handleStreamChat = async (userMessage: string) => {
         if (chunk.content) {
           // 将内容添加到打字机缓冲区，而不是直接添加到消息
           addToTypewriterBuffer(chunk.content)
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.log('📝 添加到打字机缓冲区:', chunk.content, '缓冲区长度:', typewriterBuffer.value.length)
+          }
         }
       },
       // 处理错误
@@ -485,7 +561,11 @@ const handleStreamChat = async (userMessage: string) => {
         }
         assistantMessage.streaming = false
         assistantMessage.completed = true
-        assistantMessage.content += '\n\n[流式响应中断]'
+        if (assistantMessage.content.trim()) {
+          assistantMessage.content += '\n\n[流式响应中断]'
+        } else {
+          assistantMessage.content = '流式响应发生错误，请重试。'
+        }
         Message.error(`流式对话失败: ${error.message}`)
       },
       // 完成回调
@@ -494,21 +574,39 @@ const handleStreamChat = async (userMessage: string) => {
           // eslint-disable-next-line no-console
           console.log('✅ 流式聊天完成')
         }
-        assistantMessage.streaming = false
-        assistantMessage.completed = true
+        
         lastResponseTime.value = Date.now() - startTime
 
-        // 等待打字机完成显示所有内容
+        // 流式完成后立即处理剩余内容
         const finishTypewriter = () => {
           if (typewriterBuffer.value.length > 0) {
-            // 如果还有未显示的内容，稍后再检查
-            window.setTimeout(finishTypewriter, 100)
-          } else {
-            // 所有内容已显示完毕，停止打字机
-            stopTypewriter()
+            if (import.meta.env.DEV) {
+              // eslint-disable-next-line no-console
+              console.log('🏁 流式完成，立即添加剩余内容:', typewriterBuffer.value)
+            }
+            // 立即添加剩余缓冲区内容到消息
+            assistantMessage.content += typewriterBuffer.value
+            typewriterBuffer.value = ''
           }
+
+          // 停止打字机并更新状态
+          stopTypewriter()
+          assistantMessage.streaming = false
+          assistantMessage.completed = true
+
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.log('🎯 流式消息最终完成:', assistantMessage.content)
+          }
+
+          // 强制触发响应式更新
+          nextTick(() => {
+            scrollToBottom(true)
+          })
         }
-        finishTypewriter()
+
+        // 稍微延迟一下，确保所有流式数据都已接收
+        window.setTimeout(finishTypewriter, 200)
       },
       // 取消信号
       signal: streamController.value.signal,
@@ -699,6 +797,18 @@ const formatTime = (timestamp: number) => {
   })
 }
 
+// 格式化消息内容，支持简单的文本格式化
+const formatMessageContent = (content: string) => {
+  if (!content) return ''
+
+  // 简单的文本格式化：保持换行、处理链接等
+  return content
+    .replace(/\n/g, '<br>')
+    .replace(/```([\s\S]*?)```/g, '<pre class="code-block">$1</pre>')
+    .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+    .replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
+}
+
 // 组件卸载清理
 onBeforeUnmount(() => {
   // 停止打字机效果，防止内存泄漏
@@ -793,74 +903,251 @@ defineExpose({
       }
     }
 
-    .welcome-message {
+    // 新的欢迎页面样式
+    .welcome-container {
+      height: 100%;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100%;
-      padding: 16px;
-      color: var(--color-text-3);
+      padding: 40px 20px;
 
-      .welcome-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: 0.5;
+      @media (max-width: 768px) {
+        padding: 30px 16px;
       }
 
-      .welcome-text {
-        text-align: center;
+      @media (max-width: 480px) {
+        padding: 20px 12px;
+      }
+    }
 
-        h4 {
-          margin: 0 0 8px 0;
-          font-size: 16px;
-          color: var(--color-text-2);
+    .welcome-content {
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      animation: slideInUp 0.6s ease-out;
+    }
+
+    .welcome-avatar {
+      margin-bottom: 32px;
+
+      @media (max-width: 768px) {
+        margin-bottom: 24px;
+      }
+
+      .avatar-ring {
+        position: relative;
+        display: inline-block;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: -8px;
+          left: -8px;
+          right: -8px;
+          bottom: -8px;
+          border: 2px solid var(--color-primary-6);
+          border-radius: 50%;
+          opacity: 0.3;
+          animation: pulse 2s infinite;
         }
 
-        p {
-          margin: 0;
-          font-size: 14px;
-          line-height: 1.5;
-        }
-
-        .config-status {
+        .avatar-icon {
+          width: 80px;
+          height: 80px;
+          background: linear-gradient(135deg, var(--color-primary-6), var(--color-primary-5));
+          border-radius: 50%;
           display: flex;
           align-items: center;
+          justify-content: center;
+          font-size: 32px;
+          color: white;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+          @media (max-width: 768px) {
+            width: 64px;
+            height: 64px;
+            font-size: 24px;
+          }
+
+          @media (max-width: 480px) {
+            width: 56px;
+            height: 56px;
+            font-size: 20px;
+          }
+        }
+      }
+    }
+
+    .welcome-message {
+      .welcome-title {
+        margin-bottom: 24px;
+
+        h3 {
+          margin: 0 0 8px 0;
+          font-size: 24px;
+          font-weight: 600;
+          color: var(--color-text-1);
+          background: linear-gradient(135deg, var(--color-primary-6), var(--color-success-6));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+
+          @media (max-width: 768px) {
+            font-size: 20px;
+          }
+
+          @media (max-width: 480px) {
+            font-size: 18px;
+          }
+        }
+
+        .welcome-subtitle {
+          margin: 0;
+          font-size: 14px;
+          color: var(--color-text-3);
+          font-weight: 400;
+
+          @media (max-width: 768px) {
+            font-size: 13px;
+          }
+        }
+      }
+    }
+
+    .config-status-card {
+      margin-bottom: 32px;
+
+      @media (max-width: 768px) {
+        margin-bottom: 24px;
+      }
+
+      .status-success, .status-warning {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 20px;
+        border-radius: 16px;
+        text-align: left;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+        @media (max-width: 768px) {
+          padding: 16px;
+          gap: 10px;
+        }
+
+        @media (max-width: 480px) {
+          padding: 14px;
           gap: 8px;
-          margin-top: 12px;
-          padding: 12px 16px;
-          border-radius: 8px;
+        }
+
+        .status-icon {
+          flex-shrink: 0;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
           font-size: 14px;
 
-          &.success {
-            background: var(--color-success-light-1);
-            border: 1px solid var(--color-success-light-3);
+          @media (max-width: 768px) {
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+          }
+        }
+
+        .status-content {
+          flex: 1;
+          min-width: 0;
+
+          h4 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            font-weight: 600;
+
+            @media (max-width: 768px) {
+              font-size: 14px;
+            }
+          }
+
+          p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.5;
+
+            @media (max-width: 768px) {
+              font-size: 13px;
+            }
+          }
+        }
+      }
+
+      .status-success {
+        background: var(--color-success-light-1);
+        border: 1px solid var(--color-success-light-3);
+
+        .status-icon {
+          background: var(--color-success-6);
+          color: white;
+        }
+
+        .status-content {
+          h4 {
             color: var(--color-success-dark-1);
-
-            .arco-icon {
-              color: var(--color-success);
-            }
           }
 
-          &.warning {
-            background: var(--color-warning-light-1);
-            border: 1px solid var(--color-warning-light-3);
+          p {
+            color: var(--color-success-dark-2);
+          }
+        }
+      }
+
+      .status-warning {
+        background: var(--color-warning-light-1);
+        border: 1px solid var(--color-warning-light-3);
+
+        .status-icon {
+          background: var(--color-warning-6);
+          color: white;
+        }
+
+        .status-content {
+          h4 {
             color: var(--color-warning-dark-1);
-
-            .arco-icon {
-              color: var(--color-warning);
-              margin-top: 2px;
-              align-self: flex-start;
-            }
           }
 
-          .config-issues {
-            ul {
-              margin: 4px 0 0 0;
-              padding-left: 16px;
+          p {
+            color: var(--color-warning-dark-2);
+          }
+        }
 
-              li {
-                margin: 2px 0;
+        .config-checklist {
+          .issue-list {
+            margin: 8px 0 0 0;
+            padding: 0;
+            list-style: none;
+
+            .issue-item {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin: 6px 0;
+              font-size: 13px;
+
+              @media (max-width: 768px) {
+                font-size: 12px;
+                gap: 6px;
+              }
+
+              .issue-icon {
+                font-size: 12px;
+                color: var(--color-warning-6);
+                flex-shrink: 0;
+
+                @media (max-width: 768px) {
+                  font-size: 10px;
+                }
               }
             }
           }
@@ -868,157 +1155,398 @@ defineExpose({
       }
     }
 
-    .message-list {
+    .welcome-tips {
       display: flex;
-      flex-direction: column;
       gap: 16px;
-      padding: 16px 16px 20px 16px; // 只需要很小的底部间距
-      min-height: calc(100% - 32px); // 减去内边距
+      justify-content: center;
+      flex-wrap: wrap;
 
-      @media (max-width: 768px) {
-        padding: 12px 12px 16px 12px;
+      @media (max-width: 480px) {
         gap: 12px;
       }
 
-      @media (max-width: 480px) {
-        padding: 10px 10px 12px 10px;
-        gap: 10px;
+      .tip-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 16px;
+        background: var(--color-fill-1);
+        border: 1px solid var(--color-border-2);
+        border-radius: 12px;
+        min-width: 100px;
+
+        @media (max-width: 768px) {
+          padding: 10px 12px;
+          min-width: 80px;
+        }
+
+        @media (max-width: 480px) {
+          padding: 8px 10px;
+          min-width: 70px;
+        }
+
+        .tip-key {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-primary-6);
+          background: var(--color-primary-light-1);
+          padding: 2px 6px;
+          border-radius: 4px;
+
+          @media (max-width: 768px) {
+            font-size: 11px;
+            padding: 1px 4px;
+          }
+        }
+
+        .tip-desc {
+          font-size: 11px;
+          color: var(--color-text-3);
+          text-align: center;
+
+          @media (max-width: 768px) {
+            font-size: 10px;
+          }
+        }
       }
     }
 
-    .message-item {
+    .message-list-wrapper {
+      height: 100%;
+      position: relative;
+    }
+
+    .message-list {
       display: flex;
-      gap: 12px;
-      margin-bottom: 4px;
-      animation: fadeInUp 0.3s ease-out;
+      flex-direction: column;
+      gap: 0;
+      padding: 20px;
+      min-height: 100%;
+      overflow-anchor: none;
 
-      &.user {
-        flex-direction: row-reverse;
+      @media (max-width: 768px) {
+        padding: 16px;
+      }
 
-        .message-content {
-          background: var(--color-primary-light-1);
-          border: 1px solid var(--color-primary-light-3);
-          margin-left: 20%;
+      @media (max-width: 480px) {
+        padding: 12px;
+      }
+    }
 
-          @media (max-width: 768px) {
-            margin-left: 10%;
+    // 新的消息布局样式
+    .message-wrapper {
+      margin-bottom: 24px;
+      animation: slideInUp 0.3s ease-out;
+
+      @media (max-width: 768px) {
+        margin-bottom: 20px;
+      }
+
+      @media (max-width: 480px) {
+        margin-bottom: 16px;
+      }
+
+      &.message-user {
+        .message-bubble {
+          flex-direction: row-reverse;
+          justify-content: flex-start;
+
+          .message-main {
+            margin-right: 12px;
+            margin-left: 0;
+            max-width: calc(100% - 120px);
+
+            .message-body .content {
+              background: linear-gradient(135deg, var(--color-primary-6), var(--color-primary-5));
+              color: white;
+              border-radius: 18px 18px 6px 18px;
+
+              .text {
+                color: white;
+              }
+            }
+
+            .message-meta .message-sender {
+              color: var(--color-primary-6);
+              font-weight: 600;
+            }
+          }
+
+          .message-avatar .avatar-icon.user {
+            background: var(--color-primary-6);
+            color: white;
           }
         }
       }
 
-      &.assistant {
-        .message-content {
-          background: var(--color-bg-2);
-          border: 1px solid var(--color-border-2);
-          margin-right: 20%;
+      &.message-assistant {
+        .message-bubble {
+          justify-content: flex-start;
 
-          @media (max-width: 768px) {
-            margin-right: 10%;
+          .message-main {
+            margin-left: 12px;
+            margin-right: 0;
+            max-width: calc(100% - 120px);
+
+            .message-body .content {
+              background: var(--color-bg-2);
+              border: 1px solid var(--color-border-2);
+              border-radius: 18px 18px 18px 6px;
+              color: var(--color-text-1);
+            }
+
+            .message-meta .message-sender {
+              color: var(--color-success-6);
+              font-weight: 600;
+            }
+          }
+
+          .message-avatar .avatar-icon.assistant {
+            background: var(--color-success-6);
+            color: white;
           }
         }
       }
+    }
 
-      .message-avatar {
-        width: 32px;
-        height: 32px;
+    .message-bubble {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      position: relative;
+
+      &.thinking {
+        .message-main {
+          margin-left: 12px;
+          max-width: calc(100% - 120px);
+
+          .message-body .thinking-animation {
+            background: var(--color-bg-2);
+            border: 1px solid var(--color-border-2);
+            border-radius: 18px 18px 18px 6px;
+            padding: 16px 20px;
+          }
+
+          .message-meta .message-sender {
+            color: var(--color-success-6);
+            font-weight: 600;
+          }
+        }
+
+        .message-avatar .avatar-icon {
+          background: var(--color-success-6);
+          color: white;
+        }
+      }
+    }
+
+    .message-avatar {
+      position: sticky;
+      top: 20px;
+      z-index: 1;
+
+      .avatar-icon {
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
-        background: var(--color-fill-2);
         display: flex;
         align-items: center;
         justify-content: center;
-        flex-shrink: 0;
-        overflow: hidden;
+        font-size: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
 
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+        &:hover {
+          transform: scale(1.05);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .arco-icon {
-          font-size: 16px;
-          color: var(--color-text-3);
-        }
-      }
-
-      .message-content {
-        flex: 1;
-        padding: 12px 16px;
-        border-radius: 12px;
-        min-width: 0;
-
-        .message-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-
-          .message-role {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--color-text-2);
-          }
-
-          .message-time {
-            font-size: 11px;
-            color: var(--color-text-3);
-          }
+        @media (max-width: 768px) {
+          width: 36px;
+          height: 36px;
+          font-size: 14px;
         }
 
-        .message-text {
-          .streaming-text {
-            .cursor {
-              animation: blink 1s infinite;
-            }
-          }
-
-          .static-text {
-            pre {
-              margin: 0;
-              font-family: inherit;
-              white-space: pre-wrap;
-              word-break: break-word;
-              line-height: 1.5;
-            }
-          }
+        @media (max-width: 480px) {
+          width: 32px;
+          height: 32px;
+          font-size: 12px;
         }
-      }
-
-      .message-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        opacity: 0;
-        transition: opacity 0.2s;
-      }
-
-      &:hover .message-actions {
-        opacity: 1;
       }
     }
 
-    .thinking-indicator {
-      animation: fadeInUp 0.3s ease-out;
+    .message-main {
+      flex: 1;
+      min-width: 0;
+    }
 
-      .thinking-dots {
-        display: flex;
-        gap: 4px;
-        align-items: center;
+    .message-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 0 4px;
 
-        span {
-          width: 8px;
-          height: 8px;
-          background: var(--color-primary-6);
-          border-radius: 50%;
-          animation: thinking 1.4s infinite;
+      .message-sender {
+        font-size: 13px;
+        font-weight: 500;
 
-          &:nth-child(2) {
-            animation-delay: 0.2s;
+        @media (max-width: 768px) {
+          font-size: 12px;
+        }
+      }
+
+      .message-timestamp {
+        font-size: 11px;
+        color: var(--color-text-3);
+        opacity: 0.8;
+
+        @media (max-width: 768px) {
+          font-size: 10px;
+        }
+      }
+    }
+
+    .message-body {
+      position: relative;
+
+      .content {
+        padding: 16px 20px;
+        border-radius: 18px;
+        position: relative;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        transition: all 0.2s ease;
+
+        &:hover {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+          padding: 14px 16px;
+        }
+
+        @media (max-width: 480px) {
+          padding: 12px 14px;
+        }
+
+        .text {
+          font-size: 14px;
+          line-height: 1.6;
+          word-wrap: break-word;
+          margin: 0;
+
+          @media (max-width: 768px) {
+            font-size: 13px;
+            line-height: 1.5;
           }
 
-          &:nth-child(3) {
-            animation-delay: 0.4s;
+          // 格式化样式
+          :deep(.code-block) {
+            background: var(--color-fill-3);
+            border: 1px solid var(--color-border-2);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre;
           }
+
+          :deep(.inline-code) {
+            background: var(--color-fill-2);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+          }
+
+          :deep(a) {
+            color: var(--color-primary-6);
+            text-decoration: none;
+
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+
+        &.streaming {
+          .typing-cursor {
+            animation: blink 1s infinite;
+            margin-left: 2px;
+            color: var(--color-primary-6);
+          }
+        }
+      }
+    }
+
+    .message-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      padding: 0 4px;
+      opacity: 0;
+      transition: all 0.2s ease;
+
+      .action-btn {
+        --color-text: var(--color-text-3);
+        border: none;
+        background: transparent;
+
+        &:hover {
+          background: var(--color-fill-2);
+          --color-text: var(--color-text-2);
+        }
+      }
+    }
+
+    .message-wrapper:hover .message-actions {
+      opacity: 1;
+    }
+
+    // 思考动画样式
+    .thinking-wrapper {
+      margin-bottom: 24px;
+      animation: slideInUp 0.3s ease-out;
+
+      @media (max-width: 768px) {
+        margin-bottom: 20px;
+      }
+
+      @media (max-width: 480px) {
+        margin-bottom: 16px;
+      }
+    }
+
+    .thinking-animation {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        background: var(--color-success-6);
+        border-radius: 50%;
+        animation: thinkingPulse 1.4s infinite ease-in-out;
+
+        &:nth-child(1) {
+          animation-delay: 0s;
+        }
+
+        &:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+
+        &:nth-child(3) {
+          animation-delay: 0.4s;
+        }
+
+        @media (max-width: 768px) {
+          width: 6px;
+          height: 6px;
         }
       }
     }
@@ -1192,7 +1720,8 @@ defineExpose({
   }
 }
 
-@keyframes thinking {
+// 思考动画
+@keyframes thinkingPulse {
   0%, 60%, 100% {
     transform: scale(1);
     opacity: 0.5;
@@ -1203,6 +1732,19 @@ defineExpose({
   }
 }
 
+// 滑入动画
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 旧动画保持兼容
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -1211,6 +1753,22 @@ defineExpose({
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// 脉冲动画（欢迎页头像外圈）
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
   }
 }
 
