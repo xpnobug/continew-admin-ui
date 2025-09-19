@@ -32,13 +32,13 @@
               </div>
             </div>
           </div>
-          
+
           <div class="welcome-message">
             <div class="welcome-title">
               <h3>AI 对话助手</h3>
               <p class="welcome-subtitle">智能对话，即时响应</p>
             </div>
-            
+
             <div class="config-status-card">
               <div v-if="configurationStatus.isValid" class="status-success">
                 <div class="status-icon">
@@ -49,7 +49,7 @@
                   <p>已准备就绪，可以开始对话测试</p>
                 </div>
               </div>
-              
+
               <div v-else class="status-warning">
                 <div class="status-icon">
                   <icon-exclamation-triangle />
@@ -68,7 +68,7 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="welcome-tips">
               <div class="tip-item">
                 <span class="tip-key">Ctrl + Enter</span>
@@ -100,7 +100,7 @@
                   <icon-robot v-else />
                 </div>
               </div>
-              
+
               <div class="message-main">
                 <div class="message-meta">
                   <span class="message-sender">
@@ -108,7 +108,7 @@
                   </span>
                   <span class="message-timestamp">{{ formatTime(message.timestamp) }}</span>
                 </div>
-                
+
                 <div class="message-body">
                   <div v-if="message.role === 'assistant' && message.streaming" class="content streaming">
                     <div class="text">{{ message.content }}<span class="typing-cursor">|</span></div>
@@ -117,8 +117,8 @@
                     <div class="text" v-html="formatMessageContent(message.content)"></div>
                   </div>
                 </div>
-                
-                <div class="message-actions" v-show="!message.streaming">
+
+                <div v-show="!message.streaming" class="message-actions">
                   <a-button type="text" size="mini" class="action-btn" @click="copyMessage(message.content)">
                     <template #icon><icon-copy /></template>
                   </a-button>
@@ -138,13 +138,13 @@
                   <icon-robot />
                 </div>
               </div>
-              
+
               <div class="message-main">
                 <div class="message-meta">
                   <span class="message-sender">AI助手</span>
                   <span class="message-timestamp">正在思考</span>
                 </div>
-                
+
                 <div class="message-body">
                   <div class="thinking-animation">
                     <div class="dot"></div>
@@ -574,7 +574,7 @@ const handleStreamChat = async (userMessage: string) => {
           // eslint-disable-next-line no-console
           console.log('✅ 流式聊天完成')
         }
-        
+
         lastResponseTime.value = Date.now() - startTime
 
         // 流式完成后立即处理剩余内容

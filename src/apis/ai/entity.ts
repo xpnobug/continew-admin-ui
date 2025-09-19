@@ -73,3 +73,8 @@ export function deleteEntity(id: string) {
 export function exportEntity(query: EntityQuery) {
   return http.download(`${BASE_URL}/export`, query)
 }
+
+/** @desc 更新模型状态 */
+export function updateEntityStatus(id: string, status: number) {
+  return http.put(`${BASE_URL}/${id}/status`, { status })
+}

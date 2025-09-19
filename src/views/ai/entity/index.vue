@@ -87,9 +87,11 @@
                 </div>
               </div>
               <div class="entity-status-badge">
-                <a-tag :color="entity.status === 1 ? 'green' : 'red'" size="small">
-                  {{ entity.status === 1 ? '✓' : '✗' }}
-                </a-tag>
+                <a-tooltip :content="entity.status === 1 ? '已启用' : '已禁用'">
+                  <a-tag :color="entity.status === 1 ? 'green' : 'red'" size="small">
+                    {{ entity.status === 1 ? '启用' : '禁用' }}
+                  </a-tag>
+                </a-tooltip>
               </div>
             </div>
 
@@ -143,6 +145,20 @@
                 >
                   <template #icon><icon-edit /></template>
                 </a-button>
+                <a-tooltip :content="entity.status === 1 ? '禁用模型' : '启用模型'">
+                  <a-button
+                    v-permission="['ai:entity:status']"
+                    type="text"
+                    size="mini"
+                    :status="entity.status === 1 ? 'warning' : 'success'"
+                    @click="onToggleStatus(entity)"
+                  >
+                    <template #icon>
+                      <icon-poweroff v-if="entity.status === 1" />
+                      <icon-play-circle v-else />
+                    </template>
+                  </a-button>
+                </a-tooltip>
                 <a-button
                   v-permission="['ai:entity:delete']"
                   type="text"
@@ -193,7 +209,7 @@ import { useRouter } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import EntityAddModal from './EntityAddModal.vue'
 import EntityDetailDrawer from './EntityDetailDrawer.vue'
-import { type EntityQuery, type EntityResp, deleteEntity, exportEntity, listEntity } from '@/apis/ai/entity'
+import { type EntityQuery, type EntityResp, deleteEntity, exportEntity, listEntity, updateEntityStatus } from '@/apis/ai/entity'
 import { getMeta } from '@/apis/ai/meta'
 import { useDownload, useTable } from '@/hooks'
 
@@ -279,6 +295,21 @@ const EntityDetailDrawerRef = ref<InstanceType<typeof EntityDetailDrawer>>()
 // 详情
 const onDetail = (record: EntityResp) => {
   EntityDetailDrawerRef.value?.onOpen(record.id)
+}
+
+// 切换状态
+const onToggleStatus = async (record: EntityResp) => {
+  const newStatus = record.status === 1 ? 0 : 1
+  const action = newStatus === 1 ? '启用' : '禁用'
+  
+  try {
+    await updateEntityStatus(record.id, newStatus)
+    record.status = newStatus
+    Message.success(`${action}成功`)
+  } catch (error) {
+    console.error('更新状态失败:', error)
+    Message.error(`${action}失败，请稍后重试`)
+  }
 }
 
 // 跳转到 AI 对话工作台
