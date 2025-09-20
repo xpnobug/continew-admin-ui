@@ -8,39 +8,6 @@
           {{ currentModel.modelName }}
         </a-tag>
       </div>
-      <div class="header-actions">
-        <a-dropdown @select="handleMenuSelect">
-          <a-button size="small">
-            <template #icon><icon-more /></template>
-          </a-button>
-          <template #content>
-            <a-doption value="select">
-              <template #icon><icon-search /></template>
-              选择模型
-            </a-doption>
-            <a-doption value="create">
-              <template #icon><icon-plus /></template>
-              新建模型
-            </a-doption>
-            <a-doption value="edit" :disabled="!currentModel">
-              <template #icon><icon-edit /></template>
-              编辑当前模型
-            </a-doption>
-            <a-doption value="clone" :disabled="!currentModel">
-              <template #icon><icon-copy /></template>
-              克隆模型
-            </a-doption>
-            <a-doption value="delete" :disabled="!currentModel">
-              <template #icon><icon-delete /></template>
-              删除模型
-            </a-doption>
-          </template>
-        </a-dropdown>
-        <a-button size="small" @click="resetConfig">
-          <template #icon><icon-refresh /></template>
-          重置配置
-        </a-button>
-      </div>
     </div>
 
     <!-- 配置选项卡 -->
@@ -106,206 +73,18 @@
         </div>
       </div>
     </div>
-
-    <!-- 模型选择器弹窗 -->
-    <a-modal
-      v-model:visible="showModelSelector"
-      title="选择模型"
-      :width="800"
-      :footer="false"
-    >
-      <div class="model-selector">
-        <div class="model-grid">
-          <div
-            v-for="model in availableModels"
-            :key="model.id"
-            class="model-card" :class="[{ selected: currentModel?.id === model.id }]"
-            @click="selectModel(model)"
-          >
-            <div class="card-header">
-              <div class="model-icon">
-                <img v-if="model.iconUrl" :src="model.iconUrl" :alt="model.modelName" />
-                <icon-desktop v-else />
-              </div>
-              <div class="model-info">
-                <div class="model-name">{{ model.modelName }}</div>
-                <div class="model-protocol">{{ model.protocol }}</div>
-              </div>
-              <div class="model-status">
-                <a-tag :color="model.status === 1 ? 'green' : 'red'" size="small">
-                  {{ model.status === 1 ? '可用' : '不可用' }}
-                </a-tag>
-              </div>
-            </div>
-            <div class="model-description">
-              {{ model.description || '暂无描述' }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </a-modal>
-
-    <!-- 模型编辑器弹窗 -->
-    <a-modal
-      v-model:visible="showModelEditor"
-      :title="isEditMode ? '编辑模型' : '新建模型'"
-      :width="600"
-      @ok="saveModel"
-      @cancel="showModelEditor = false"
-    >
-      <div class="model-editor">
-        <a-form :model="editingModel" layout="vertical">
-          <a-form-item label="模型名称" required>
-            <a-input v-model="editingModel.modelName" placeholder="请输入模型名称" />
-          </a-form-item>
-
-          <a-form-item label="协议类型" required>
-            <a-select v-model="editingModel.protocol" placeholder="选择协议类型">
-              <a-option value="openai">OpenAI</a-option>
-              <a-option value="anthropic">Anthropic</a-option>
-              <a-option value="huggingface">HuggingFace</a-option>
-              <a-option value="custom">自定义</a-option>
-            </a-select>
-          </a-form-item>
-
-          <a-form-item label="模型能力">
-            <a-input v-model="editingModel.capability" placeholder="描述模型的主要能力" />
-          </a-form-item>
-
-          <a-form-item label="图标URL">
-            <a-input v-model="editingModel.iconUrl" placeholder="模型图标的URL地址" />
-          </a-form-item>
-
-          <a-form-item label="状态">
-            <a-select v-model="editingModel.status" placeholder="选择模型状态">
-              <a-option :value="1">启用</a-option>
-              <a-option :value="0">禁用</a-option>
-            </a-select>
-          </a-form-item>
-
-          <a-form-item label="描述">
-            <a-textarea
-              v-model="editingModel.description"
-              placeholder="详细描述模型的功能和特性"
-              :rows="3"
-            />
-          </a-form-item>
-        </a-form>
-      </div>
-    </a-modal>
-
-    <!-- 分组管理弹窗 -->
-    <a-modal
-      v-model:visible="showGroupManager"
-      title="模型分组管理"
-      :width="700"
-      :footer="false"
-    >
-      <div class="group-manager">
-        <div class="manager-header">
-          <a-button type="primary" @click="showGroupEditor = true">
-            <template #icon><icon-plus /></template>
-            新建分组
-          </a-button>
-        </div>
-
-        <div class="groups-list">
-          <div
-            v-for="group in modelGroups"
-            :key="group.id"
-            class="group-item"
-          >
-            <div class="group-header">
-              <div class="group-info">
-                <div class="group-name">{{ group.name }}</div>
-                <div class="group-description">{{ group.description || '暂无描述' }}</div>
-                <div class="group-stats">{{ group.models?.length || 0 }} 个模型</div>
-              </div>
-              <div class="group-actions">
-                <a-button size="small" type="text" @click="editGroup(group)">
-                  <template #icon><icon-edit /></template>
-                </a-button>
-                <a-button size="small" type="text" status="danger" @click="deleteGroup(group)">
-                  <template #icon><icon-delete /></template>
-                </a-button>
-              </div>
-            </div>
-            <div v-if="group.models?.length" class="group-models">
-              <div
-                v-for="model in group.models.slice(0, 3)"
-                :key="model.id"
-                class="model-tag"
-              >
-                {{ model.modelName }}
-              </div>
-              <span v-if="group.models.length > 3" class="more-models">
-                +{{ group.models.length - 3 }} 个...
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </a-modal>
-
-    <!-- 分组编辑弹窗 -->
-    <a-modal
-      v-model:visible="showGroupEditor"
-      :title="editingGroup.id ? '编辑分组' : '新建分组'"
-      :width="500"
-      @ok="saveGroup"
-      @cancel="closeGroupEditor"
-    >
-      <div class="group-editor">
-        <a-form :model="editingGroup" layout="vertical">
-          <a-form-item label="分组名称" required>
-            <a-input v-model="editingGroup.name" placeholder="请输入分组名称" />
-          </a-form-item>
-
-          <a-form-item label="分组描述">
-            <a-textarea
-              v-model="editingGroup.description"
-              placeholder="描述这个分组的用途和特点"
-              :rows="3"
-            />
-          </a-form-item>
-
-          <a-form-item label="分组颜色">
-            <div class="color-picker">
-              <div
-                v-for="color in groupColors"
-                :key="color"
-                class="color-option"
-                :class="{ active: editingGroup.color === color }"
-                :style="{ backgroundColor: color }"
-                @click="editingGroup.color = color"
-              />
-            </div>
-          </a-form-item>
-
-          <a-form-item label="排序权重">
-            <a-input-number
-              v-model="editingGroup.sort"
-              :min="0"
-              :max="999"
-              placeholder="数字越小排序越靠前"
-              style="width: 100%"
-            />
-          </a-form-item>
-        </a-form>
-      </div>
-    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Message, Modal } from '@arco-design/web-vue'
+import { Message } from '@arco-design/web-vue'
 import ModelCapabilityEditor from './ModelCapabilityEditor.vue'
 import ModelConnectionConfig from './ModelConnectionConfig.vue'
 import OrchestrationConfigEditor from './OrchestrationConfigEditor.vue'
 import ModelParametersConfig from './ModelParametersConfig.vue'
 import ModelContextConfig from './ModelContextConfig.vue'
 import ModelSafetyConfig from './ModelSafetyConfig.vue'
-import { type MetaResp, addMeta, deleteMeta, getMeta, listMeta, updateMeta } from '@/apis/ai/meta'
+import { type MetaResp, getMeta, listMeta, updateMeta } from '@/apis/ai/meta'
 import { addEntity, listEntity, updateEntity } from '@/apis/ai/entity'
 
 interface Props {
@@ -322,18 +101,6 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-// 类型定义
-interface ModelGroup {
-  id: string
-  name: string
-  description?: string
-  color: string
-  sort: number
-  models?: MetaResp[]
-  createdAt: string
-  updatedAt: string
-}
-
 // interface ApiConfig {
 //   baseUrl: string
 //   apiKey: string
@@ -346,12 +113,8 @@ interface ModelGroup {
 
 // 响应式数据
 const currentModel = ref<MetaResp | null>(props.modelValue)
-const showModelSelector = ref(false)
 const availableModels = ref<MetaResp[]>([])
 const activeTab = ref('capability')
-const showModelEditor = ref(false)
-const editingModel = ref<Partial<MetaResp>>({})
-const isEditMode = ref(false)
 
 // 新的配置数据结构
 const modelCapabilityConfig = ref({
@@ -396,30 +159,6 @@ const modelConnectionConfig = ref({
     certPath: '',
   },
 })
-
-// 分组管理（保留用于后续扩展）
-const showGroupManager = ref(false)
-const showGroupEditor = ref(false)
-const modelGroups = ref<ModelGroup[]>([])
-const currentGroupId = ref<string>('')
-const editingGroup = ref<Partial<ModelGroup>>({})
-
-// 分组颜色选项
-const groupColors = [
-  '#1890ff',
-  '#52c41a',
-  '#faad14',
-  '#f5222d',
-  '#722ed1',
-  '#13c2c2',
-  '#eb2f96',
-  '#fa541c',
-  '#a0d911',
-  '#2f54eb',
-  '#fa8c16',
-  '#d32029',
-]
-
 // 模型配置
 const modelConfig = reactive({
   temperature: 0.7,
@@ -577,41 +316,16 @@ const autoSaveConfig = async () => {
     await updateMeta(metaData, currentModel.value.id)
 
     // 2. 获取或创建模型实体
-    if (!currentEntityId.value) {
-      currentEntityId.value = await getOrCreateEntity()
-    }
-
-    // 3. 更新模型实体的默认参数
-    const entityData = {
-      metaId: currentModel.value.id,
-      name: `${currentModel.value.modelName} - 默认配置`,
-      description: '自动生成的模型配置',
-      defaultParams: JSON.stringify({
-        temperature: modelConfig.temperature,
-        topP: modelConfig.topP,
-        maxTokens: modelConfig.maxTokens,
-        presencePenalty: modelConfig.presencePenalty,
-        frequencyPenalty: modelConfig.frequencyPenalty,
-        stream: modelConfig.stream,
-        systemPrompt: contextConfig.systemMessage,
-        stop: modelConfig.stopSequences ? modelConfig.stopSequences.split(',').map((s) => s.trim()).filter(Boolean) : [],
-        seed: modelConfig.seed,
-        contextConfig: {
-          windowSize: contextConfig.windowSize,
-          keepSystemMessage: contextConfig.keepSystemMessage,
-          autoSummary: contextConfig.autoSummary,
-        },
-        safetyConfig: {
-          enableContentFilter: safetyConfig.enableContentFilter,
-          sensitiveContentDetection: safetyConfig.sensitiveContentDetection,
-          filterLevel: safetyConfig.filterLevel,
-          blacklistKeywords: safetyConfig.blacklistKeywords,
-        },
-      }),
-      scenario: 1,
-      status: 1,
-    }
-    await updateEntity(entityData, currentEntityId.value)
+    // if (!currentEntityId.value) {
+    //   currentEntityId.value = await getOrCreateEntity()
+    // }
+    //
+    // // 3. 更新模型实体的默认参数
+    // const entityData = {
+    //   metaId: currentModel.value.id,
+    //   name: `${currentModel.value.modelName}`,
+    // }
+    // await updateEntity(entityData, currentEntityId.value)
 
     saveStatus.value = 'saved'
     lastSaveTime.value = new Date().toLocaleTimeString('zh-CN', {
@@ -666,106 +380,6 @@ watch([modelConfig, contextConfig, safetyConfig, modelCapabilityConfig, modelCon
   debouncedAutoSave()
 }, { deep: true })
 
-// 关闭分组编辑器
-const closeGroupEditor = () => {
-  showGroupEditor.value = false
-  editingGroup.value = {}
-}
-
-// 加载分组数据（暂时保留空实现，用于后续扩展）
-const loadGroups = () => {
-  // 初始化默认分组
-  modelGroups.value = [
-    {
-      id: 'default',
-      name: '默认分组',
-      description: '系统默认分组',
-      color: '#1890ff',
-      sort: 0,
-      models: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ]
-}
-
-// 处理分组变化（暂时保留用于后续扩展）
-const _handleGroupChange = (groupId: string) => {
-  currentGroupId.value = groupId
-}
-
-// 编辑分组
-const editGroup = (group: ModelGroup) => {
-  editingGroup.value = { ...group }
-  showGroupEditor.value = true
-}
-
-// 删除分组
-const deleteGroup = (group: ModelGroup) => {
-  if (group.id === 'default') {
-    Message.warning('默认分组不能删除')
-    return
-  }
-
-  Modal.confirm({
-    title: '确认删除',
-    content: `确定要删除分组"${group.name}"吗？删除后分组下的模型配置也会被清除。`,
-    onOk: () => {
-      const index = modelGroups.value.findIndex((g) => g.id === group.id)
-      if (index > -1) {
-        modelGroups.value.splice(index, 1)
-        Message.success('分组删除成功')
-
-        // 如果删除的是当前选中的分组，切换到默认分组
-        if (currentGroupId.value === group.id) {
-          currentGroupId.value = 'default'
-        }
-      }
-    },
-  })
-}
-
-// 保存分组
-const saveGroup = () => {
-  if (!editingGroup.value.name) {
-    Message.warning('请输入分组名称')
-    return
-  }
-
-  try {
-    if (editingGroup.value.id) {
-      // 编辑现有分组
-      const index = modelGroups.value.findIndex((g) => g.id === editingGroup.value.id)
-      if (index > -1) {
-        modelGroups.value[index] = {
-          ...modelGroups.value[index],
-          ...editingGroup.value,
-          updatedAt: new Date().toISOString(),
-        } as ModelGroup
-      }
-    } else {
-      // 新建分组
-      const newGroup: ModelGroup = {
-        id: `group_${Date.now()}`,
-        name: editingGroup.value.name,
-        description: editingGroup.value.description || '',
-        color: editingGroup.value.color || '#1890ff',
-        sort: editingGroup.value.sort || 999,
-        models: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-      modelGroups.value.push(newGroup)
-    }
-
-    closeGroupEditor()
-    Message.success('分组保存成功')
-  } catch (error) {
-    console.error('Failed to save group:', error)
-    Message.error('保存分组失败')
-  }
-}
-
 // 加载可用模型列表
 const loadModels = async () => {
   try {
@@ -786,101 +400,6 @@ const loadModels = async () => {
   } catch (error) {
     console.error('Failed to load models:', error)
     Message.error('加载模型列表失败')
-  }
-}
-
-// 打开模型选择器
-const openModelSelector = async () => {
-  await loadModels()
-  showModelSelector.value = true
-}
-
-// 创建新模型
-const createNewModel = () => {
-  editingModel.value = {
-    modelName: '',
-    protocol: 'openai',
-    iconUrl: '',
-    status: 1,
-    description: '',
-    capability: '',
-  }
-  isEditMode.value = false
-  showModelEditor.value = true
-}
-
-// 编辑当前模型
-const editCurrentModel = () => {
-  if (!currentModel.value) return
-  editingModel.value = { ...currentModel.value }
-  isEditMode.value = true
-  showModelEditor.value = true
-}
-
-// 克隆当前模型
-const cloneCurrentModel = () => {
-  if (!currentModel.value) return
-  editingModel.value = {
-    ...currentModel.value,
-    id: undefined,
-    modelName: `${currentModel.value.modelName} (副本)`,
-  }
-  isEditMode.value = false
-  showModelEditor.value = true
-}
-
-// 删除当前模型
-const deleteCurrentModel = () => {
-  if (!currentModel.value) return
-
-  Modal.confirm({
-    title: '删除模型',
-    content: `确定要删除模型 "${currentModel.value.modelName}" 吗？`,
-    onOk: async () => {
-      try {
-        await deleteMeta(currentModel.value!.id)
-        currentModel.value = null
-        emit('update:modelValue', null)
-        emit('change', null)
-        await loadModels()
-        Message.success('模型删除成功')
-      } catch (error) {
-        console.error('Failed to delete model:', error)
-        Message.error('模型删除失败')
-      }
-    },
-  })
-}
-
-// 保存模型
-const saveModel = async () => {
-  if (!editingModel.value.modelName) {
-    Message.warning('请填写模型名称')
-    return
-  }
-
-  try {
-    let savedModel: MetaResp
-    if (isEditMode.value && editingModel.value.id) {
-      // 更新现有模型
-      await updateMeta(editingModel.value as MetaResp, editingModel.value.id)
-      savedModel = editingModel.value as MetaResp
-      Message.success('模型更新成功')
-    } else {
-      // 创建新模型
-      const { data } = await addMeta(editingModel.value)
-      savedModel = { ...editingModel.value, id: data.id } as MetaResp
-      Message.success('模型创建成功')
-    }
-
-    currentModel.value = savedModel
-    emit('update:modelValue', savedModel)
-    emit('change', savedModel)
-    showModelEditor.value = false
-    await loadModels()
-  } catch (error) {
-    console.error('Failed to save model:', error)
-    Message.error('模型保存失败')
   }
 }
 
@@ -993,40 +512,6 @@ watch(() => props.modelValue, async (newModel) => {
   }
 }, { immediate: true })
 
-// 选择模型
-const selectModel = async (model: MetaResp) => {
-  currentModel.value = model
-  emit('update:modelValue', model)
-  emit('change', model)
-  showModelSelector.value = false
-
-  // 加载模型的编排配置
-  await loadModelOrchestrationConfig(model.id)
-
-  Message.success(`已选择模型: ${model.modelName}`)
-}
-
-// 处理菜单选择
-const handleMenuSelect = (value: string) => {
-  switch (value) {
-    case 'select':
-      openModelSelector()
-      break
-    case 'create':
-      createNewModel()
-      break
-    case 'edit':
-      editCurrentModel()
-      break
-    case 'clone':
-      cloneCurrentModel()
-      break
-    case 'delete':
-      deleteCurrentModel()
-      break
-  }
-}
-
 // 重置配置
 const resetConfig = () => {
   Object.assign(modelConfig, {
@@ -1094,7 +579,6 @@ const getFullConfig = () => {
 }
 
 onMounted(async () => {
-  loadGroups()
   loadModels()
   // 如果有当前模型，加载其编排配置
   if (currentModel.value?.id) {
@@ -1152,10 +636,6 @@ defineExpose({
       }
     }
 
-    .header-actions {
-      display: flex;
-      gap: 8px;
-    }
   }
 
   .config-tabs {
