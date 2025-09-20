@@ -71,23 +71,23 @@
     </div>
 
     <!-- 提示词模板 -->
-    <div class="templates-section">
-      <div class="section-title">
-        <icon-file />
-        快速模板
-      </div>
-      <div class="templates-list">
-        <div
-          v-for="template in templates"
-          :key="template.id"
-          class="template-item"
-          @click="useTemplate(template)"
-        >
-          <div class="template-name">{{ template.name }}</div>
-          <div class="template-desc">{{ template.description }}</div>
-        </div>
-      </div>
-    </div>
+<!--    <div class="templates-section">-->
+<!--      <div class="section-title">-->
+<!--        <icon-file />-->
+<!--        快速模板-->
+<!--      </div>-->
+<!--      <div class="templates-list">-->
+<!--        <div-->
+<!--          v-for="template in templates"-->
+<!--          :key="template.id"-->
+<!--          class="template-item"-->
+<!--          @click="useTemplate(template)"-->
+<!--        >-->
+<!--          <div class="template-name">{{ template.name }}</div>-->
+<!--          <div class="template-desc">{{ template.description }}</div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
 
     <!-- 提示词库管理弹窗 -->
     <PromptLibrary

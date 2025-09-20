@@ -64,23 +64,23 @@
     </div>
 
     <!-- 配置预设 -->
-    <div class="presets-section">
-      <div class="section-title">
-        <icon-bookmark />
-        配置预设
-      </div>
-      <div class="presets-list">
-        <div
-          v-for="preset in configPresets"
-          :key="preset.id"
-          class="preset-item"
-          @click="applyPreset(preset)"
-        >
-          <div class="preset-name">{{ preset.name }}</div>
-          <div class="preset-desc">{{ preset.description }}</div>
-        </div>
-      </div>
-    </div>
+<!--    <div class="presets-section">-->
+<!--      <div class="section-title">-->
+<!--        <icon-bookmark />-->
+<!--        配置预设-->
+<!--      </div>-->
+<!--      <div class="presets-list">-->
+<!--        <div-->
+<!--          v-for="preset in configPresets"-->
+<!--          :key="preset.id"-->
+<!--          class="preset-item"-->
+<!--          @click="applyPreset(preset)"-->
+<!--        >-->
+<!--          <div class="preset-name">{{ preset.name }}</div>-->
+<!--          <div class="preset-desc">{{ preset.description }}</div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
   </div>
 </template>
 
