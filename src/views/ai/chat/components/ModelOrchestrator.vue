@@ -85,7 +85,7 @@ import ModelParametersConfig from './ModelParametersConfig.vue'
 import ModelContextConfig from './ModelContextConfig.vue'
 import ModelSafetyConfig from './ModelSafetyConfig.vue'
 import { type MetaResp, getMeta, listMeta, updateMeta } from '@/apis/ai/meta'
-import { addEntity, listEntity, updateEntity } from '@/apis/ai/entity'
+import { listEntity } from '@/apis/ai/entity'
 
 interface Props {
   modelValue?: MetaResp | null
@@ -239,67 +239,6 @@ const lastSaveTime = ref<string>('')
 watch([saveStatus, lastSaveTime], ([newStatus, newSaveTime]) => {
   emit('save-status-change', newStatus, newSaveTime)
 }, { immediate: true })
-
-// 获取或创建模型实体
-const getOrCreateEntity = async (): Promise<string> => {
-  if (!currentModel.value) throw new Error('No current model')
-
-  try {
-    // 先尝试查询是否已存在该模型的实体
-    const { data } = await listEntity({
-      metaId: currentModel.value.id,
-      name: undefined,
-      scenario: undefined,
-      status: undefined,
-      createUser: undefined,
-      createTime: undefined,
-      page: 1,
-      size: 1,
-      sort: ['id,desc'],
-    })
-
-    if (data.list && data.list.length > 0) {
-      return data.list[0].id
-    }
-
-    // 如果不存在，则创建新的实体
-    const entityData = {
-      metaId: currentModel.value.id,
-      name: `${currentModel.value.modelName} - 默认配置`,
-      description: '自动生成的模型配置',
-      defaultParams: JSON.stringify({
-        temperature: modelConfig.temperature,
-        topP: modelConfig.topP,
-        maxTokens: modelConfig.maxTokens,
-        presencePenalty: modelConfig.presencePenalty,
-        frequencyPenalty: modelConfig.frequencyPenalty,
-        stream: modelConfig.stream,
-        systemPrompt: contextConfig.systemMessage,
-        stop: modelConfig.stopSequences ? modelConfig.stopSequences.split(',').map((s) => s.trim()).filter(Boolean) : [],
-        seed: modelConfig.seed,
-        contextConfig: {
-          windowSize: contextConfig.windowSize,
-          keepSystemMessage: contextConfig.keepSystemMessage,
-          autoSummary: contextConfig.autoSummary,
-        },
-        safetyConfig: {
-          enableContentFilter: safetyConfig.enableContentFilter,
-          sensitiveContentDetection: safetyConfig.sensitiveContentDetection,
-          filterLevel: safetyConfig.filterLevel,
-          blacklistKeywords: safetyConfig.blacklistKeywords,
-        },
-      }),
-      scenario: 1, // 默认场景
-      status: 1, // 启用状态
-    }
-
-    const createResult = await addEntity(entityData)
-    return createResult.data.id
-  } catch (error) {
-    console.error('Failed to get or create entity:', error)
-    throw error
-  }
-}
 
 const autoSaveConfig = async () => {
   if (!currentModel.value) return
