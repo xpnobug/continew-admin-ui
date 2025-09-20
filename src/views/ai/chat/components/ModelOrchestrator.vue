@@ -20,6 +20,7 @@
           <a-tab-pane key="parameters" title="参数配置" />
           <a-tab-pane key="context" title="上下文管理" />
           <a-tab-pane key="safety" title="安全与过滤" />
+          <a-tab-pane key="keywords" title="关键词管理" />
           <a-tab-pane key="orchestration" title="模型编排" />
         </a-tabs>
       </div>
@@ -44,6 +45,10 @@
 
         <div v-if="activeTab === 'safety'" class="tab-content-item">
           <ModelSafetyConfig v-model="safetyConfig" />
+        </div>
+
+        <div v-if="activeTab === 'keywords'" class="tab-content-item">
+          <KeywordManagerConfig ref="keywordManagerRef" />
         </div>
 
         <div v-if="activeTab === 'orchestration'" class="tab-content-item">
@@ -84,6 +89,7 @@ import OrchestrationConfigEditor from './OrchestrationConfigEditor.vue'
 import ModelParametersConfig from './ModelParametersConfig.vue'
 import ModelContextConfig from './ModelContextConfig.vue'
 import ModelSafetyConfig from './ModelSafetyConfig.vue'
+import KeywordManagerConfig from './KeywordManagerConfig.vue'
 import { type MetaResp, getMeta, listMeta, updateMeta } from '@/apis/ai/meta'
 import { listEntity } from '@/apis/ai/entity'
 
@@ -226,6 +232,9 @@ const configPresets = ref([
     },
   },
 ])
+
+// 关键词管理器引用
+const keywordManagerRef = ref()
 
 // 防抖保存函数
 let autoSaveTimer: NodeJS.Timeout | null = null
@@ -533,6 +542,11 @@ onBeforeUnmount(() => {
   }
 })
 
+// 获取关键词管理器的方法
+const getKeywordManager = () => {
+  return keywordManagerRef.value
+}
+
 defineExpose({
   currentModel,
   modelConfig,
@@ -540,10 +554,12 @@ defineExpose({
   safetyConfig,
   modelCapabilityConfig,
   modelConnectionConfig,
+  keywordManagerRef,
   getFullConfig,
   resetConfig,
   handleOrchestrationSave,
   loadModelOrchestrationConfig,
+  getKeywordManager,
 })
 </script>
 
