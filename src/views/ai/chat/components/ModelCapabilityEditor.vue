@@ -129,6 +129,48 @@
 </template>
 
 <script setup lang="ts">
+// 自定义关键词接口
+interface CustomKeyword {
+  text: string
+  category: string
+  description?: string
+}
+
+// 自定义分类接口
+interface CustomCategory {
+  id: string
+  name: string
+  color: string
+  description?: string
+}
+
+// 关键词配置接口
+interface KeywordConfig {
+  customKeywords: CustomKeyword[]
+  customCategories: CustomCategory[]
+  enabledSystemCategories: string[]
+  // 系统关键词库（可自定义覆盖）
+  systemKeywords: Record<string, string[]>
+  // 热门关键词配置
+  hotKeywords: string[]
+  hotKeywordsConfig: {
+    autoGenerate: boolean
+    maxCount: number
+    updateInterval: string // 'daily' | 'weekly' | 'monthly'
+  }
+  // 季节性关键词配置
+  seasonalKeywords: Record<string, string[]>
+  seasonalKeywordsConfig: {
+    autoGenerate: boolean
+    currentSeason?: string
+    customSeasons: Record<string, {
+      name: string
+      months: number[]
+      keywords: string[]
+    }>
+  }
+}
+
 interface ModelCapability {
   textGeneration: boolean
   codeGeneration: boolean
@@ -145,6 +187,8 @@ interface ModelCapability {
   languages: string[]
   // 当前选择的提示词
   currentPrompt: any
+  // 关键词配置
+  keywordConfig?: KeywordConfig
 }
 
 interface Props {
@@ -180,6 +224,140 @@ const defaultCapabilities: ModelCapability = {
   languages: ['zh-CN', 'en-US'],
   // 当前选择的提示词
   currentPrompt: null,
+  // 关键词配置默认值
+  keywordConfig: {
+    customKeywords: [],
+    customCategories: [],
+    enabledSystemCategories: ['scenic', 'food', 'culture', 'activity', 'travel'],
+    // 系统关键词库（河南旅游主题）
+    systemKeywords: {
+      scenic: [
+        '龙门石窟',
+        '少林寺',
+        '白马寺',
+        '清明上河园',
+        '开封府',
+        '云台山',
+        '老君山',
+        '嵩山',
+        '白云山',
+        '鸡公山',
+        '尧山',
+        '红旗渠',
+        '殷墟',
+        '函谷关',
+        '太行大峡谷',
+        '黄河小浪底',
+        '焦作影视城',
+        '洛阳牡丹园',
+        '康百万庄园',
+        '河南博物院',
+        '嵩阳书院',
+        '中岳庙',
+      ],
+      food: [
+        '胡辣汤',
+        '烩面',
+        '水席',
+        '道口烧鸡',
+        '开封灌汤包',
+        '安阳血糕',
+        '信阳毛尖',
+        '铁棍山药',
+        '新郑大枣',
+        '西峡香菇',
+        '牛肉拉面',
+        '焦作怀药',
+        '洛阳燕菜',
+        '周口逍遥胡辣汤',
+        '驻马店芝麻糖',
+        '商丘归德府汤包',
+        '许昌烧饼',
+      ],
+      culture: [
+        '中原文化',
+        '河洛文化',
+        '黄河文明',
+        '汉字文化',
+        '武术文化',
+        '佛教文化',
+        '道教文化',
+        '诗词文化',
+        '戏曲文化',
+        '民俗文化',
+        '古都文化',
+        '姓氏文化',
+        '易经文化',
+        '医药文化',
+        '书法文化',
+        '陶瓷文化',
+        '青铜文化',
+        '石刻文化',
+      ],
+      activity: [
+        '登山',
+        '徒步',
+        '摄影',
+        '赏花',
+        '泡温泉',
+        '漂流',
+        '滑雪',
+        '采摘',
+        '观鸟',
+        '露营',
+        '骑行',
+        '垂钓',
+        '品茶',
+        '书法体验',
+        '武术学习',
+        '陶艺制作',
+        '民俗体验',
+        '古装体验',
+      ],
+      travel: [
+        '高铁',
+        '飞机',
+        '自驾',
+        '包车',
+        '公交',
+        '地铁',
+        '出租车',
+        '共享单车',
+        '景区直通车',
+        '旅游专线',
+        '住宿推荐',
+        '美食推荐',
+        '购物指南',
+        '交通路线',
+        '最佳季节',
+        '注意事项',
+      ],
+    },
+    // 热门关键词
+    hotKeywords: ['龙门石窟', '少林寺', '清明上河园', '云台山', '胡辣汤', '烩面', '道口烧鸡', '开封灌汤包'],
+    hotKeywordsConfig: {
+      autoGenerate: true,
+      maxCount: 8,
+      updateInterval: 'weekly',
+    },
+    // 季节性关键词
+    seasonalKeywords: {
+      spring: ['牡丹花', '樱花', '踏青', '温泉', '登山', '清明上河园'],
+      summer: ['云台山', '漂流', '避暑', '青天河', '鸡公山', '南湾湖'],
+      autumn: ['老君山', '红叶', '登高', '秋游', '嵩山', '太行大峡谷'],
+      winter: ['温泉', '雪景', '室内景点', '博物院', '古建筑', '美食'],
+    },
+    seasonalKeywordsConfig: {
+      autoGenerate: true,
+      currentSeason: 'spring',
+      customSeasons: {
+        spring: { name: '春季', months: [3, 4, 5], keywords: ['牡丹花', '樱花', '踏青'] },
+        summer: { name: '夏季', months: [6, 7, 8], keywords: ['漂流', '避暑', '清凉'] },
+        autumn: { name: '秋季', months: [9, 10, 11], keywords: ['红叶', '登高', '秋游'] },
+        winter: { name: '冬季', months: [12, 1, 2], keywords: ['温泉', '雪景', '室内'] },
+      },
+    },
+  },
 }
 
 // 初始化默认值

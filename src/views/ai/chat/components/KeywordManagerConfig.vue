@@ -33,19 +33,19 @@
     </div>
 
     <!-- 关键词分类标签 -->
-    <div class="category-tabs">
-      <a-radio-group v-model="selectedCategory" type="button" size="small">
-        <a-radio value="all">全部</a-radio>
-        <a-radio value="scenic">景点推荐</a-radio>
-        <a-radio value="food">美食特产</a-radio>
-        <a-radio value="culture">历史文化</a-radio>
-        <a-radio value="activity">体验活动</a-radio>
-        <a-radio value="travel">出行指南</a-radio>
-        <a-radio v-for="category in customCategories" :key="category.id" :value="category.id">
-          {{ category.name }}
-        </a-radio>
-      </a-radio-group>
-    </div>
+    <!--    <div class="category-tabs"> -->
+    <!--      <a-radio-group v-model="selectedCategory" type="button" size="small"> -->
+    <!--        <a-radio value="all">全部</a-radio> -->
+    <!--        <a-radio value="scenic">景点推荐</a-radio> -->
+    <!--        <a-radio value="food">美食特产</a-radio> -->
+    <!--        <a-radio value="culture">历史文化</a-radio> -->
+    <!--        <a-radio value="activity">体验活动</a-radio> -->
+    <!--        <a-radio value="travel">出行指南</a-radio> -->
+    <!--        <a-radio v-for="category in customCategories" :key="category.id" :value="category.id"> -->
+    <!--          {{ category.name }} -->
+    <!--        </a-radio> -->
+    <!--      </a-radio-group> -->
+    <!--    </div> -->
 
     <!-- 关键词统计信息 -->
     <div class="stats-section">
@@ -73,6 +73,7 @@
           <a-tab-pane key="custom" title="自定义关键词" />
           <a-tab-pane key="hot" title="热门推荐" />
           <a-tab-pane key="seasonal" title="季节推荐" />
+          <a-tab-pane key="management" title="关键词库管理" />
         </a-tabs>
       </div>
 
@@ -180,8 +181,115 @@
             </a-tag>
           </div>
         </div>
+
+        <!-- 关键词库管理 -->
+        <div v-if="activeContentTab === 'management'" class="keywords-management">
+          <!-- 管理工具栏 -->
+          <div class="management-toolbar">
+            <div class="toolbar-section">
+              <h3 class="section-title">
+                <icon-tool class="title-icon" />
+                关键词库管理
+              </h3>
+              <p class="section-description">管理系统关键词库，支持添加、删除关键词，导入导出配置</p>
+            </div>
+            <div class="toolbar-actions">
+              <!--              <a-button-group> -->
+              <!--                <a-button @click="handleImportKeywords"> -->
+              <!--                  <template #icon> -->
+              <!--                    <icon-upload /> -->
+              <!--                  </template> -->
+              <!--                  导入配置 -->
+              <!--                </a-button> -->
+              <!--                <a-button type="primary" @click="handleExportKeywords"> -->
+              <!--                  <template #icon> -->
+              <!--                    <icon-download /> -->
+              <!--                  </template> -->
+              <!--                  导出配置 -->
+              <!--                </a-button> -->
+              <!--              </a-button-group> -->
+              <a-button status="warning" @click="handleResetToDefault">
+                <template #icon>
+                  <icon-refresh />
+                </template>
+                重置默认
+              </a-button>
+            </div>
+          </div>
+
+          <!-- 系统关键词管理 -->
+          <div class="system-keywords-management">
+            <div v-for="(keywords, categoryId) in keywordConfig.systemKeywords" :key="categoryId" class="keyword-category">
+              <div class="category-title">
+                <icon-tag />
+                {{ getTypeName(categoryId) }}
+                <a-tag size="small" :color="getKeywordColor(categoryId)">{{ keywords.length }}</a-tag>
+                <div class="category-actions">
+                  <a-button
+                    type="text"
+                    size="small"
+                    class="add-keyword-btn"
+                    @click="handleAddSystemKeyword(categoryId)"
+                  >
+                    <template #icon>
+                      <icon-plus />
+                    </template>
+                    添加关键词
+                  </a-button>
+                </div>
+              </div>
+              <div class="keyword-tags">
+                <template v-if="keywords.length === 0">
+                  <div class="empty-keywords">
+                    <span class="empty-text">暂无关键词</span>
+                    <a-button
+                      size="mini"
+                      type="primary"
+                      @click="handleAddSystemKeyword(categoryId)"
+                    >
+                      添加第一个
+                    </a-button>
+                  </div>
+                </template>
+                <template v-else>
+                  <a-tag
+                    v-for="(keyword, index) in keywords"
+                    :key="`${categoryId}-${index}`"
+                    class="keyword-tag editable"
+                    :color="getKeywordColor(categoryId)"
+                    closable
+                    @close="handleRemoveSystemKeyword(categoryId, index)"
+                    @click="handleKeywordClick(keyword)"
+                  >
+                    {{ keyword }}
+                    <template #icon>
+                      <icon-copy class="copy-icon" @click.stop="handleCopyKeyword(keyword)" />
+                    </template>
+                  </a-tag>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- 添加系统关键词模态框 -->
+    <a-modal
+      v-model:visible="addSystemKeywordVisible"
+      title="添加系统关键词"
+      @ok="handleAddSystemKeywordConfirm"
+    >
+      <div class="add-system-keyword-form">
+        <div class="form-item">
+          <label class="form-label">关键词内容 *</label>
+          <a-input v-model="addSystemKeywordForm.text" placeholder="请输入关键词" />
+        </div>
+        <div class="form-item">
+          <label class="form-label">分类：{{ getTypeName(addSystemKeywordForm.category) }}</label>
+        </div>
+      </div>
+    </a-modal>
 
     <!-- 添加关键词模态框 -->
     <a-modal
@@ -329,6 +437,11 @@
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
 
+// Props 和 Emits
+const props = defineProps<Props>()
+
+const emit = defineEmits<Emits>()
+
 // 关键词类型常量
 const KEYWORD_TYPES = {
   SCENIC: 'scenic',
@@ -338,122 +451,80 @@ const KEYWORD_TYPES = {
   TRAVEL: 'travel',
 }
 
-// 河南地区专业关键词库
-const HENAN_KEYWORDS: Record<string, string[]> = {
-  [KEYWORD_TYPES.SCENIC]: [
-    '龙门石窟',
-    '少林寺',
-    '白马寺',
-    '清明上河园',
-    '开封府',
-    '云台山',
-    '老君山',
-    '嵩山',
-    '白云山',
-    '鸡公山',
-    '尧山',
-    '红旗渠',
-    '殷墟',
-    '函谷关',
-    '太行大峡谷',
-    '黄河小浪底',
-    '焦作影视城',
-    '洛阳牡丹园',
-    '康百万庄园',
-    '河南博物院',
-    '嵩阳书院',
-    '中岳庙',
-  ],
-  [KEYWORD_TYPES.FOOD]: [
-    '胡辣汤',
-    '烩面',
-    '水席',
-    '道口烧鸡',
-    '开封灌汤包',
-    '安阳血糕',
-    '信阳毛尖',
-    '铁棍山药',
-    '新郑大枣',
-    '西峡香菇',
-    '牛肉拉面',
-    '焦作怀药',
-    '洛阳燕菜',
-    '周口逍遥胡辣汤',
-    '驻马店芝麻糖',
-    '商丘归德府汤包',
-    '许昌烧饼',
-  ],
-  [KEYWORD_TYPES.CULTURE]: [
-    '中原文化',
-    '河洛文化',
-    '黄河文明',
-    '汉字文化',
-    '武术文化',
-    '佛教文化',
-    '道教文化',
-    '诗词文化',
-    '戏曲文化',
-    '民俗文化',
-    '古都文化',
-    '姓氏文化',
-    '易经文化',
-    '医药文化',
-    '书法文化',
-    '陶瓷文化',
-    '青铜文化',
-    '石刻文化',
-  ],
-  [KEYWORD_TYPES.ACTIVITY]: [
-    '登山',
-    '徒步',
-    '摄影',
-    '赏花',
-    '泡温泉',
-    '漂流',
-    '滑雪',
-    '采摘',
-    '观鸟',
-    '露营',
-    '骑行',
-    '垂钓',
-    '品茶',
-    '书法体验',
-    '武术学习',
-    '陶艺制作',
-    '民俗体验',
-    '古装体验',
-  ],
-  [KEYWORD_TYPES.TRAVEL]: [
-    '高铁',
-    '飞机',
-    '自驾',
-    '包车',
-    '公交',
-    '地铁',
-    '出租车',
-    '共享单车',
-    '景区直通车',
-    '旅游专线',
-    '住宿推荐',
-    '美食推荐',
-    '购物指南',
-    '交通路线',
-    '最佳季节',
-    '注意事项',
-  ],
+// 工具函数
+const getTypeName = (type: string) => {
+  const typeNames: Record<string, string> = {
+    [KEYWORD_TYPES.SCENIC]: '景点推荐',
+    [KEYWORD_TYPES.FOOD]: '美食特产',
+    [KEYWORD_TYPES.CULTURE]: '历史文化',
+    [KEYWORD_TYPES.ACTIVITY]: '体验活动',
+    [KEYWORD_TYPES.TRAVEL]: '出行指南',
+  }
+  return typeNames[type] || '其他'
 }
 
+// const getCategoryDescription = (type: string) => {
+//   const descriptions: Record<string, string> = {
+//     [KEYWORD_TYPES.SCENIC]: '推荐景点、名胜古迹、自然风光等相关关键词',
+//     [KEYWORD_TYPES.FOOD]: '特色美食、地方小吃、特产商品等相关关键词',
+//     [KEYWORD_TYPES.CULTURE]: '历史文化、传统艺术、民俗风情等相关关键词',
+//     [KEYWORD_TYPES.ACTIVITY]: '体验活动、娱乐项目、休闲运动等相关关键词',
+//     [KEYWORD_TYPES.TRAVEL]: '交通出行、住宿指南、旅游攻略等相关关键词',
+//   }
+//   return descriptions[type] || '其他类型关键词'
+// }
+
+const getKeywordColor = (type: string) => {
+  const colors: Record<string, string> = {
+    [KEYWORD_TYPES.SCENIC]: 'blue',
+    [KEYWORD_TYPES.FOOD]: 'orange',
+    [KEYWORD_TYPES.CULTURE]: 'purple',
+    [KEYWORD_TYPES.ACTIVITY]: 'green',
+    [KEYWORD_TYPES.TRAVEL]: 'cyan',
+  }
+  return colors[type] || 'gray'
+}
+
+// 自定义关键词接口
 interface CustomKeyword {
   text: string
   category: string
   description?: string
 }
 
+// 自定义分类接口
 interface CustomCategory {
   id: string
   name: string
   color: string
   description?: string
+}
+
+// 关键词配置接口
+interface KeywordConfig {
+  customKeywords: CustomKeyword[]
+  customCategories: CustomCategory[]
+  enabledSystemCategories: string[]
+  // 系统关键词库（可自定义覆盖）
+  systemKeywords: Record<string, string[]>
+  // 热门关键词配置
+  hotKeywords: string[]
+  hotKeywordsConfig: {
+    autoGenerate: boolean
+    maxCount: number
+    updateInterval: string // 'daily' | 'weekly' | 'monthly'
+  }
+  // 季节性关键词配置
+  seasonalKeywords: Record<string, string[]>
+  seasonalKeywordsConfig: {
+    autoGenerate: boolean
+    currentSeason?: string
+    customSeasons: Record<string, {
+      name: string
+      months: number[]
+      keywords: string[]
+    }>
+  }
 }
 
 interface KeywordInfo {
@@ -463,17 +534,21 @@ interface KeywordInfo {
   relatedKeywords: string[]
 }
 
+// Props接口
+interface Props {
+  modelValue?: KeywordConfig
+}
+
+// Emits接口
+interface Emits {
+  (e: 'update:modelValue', value: KeywordConfig): void
+}
+
 // 响应式数据
 const selectedCategory = ref('all')
 const activeContentTab = ref('system')
 const searchQuery = ref('')
 const selectedMonth = ref(new Date().getMonth() + 1)
-
-// 自定义关键词
-const customKeywords = ref<CustomKeyword[]>([])
-
-// 自定义分类
-const customCategories = ref<CustomCategory[]>([])
 
 // 添加关键词
 const addKeywordVisible = ref(false)
@@ -489,6 +564,69 @@ const addCategoryForm = reactive({
   name: '',
   color: 'blue',
   description: '',
+})
+
+// 添加系统关键词
+const addSystemKeywordVisible = ref(false)
+const addSystemKeywordForm = reactive({
+  text: '',
+  category: '',
+})
+
+// 配置数据的计算属性
+const keywordConfig = computed({
+  get: () => props.modelValue || {
+    customKeywords: [],
+    customCategories: [],
+    enabledSystemCategories: ['scenic', 'food', 'culture', 'activity', 'travel'],
+    systemKeywords: {
+      scenic: ['龙门石窟', '少林寺', '白马寺', '清明上河园', '开封府', '云台山', '老君山', '嵩山'],
+      food: ['胡辣汤', '烩面', '水席', '道口烧鸡', '开封灌汤包', '安阳血糕', '信阳毛尖'],
+      culture: ['中原文化', '河洛文化', '黄河文明', '汉字文化', '武术文化', '佛教文化'],
+      activity: ['登山', '徒步', '摄影', '赏花', '泡温泉', '漂流', '滑雪', '采摘'],
+      travel: ['高铁', '飞机', '自驾', '包车', '公交', '地铁', '出租车', '共享单车'],
+    },
+    hotKeywords: ['龙门石窟', '少林寺', '清明上河园', '云台山'],
+    hotKeywordsConfig: {
+      autoGenerate: true,
+      maxCount: 8,
+      updateInterval: 'weekly',
+    },
+    seasonalKeywords: {
+      spring: ['牡丹花', '樱花', '踏青'],
+      summer: ['云台山', '漂流', '避暑'],
+      autumn: ['老君山', '红叶', '登高'],
+      winter: ['温泉', '雪景', '室内景点'],
+    },
+    seasonalKeywordsConfig: {
+      autoGenerate: true,
+      currentSeason: 'spring',
+      customSeasons: {
+        spring: { name: '春季', months: [3, 4, 5], keywords: ['牡丹花', '樱花', '踏青'] },
+        summer: { name: '夏季', months: [6, 7, 8], keywords: ['漂流', '避暑', '清凉'] },
+        autumn: { name: '秋季', months: [9, 10, 11], keywords: ['红叶', '登高', '秋游'] },
+        winter: { name: '冬季', months: [12, 1, 2], keywords: ['温泉', '雪景', '室内'] },
+      },
+    },
+  },
+  set: (value) => {
+    emit('update:modelValue', value)
+  },
+})
+
+// 便捷访问属性
+const customKeywords = computed({
+  get: () => keywordConfig.value.customKeywords,
+  set: (value) => {
+    keywordConfig.value = { ...keywordConfig.value, customKeywords: value }
+  },
+})
+
+const customCategories = computed({
+  get: () => keywordConfig.value.customCategories,
+  set: (value) => {
+    keywordConfig.value = { ...keywordConfig.value, customCategories: value }
+  },
 })
 
 // 可用颜色配置
@@ -516,7 +654,7 @@ const keywordStats = computed(() => {
   let totalCount = 0
   const stats: Record<string, any> = {}
 
-  for (const [type, keywords] of Object.entries(HENAN_KEYWORDS)) {
+  for (const [type, keywords] of Object.entries(keywordConfig.value.systemKeywords)) {
     stats[type] = {
       count: keywords.length,
       typeName: getTypeName(type),
@@ -527,16 +665,16 @@ const keywordStats = computed(() => {
   return {
     ...stats,
     totalCount: totalCount + customKeywords.value.length,
-    typeCount: Object.keys(HENAN_KEYWORDS).length,
+    typeCount: Object.keys(keywordConfig.value.systemKeywords).length,
   }
 })
 
 const filteredSystemKeywords = computed(() => {
-  let filtered = { ...HENAN_KEYWORDS }
+  let filtered = { ...keywordConfig.value.systemKeywords }
 
   // 按分类过滤
   if (selectedCategory.value !== 'all') {
-    filtered = { [selectedCategory.value]: HENAN_KEYWORDS[selectedCategory.value] || [] }
+    filtered = { [selectedCategory.value]: keywordConfig.value.systemKeywords[selectedCategory.value] || [] }
   }
 
   // 按搜索关键词过滤
@@ -558,39 +696,10 @@ const filteredSystemKeywords = computed(() => {
   return filtered
 })
 
-const hotKeywords = computed(() => [
-  // 必推景点
-  '龙门石窟',
-  '少林寺',
-  '清明上河园',
-  '云台山',
-  // 特色美食
-  '胡辣汤',
-  '烩面',
-  '道口烧鸡',
-  '开封灌汤包',
-  // 文化体验
-  '中原文化',
-  '武术文化',
-  '古都文化',
-  // 热门活动
-  '登山',
-  '赏花',
-  '温泉',
-  '摄影',
-])
+const hotKeywords = computed(() => keywordConfig.value.hotKeywords || [])
 
 const seasonalKeywords = computed(() => {
-  const seasonalKeywords: Record<string, string[]> = {
-    // 春季 (3-5月)
-    spring: ['牡丹花', '樱花', '踏青', '温泉', '登山', '清明上河园'],
-    // 夏季 (6-8月)
-    summer: ['云台山', '漂流', '避暑', '青天河', '鸡公山', '南湾湖'],
-    // 秋季 (9-11月)
-    autumn: ['老君山', '红叶', '登高', '秋游', '嵩山', '太行大峡谷'],
-    // 冬季 (12-2月)
-    winter: ['温泉', '雪景', '室内景点', '博物院', '古建筑', '美食'],
-  }
+  const seasonalKeywordsByMonth = keywordConfig.value.seasonalKeywords || {}
 
   const month = selectedMonth.value
   let season = 'spring'
@@ -598,7 +707,7 @@ const seasonalKeywords = computed(() => {
   else if (month >= 9 && month <= 11) season = 'autumn'
   else if (month === 12 || month <= 2) season = 'winter'
 
-  return seasonalKeywords[season] || []
+  return seasonalKeywordsByMonth[season] || []
 })
 
 // 所有可用的分类选项（系统 + 自定义）
@@ -663,31 +772,10 @@ const groupedCustomKeywords = computed(() => {
   })
 })
 
-// 方法
-const getTypeName = (type: string) => {
-  const typeNames: Record<string, string> = {
-    [KEYWORD_TYPES.SCENIC]: '景点推荐',
-    [KEYWORD_TYPES.FOOD]: '美食特产',
-    [KEYWORD_TYPES.CULTURE]: '历史文化',
-    [KEYWORD_TYPES.ACTIVITY]: '体验活动',
-    [KEYWORD_TYPES.TRAVEL]: '出行指南',
-  }
-  return typeNames[type] || '其他'
-}
-
-const getKeywordColor = (type: string) => {
-  const colors: Record<string, string> = {
-    [KEYWORD_TYPES.SCENIC]: 'blue',
-    [KEYWORD_TYPES.FOOD]: 'orange',
-    [KEYWORD_TYPES.CULTURE]: 'purple',
-    [KEYWORD_TYPES.ACTIVITY]: 'green',
-    [KEYWORD_TYPES.TRAVEL]: 'cyan',
-  }
-  return colors[type] || 'gray'
-}
+// 其他工具方法
 
 const getRandomKeywords = (type: string, count = 3) => {
-  const typeKeywords = HENAN_KEYWORDS[type] || []
+  const typeKeywords = keywordConfig.value.systemKeywords[type] || []
   const shuffled = typeKeywords.sort(() => 0.5 - Math.random())
   return shuffled.slice(0, count)
 }
@@ -702,7 +790,7 @@ const handleCopyKeyword = async (keyword: string) => {
 }
 
 const getKeywordInfo = (keyword: string): KeywordInfo => {
-  for (const [type, keywords] of Object.entries(HENAN_KEYWORDS)) {
+  for (const [type, keywords] of Object.entries(keywordConfig.value.systemKeywords)) {
     if (keywords.includes(keyword)) {
       return {
         keyword,
@@ -818,6 +906,233 @@ const handleRefreshKeywords = () => {
   Message.success('关键词推荐已刷新')
 }
 
+// 系统关键词管理方法
+const handleAddSystemKeyword = (categoryId: string) => {
+  addSystemKeywordForm.category = categoryId
+  addSystemKeywordForm.text = ''
+  addSystemKeywordVisible.value = true
+}
+
+const handleAddSystemKeywordConfirm = () => {
+  if (!addSystemKeywordForm.text.trim()) {
+    Message.error('请输入关键词内容')
+    return
+  }
+
+  const categoryId = addSystemKeywordForm.category
+  const newKeyword = addSystemKeywordForm.text.trim()
+
+  // 检查是否已存在
+  if (keywordConfig.value.systemKeywords[categoryId]?.includes(newKeyword)) {
+    Message.error('该关键词已存在')
+    return
+  }
+
+  // 添加关键词到配置
+  const updatedConfig = { ...keywordConfig.value }
+  if (!updatedConfig.systemKeywords[categoryId]) {
+    updatedConfig.systemKeywords[categoryId] = []
+  }
+  updatedConfig.systemKeywords[categoryId].push(newKeyword)
+
+  keywordConfig.value = updatedConfig
+  addSystemKeywordVisible.value = false
+  Message.success('关键词添加成功')
+}
+
+const handleRemoveSystemKeyword = (categoryId: string, index: number) => {
+  const updatedConfig = { ...keywordConfig.value }
+  updatedConfig.systemKeywords[categoryId].splice(index, 1)
+  keywordConfig.value = updatedConfig
+  Message.success('关键词删除成功')
+}
+
+// 导入导出功能（暂时注释，如需要可以取消注释）
+// const handleExportKeywords = () => {
+//   const config = {
+//     version: '1.0',
+//     timestamp: new Date().toISOString(),
+//     keywordConfig: keywordConfig.value,
+//   }
+
+//   const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' })
+//   const url = URL.createObjectURL(blob)
+//   const a = document.createElement('a')
+//   a.href = url
+//   a.download = `keyword-config-${new Date().toISOString().slice(0, 10)}.json`
+//   document.body.appendChild(a)
+//   a.click()
+//   document.body.removeChild(a)
+//   URL.revokeObjectURL(url)
+
+//   Message.success('配置导出成功')
+// }
+
+// const handleImportKeywords = () => {
+//   const input = document.createElement('input')
+//   input.type = 'file'
+//   input.accept = '.json'
+
+//   input.onchange = (event) => {
+//     const file = (event.target as HTMLInputElement).files?.[0]
+//     if (!file) return
+
+//     const reader = new FileReader()
+//     reader.onload = (e) => {
+//       try {
+//         const config = JSON.parse(e.target?.result as string)
+//         if (config.keywordConfig) {
+//           keywordConfig.value = config.keywordConfig
+//           Message.success('配置导入成功')
+//         } else {
+//           Message.error('配置文件格式错误')
+//         }
+//       } catch (error) {
+//         Message.error('配置文件解析失败')
+//       }
+//     }
+//     reader.readAsText(file)
+//   }
+
+//   input.click()
+// }
+
+const handleResetToDefault = () => {
+  const defaultConfig = {
+    customKeywords: [],
+    customCategories: [],
+    enabledSystemCategories: ['scenic', 'food', 'culture', 'activity', 'travel'],
+    systemKeywords: {
+      scenic: [
+        '龙门石窟',
+        '少林寺',
+        '白马寺',
+        '清明上河园',
+        '开封府',
+        '云台山',
+        '老君山',
+        '嵩山',
+        '白云山',
+        '鸡公山',
+        '尧山',
+        '红旗渠',
+        '殷墟',
+        '函谷关',
+        '太行大峡谷',
+        '黄河小浪底',
+        '焦作影视城',
+        '洛阳牡丹园',
+        '康百万庄园',
+        '河南博物院',
+        '嵩阳书院',
+        '中岳庙',
+      ],
+      food: [
+        '胡辣汤',
+        '烩面',
+        '水席',
+        '道口烧鸡',
+        '开封灌汤包',
+        '安阳血糕',
+        '信阳毛尖',
+        '铁棍山药',
+        '新郑大枣',
+        '西峡香菇',
+        '牛肉拉面',
+        '焦作怀药',
+        '洛阳燕菜',
+        '周口逍遥胡辣汤',
+        '驻马店芝麻糖',
+        '商丘归德府汤包',
+        '许昌烧饼',
+      ],
+      culture: [
+        '中原文化',
+        '河洛文化',
+        '黄河文明',
+        '汉字文化',
+        '武术文化',
+        '佛教文化',
+        '道教文化',
+        '诗词文化',
+        '戏曲文化',
+        '民俗文化',
+        '古都文化',
+        '姓氏文化',
+        '易经文化',
+        '医药文化',
+        '书法文化',
+        '陶瓷文化',
+        '青铜文化',
+        '石刻文化',
+      ],
+      activity: [
+        '登山',
+        '徒步',
+        '摄影',
+        '赏花',
+        '泡温泉',
+        '漂流',
+        '滑雪',
+        '采摘',
+        '观鸟',
+        '露营',
+        '骑行',
+        '垂钓',
+        '品茶',
+        '书法体验',
+        '武术学习',
+        '陶艺制作',
+        '民俗体验',
+        '古装体验',
+      ],
+      travel: [
+        '高铁',
+        '飞机',
+        '自驾',
+        '包车',
+        '公交',
+        '地铁',
+        '出租车',
+        '共享单车',
+        '景区直通车',
+        '旅游专线',
+        '住宿推荐',
+        '美食推荐',
+        '购物指南',
+        '交通路线',
+        '最佳季节',
+        '注意事项',
+      ],
+    },
+    hotKeywords: ['龙门石窟', '少林寺', '清明上河园', '云台山', '胡辣汤', '烩面', '道口烧鸡', '开封灌汤包'],
+    hotKeywordsConfig: {
+      autoGenerate: true,
+      maxCount: 8,
+      updateInterval: 'weekly',
+    },
+    seasonalKeywords: {
+      spring: ['牡丹花', '樱花', '踏青', '温泉', '登山', '清明上河园'],
+      summer: ['云台山', '漂流', '避暑', '青天河', '鸡公山', '南湾湖'],
+      autumn: ['老君山', '红叶', '登高', '秋游', '嵩山', '太行大峡谷'],
+      winter: ['温泉', '雪景', '室内景点', '博物院', '古建筑', '美食'],
+    },
+    seasonalKeywordsConfig: {
+      autoGenerate: true,
+      currentSeason: 'spring',
+      customSeasons: {
+        spring: { name: '春季', months: [3, 4, 5], keywords: ['牡丹花', '樱花', '踏青'] },
+        summer: { name: '夏季', months: [6, 7, 8], keywords: ['漂流', '避暑', '清凉'] },
+        autumn: { name: '秋季', months: [9, 10, 11], keywords: ['红叶', '登高', '秋游'] },
+        winter: { name: '冬季', months: [12, 1, 2], keywords: ['温泉', '雪景', '室内'] },
+      },
+    },
+  }
+
+  keywordConfig.value = defaultConfig
+  Message.success('已重置为默认配置')
+}
+
 // 生成基于用户输入的回退关键词
 const generateFallbackKeywords = (userInput = '') => {
   const keywords = []
@@ -825,31 +1140,31 @@ const generateFallbackKeywords = (userInput = '') => {
 
   // 基于用户输入内容智能推荐关键词
   if (input.includes('景点') || input.includes('旅游') || input.includes('游玩') || input.includes('参观')) {
-    keywords.push(...getRandomKeywords(KEYWORD_TYPES.SCENIC, 3))
+    keywords.push(...getRandomKeywords('scenic', 3))
   }
 
   if (input.includes('美食') || input.includes('吃') || input.includes('小吃') || input.includes('特产')) {
-    keywords.push(...getRandomKeywords(KEYWORD_TYPES.FOOD, 3))
+    keywords.push(...getRandomKeywords('food', 3))
   }
 
   if (input.includes('文化') || input.includes('历史') || input.includes('传统') || input.includes('民俗')) {
-    keywords.push(...getRandomKeywords(KEYWORD_TYPES.CULTURE, 3))
+    keywords.push(...getRandomKeywords('culture', 3))
   }
 
   if (input.includes('活动') || input.includes('体验') || input.includes('娱乐')) {
-    keywords.push(...getRandomKeywords(KEYWORD_TYPES.ACTIVITY, 3))
+    keywords.push(...getRandomKeywords('activity', 3))
   }
 
   if (input.includes('交通') || input.includes('路线') || input.includes('怎么去') || input.includes('住宿')) {
-    keywords.push(...getRandomKeywords(KEYWORD_TYPES.TRAVEL, 3))
+    keywords.push(...getRandomKeywords('travel', 3))
   }
 
   // 如果没有匹配到特定类别，提供综合推荐
   if (keywords.length === 0) {
     keywords.push(
-      ...getRandomKeywords(KEYWORD_TYPES.SCENIC, 2),
-      ...getRandomKeywords(KEYWORD_TYPES.FOOD, 2),
-      ...getRandomKeywords(KEYWORD_TYPES.CULTURE, 1),
+      ...getRandomKeywords('scenic', 2),
+      ...getRandomKeywords('food', 2),
+      ...getRandomKeywords('culture', 1),
     )
   }
 
@@ -1277,9 +1592,150 @@ defineExpose({
       }
     }
   }
-
 }
 
+// 关键词库管理样式
+.keywords-management {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 20px;
+
+  .management-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--color-bg-2) 0%, var(--color-fill-1) 100%);
+    border-radius: 12px;
+    border: 1px solid var(--color-border-2);
+
+    .toolbar-section {
+      flex: 1;
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--color-text-1);
+
+        .title-icon {
+          color: rgb(var(--primary-6));
+        }
+      }
+
+      .section-description {
+        margin: 0;
+        font-size: 13px;
+        color: var(--color-text-3);
+        line-height: 1.5;
+      }
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+  }
+
+  .system-keywords-management {
+    flex: 1;
+    overflow-y: auto;
+
+    .keyword-category {
+      margin-bottom: 20px;
+
+      .category-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--color-text-1);
+
+        .category-actions {
+          margin-left: auto;
+
+          .add-keyword-btn {
+            color: rgb(var(--primary-6));
+            border-color: transparent;
+
+            &:hover {
+              background: rgba(var(--primary-1), 0.8);
+              border-color: rgba(var(--primary-6), 0.2);
+            }
+          }
+        }
+      }
+
+      .keyword-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .empty-keywords {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px 20px;
+          background: var(--color-fill-1);
+          border: 1px dashed var(--color-border-3);
+          border-radius: 8px;
+          width: 100%;
+
+          .empty-text {
+            color: var(--color-text-3);
+            font-size: 13px;
+          }
+        }
+
+        .keyword-tag {
+          cursor: pointer;
+          transition: all 0.2s;
+
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+
+          &.editable {
+            position: relative;
+
+            .copy-icon {
+              margin-left: 4px;
+              cursor: pointer;
+              opacity: 0.6;
+
+              &:hover {
+                opacity: 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+  .add-system-keyword-form {
+    .form-item {
+      margin-bottom: 16px;
+
+      .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--color-text-1);
+        margin-bottom: 8px;
+      }
+    }
+  }
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgb(var(--red-6) / 40%);
