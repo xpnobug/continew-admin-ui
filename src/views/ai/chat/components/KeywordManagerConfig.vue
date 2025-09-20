@@ -1,36 +1,6 @@
 <template>
   <div class="keyword-manager">
     <!-- 头部操作栏 -->
-    <div class="manager-header">
-      <div class="header-left">
-        <a-button type="primary" @click="handleAddKeyword">
-          <template #icon>
-            <icon-plus />
-          </template>
-          添加关键词
-        </a-button>
-        <a-button @click="handleAddCategory">
-          <template #icon>
-            <icon-tag />
-          </template>
-          新增分类
-        </a-button>
-        <a-button @click="handleRefreshKeywords">
-          <template #icon>
-            <icon-refresh />
-          </template>
-          刷新推荐
-        </a-button>
-      </div>
-      <!--      <div class="header-right"> -->
-      <!--        <a-input-search -->
-      <!--          v-model="searchQuery" -->
-      <!--          placeholder="搜索关键词..." -->
-      <!--          style="width: 200px;" -->
-      <!--          @search="handleSearch" -->
-      <!--        /> -->
-      <!--      </div> -->
-    </div>
 
     <!-- 关键词分类标签 -->
     <!--    <div class="category-tabs"> -->
@@ -69,10 +39,10 @@
     <div class="keywords-content">
       <div class="content-tabs">
         <a-tabs v-model:active-key="activeContentTab" size="small">
-          <a-tab-pane key="system" title="系统关键词" />
-          <a-tab-pane key="custom" title="自定义关键词" />
-          <a-tab-pane key="hot" title="热门推荐" />
-          <a-tab-pane key="seasonal" title="季节推荐" />
+<!--          <a-tab-pane key="system" title="系统关键词" />-->
+<!--          <a-tab-pane key="custom" title="自定义关键词" />-->
+<!--          <a-tab-pane key="hot" title="热门推荐" />-->
+<!--          <a-tab-pane key="seasonal" title="季节推荐" />-->
           <a-tab-pane key="management" title="关键词库管理" />
         </a-tabs>
       </div>
@@ -191,23 +161,15 @@
                 <icon-tool class="title-icon" />
                 关键词库管理
               </h3>
-              <p class="section-description">管理系统关键词库，支持添加、删除关键词，导入导出配置</p>
+              <p class="section-description">管理系统关键词库和自定义分类，支持添加、删除关键词，导入导出配置</p>
             </div>
             <div class="toolbar-actions">
-              <!--              <a-button-group> -->
-              <!--                <a-button @click="handleImportKeywords"> -->
-              <!--                  <template #icon> -->
-              <!--                    <icon-upload /> -->
-              <!--                  </template> -->
-              <!--                  导入配置 -->
-              <!--                </a-button> -->
-              <!--                <a-button type="primary" @click="handleExportKeywords"> -->
-              <!--                  <template #icon> -->
-              <!--                    <icon-download /> -->
-              <!--                  </template> -->
-              <!--                  导出配置 -->
-              <!--                </a-button> -->
-              <!--              </a-button-group> -->
+              <a-button @click="handleAddCategory">
+                <template #icon>
+                  <icon-tag />
+                </template>
+                新增分类
+              </a-button>
               <a-button status="warning" @click="handleResetToDefault">
                 <template #icon>
                   <icon-refresh />
@@ -217,8 +179,16 @@
             </div>
           </div>
 
+          <!-- 分类管理子标签 -->
+          <div class="sub-tabs-wrapper">
+            <a-tabs v-model:active-key="activeManagementTab" size="small" class="management-tabs">
+              <a-tab-pane key="system" title="系统分类管理" />
+              <a-tab-pane key="custom" title="自定义分类管理" />
+            </a-tabs>
+          </div>
+
           <!-- 系统关键词管理 -->
-          <div class="system-keywords-management">
+          <div v-if="activeManagementTab === 'system'" class="system-keywords-management">
             <div v-for="(keywords, categoryId) in keywordConfig.systemKeywords" :key="categoryId" class="keyword-category">
               <div class="category-title">
                 <icon-tag />
@@ -267,6 +237,106 @@
                     </template>
                   </a-tag>
                 </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- 自定义分类管理 -->
+          <div v-if="activeManagementTab === 'custom'" class="custom-categories-management">
+            <!-- 分类列表为空时的提示 -->
+            <div v-if="customCategories.length === 0" class="empty-categories">
+              <div class="empty-content">
+                <icon-folder-add class="empty-icon" />
+                <h4>暂无自定义分类</h4>
+                <p>您还没有创建任何自定义分类，点击下方按钮开始创建吧</p>
+                <a-button type="primary" @click="handleAddCategory">
+                  <template #icon>
+                    <icon-plus />
+                  </template>
+                  创建第一个分类
+                </a-button>
+              </div>
+            </div>
+
+            <!-- 自定义分类列表 -->
+            <div v-else class="custom-categories-list">
+              <div v-for="category in customCategories" :key="category.id" class="custom-category-item">
+                <div class="category-title">
+                  <span
+                    class="category-color-dot"
+                    :style="{ backgroundColor: getColorValue(category.color) }"
+                  ></span>
+                  <span class="category-name">{{ category.name }}</span>
+                  <a-tag size="small" :color="category.color">{{ getCategoryKeywordCount(category.id) }}</a-tag>
+                  <div class="category-actions">
+                    <a-button
+                      type="text"
+                      size="small"
+                      class="add-keyword-btn"
+                      @click="handleAddCustomKeyword(category.id)"
+                    >
+                      <template #icon>
+                        <icon-plus />
+                      </template>
+                      添加关键词
+                    </a-button>
+                    <a-button
+                      type="text"
+                      size="small"
+                      @click="handleEditCategory(category)"
+                    >
+                      <template #icon>
+                        <icon-edit />
+                      </template>
+                      编辑
+                    </a-button>
+                    <a-popconfirm
+                      content="确定要删除这个分类吗？分类下的所有关键词也会被删除"
+                      @ok="handleDeleteCategory(category.id)"
+                    >
+                      <a-button
+                        type="text"
+                        size="small"
+                        status="danger"
+                      >
+                        <template #icon>
+                          <icon-delete />
+                        </template>
+                        删除
+                      </a-button>
+                    </a-popconfirm>
+                  </div>
+                </div>
+                <div class="keyword-tags">
+                  <template v-if="getCategoryKeywords(category.id).length === 0">
+                    <div class="empty-keywords">
+                      <span class="empty-text">暂无关键词</span>
+                      <a-button
+                        size="mini"
+                        type="primary"
+                        @click="handleAddCustomKeyword(category.id)"
+                      >
+                        添加第一个
+                      </a-button>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <a-tag
+                      v-for="(keyword, index) in getCategoryKeywords(category.id)"
+                      :key="`${category.id}-${index}`"
+                      class="keyword-tag editable"
+                      :color="category.color"
+                      closable
+                      @close="handleRemoveCustomKeyword(getCategoryKeywords(category.id), index)"
+                      @click="handleKeywordClick(keyword.text)"
+                    >
+                      {{ keyword.text }}
+                      <template #icon>
+                        <icon-copy class="copy-icon" @click.stop="handleCopyKeyword(keyword.text)" />
+                      </template>
+                    </a-tag>
+                  </template>
+                </div>
               </div>
             </div>
           </div>
@@ -431,6 +501,112 @@
         </div>
       </div>
     </a-modal>
+
+    <!-- 编辑分类模态框 -->
+    <a-modal
+      v-model:visible="editCategoryVisible"
+      title="编辑自定义分类"
+      width="520px"
+      :footer="false"
+      class="add-category-modal-wrapper"
+    >
+      <div class="modern-category-form">
+        <!-- 顶部预览区 -->
+        <div class="preview-section">
+          <div class="preview-title">实时预览</div>
+          <div class="preview-demo">
+            <div class="demo-tag">
+              <span
+                class="tag-dot"
+                :style="{ backgroundColor: getColorValue(editCategoryForm.color) }"
+              ></span>
+              <span class="tag-text">{{ editCategoryForm.name || '我的分类' }}</span>
+              <span class="tag-count">{{ getCategoryKeywordCount(editCategoryForm.id) }}</span>
+            </div>
+            <div class="demo-description">
+              {{ editCategoryForm.description || '这里显示分类描述信息...' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 表单区域 -->
+        <div class="form-section">
+          <!-- 分类名称 -->
+          <div class="input-group">
+            <div class="input-label">
+              <span class="label-text">分类名称</span>
+              <span class="required-mark">*</span>
+            </div>
+            <a-input
+              v-model="editCategoryForm.name"
+              placeholder="为你的分类起个名字"
+              size="large"
+              :max-length="15"
+              class="modern-input"
+            />
+          </div>
+
+          <!-- 选择颜色 -->
+          <div class="input-group">
+            <div class="input-label">
+              <span class="label-text">选择颜色</span>
+            </div>
+            <div class="color-grid">
+              <div
+                v-for="(colorOption, index) in colorOptions"
+                :key="`edit-color-${index}`"
+                class="color-item"
+                :class="{ selected: editCategoryForm.color === colorOption.name }"
+                :title="colorOption.label"
+                @click="editCategoryForm.color = colorOption.name"
+              >
+                <div
+                  class="color-circle"
+                  :style="{ backgroundColor: colorOption.value }"
+                >
+                  <div v-if="editCategoryForm.color === colorOption.name" class="check-mark">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M13.5 4.5L6 12L2.5 8.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </div>
+                </div>
+                <span class="color-label">{{ colorOption.label }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 分类描述 -->
+          <div class="input-group">
+            <div class="input-label">
+              <span class="label-text">分类描述</span>
+              <span class="optional-mark">可选</span>
+            </div>
+            <a-textarea
+              v-model="editCategoryForm.description"
+              placeholder="简单描述一下这个分类的用途..."
+              :rows="3"
+              :max-length="80"
+              class="modern-textarea"
+            />
+          </div>
+        </div>
+
+        <!-- 底部操作区 -->
+        <div class="action-section">
+          <a-button size="large" @click="editCategoryVisible = false">
+            取消
+          </a-button>
+          <a-button
+            type="primary"
+            size="large"
+            :disabled="!editCategoryForm.name.trim()"
+            @click="handleEditCategoryConfirm"
+          >
+            保存修改
+          </a-button>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -546,7 +722,8 @@ interface Emits {
 
 // 响应式数据
 const selectedCategory = ref('all')
-const activeContentTab = ref('system')
+const activeContentTab = ref('management')
+const activeManagementTab = ref('system')
 const searchQuery = ref('')
 const selectedMonth = ref(new Date().getMonth() + 1)
 
@@ -561,6 +738,15 @@ const addKeywordForm = reactive({
 // 添加分类
 const addCategoryVisible = ref(false)
 const addCategoryForm = reactive({
+  name: '',
+  color: 'blue',
+  description: '',
+})
+
+// 编辑分类
+const editCategoryVisible = ref(false)
+const editCategoryForm = reactive({
+  id: '',
   name: '',
   color: 'blue',
   description: '',
@@ -780,6 +966,16 @@ const getRandomKeywords = (type: string, count = 3) => {
   return shuffled.slice(0, count)
 }
 
+// 获取分类下的关键词数量
+const getCategoryKeywordCount = (categoryId: string) => {
+  return customKeywords.value.filter((keyword) => keyword.category === categoryId).length
+}
+
+// 获取分类下的所有关键词
+const getCategoryKeywords = (categoryId: string) => {
+  return customKeywords.value.filter((keyword) => keyword.category === categoryId)
+}
+
 const handleCopyKeyword = async (keyword: string) => {
   try {
     await navigator.clipboard.writeText(keyword)
@@ -898,6 +1094,68 @@ const handleRemoveCustomKeyword = (keywords: CustomKeyword[], index: number) => 
     customKeywords.value.splice(globalIndex, 1)
     Message.success('删除成功')
   }
+}
+
+// 自定义分类管理方法
+const handleEditCategory = (category: CustomCategory) => {
+  editCategoryForm.id = category.id
+  editCategoryForm.name = category.name
+  editCategoryForm.color = category.color
+  editCategoryForm.description = category.description || ''
+  editCategoryVisible.value = true
+}
+
+const handleEditCategoryConfirm = () => {
+  if (!editCategoryForm.name.trim()) {
+    Message.error('请输入分类名称')
+    return
+  }
+
+  // 检查名称是否与其他分类重复
+  const exists = customCategories.value.some((cat) =>
+    cat.id !== editCategoryForm.id && cat.name === editCategoryForm.name.trim(),
+  )
+  if (exists) {
+    Message.error('分类名称已存在')
+    return
+  }
+
+  // 更新分类
+  const categoryIndex = customCategories.value.findIndex((cat) => cat.id === editCategoryForm.id)
+  if (categoryIndex !== -1) {
+    customCategories.value[categoryIndex] = {
+      id: editCategoryForm.id,
+      name: editCategoryForm.name.trim(),
+      color: editCategoryForm.color,
+      description: editCategoryForm.description.trim(),
+    }
+    Message.success('分类编辑成功')
+    editCategoryVisible.value = false
+  }
+}
+
+const handleDeleteCategory = (categoryId: string) => {
+  // 删除分类
+  const categoryIndex = customCategories.value.findIndex((cat) => cat.id === categoryId)
+  if (categoryIndex !== -1) {
+    customCategories.value.splice(categoryIndex, 1)
+  }
+
+  // 删除该分类下的所有关键词
+  for (let i = customKeywords.value.length - 1; i >= 0; i--) {
+    if (customKeywords.value[i].category === categoryId) {
+      customKeywords.value.splice(i, 1)
+    }
+  }
+
+  Message.success('分类删除成功')
+}
+
+const handleAddCustomKeyword = (categoryId: string) => {
+  addKeywordForm.category = categoryId
+  addKeywordForm.text = ''
+  addKeywordForm.description = ''
+  addKeywordVisible.value = true
 }
 
 const handleRefreshKeywords = () => {
@@ -1601,6 +1859,17 @@ defineExpose({
   height: 100%;
   gap: 20px;
 
+  .sub-tabs-wrapper {
+    margin-bottom: 16px;
+
+    .management-tabs {
+      :deep(.arco-tabs-tab) {
+        font-size: 13px;
+        padding: 8px 16px;
+      }
+    }
+  }
+
   .management-toolbar {
     display: flex;
     justify-content: space-between;
@@ -1714,6 +1983,136 @@ defineExpose({
 
               &:hover {
                 opacity: 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 自定义分类管理样式
+  .custom-categories-management {
+    flex: 1;
+    overflow-y: auto;
+
+    .empty-categories {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 300px;
+
+      .empty-content {
+        text-align: center;
+        color: var(--color-text-3);
+
+        .empty-icon {
+          font-size: 48px;
+          margin-bottom: 16px;
+          color: var(--color-text-4);
+        }
+
+        h4 {
+          margin: 0 0 8px 0;
+          font-size: 16px;
+          font-weight: 500;
+          color: var(--color-text-2);
+        }
+
+        p {
+          margin: 0 0 20px 0;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+      }
+    }
+
+    .custom-categories-list {
+      .custom-category-item {
+        margin-bottom: 20px;
+
+        .category-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 12px;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--color-text-1);
+
+          .category-color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+          }
+
+          .category-name {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-1);
+          }
+
+          .category-actions {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .add-keyword-btn {
+              color: rgb(var(--primary-6));
+              border-color: transparent;
+
+              &:hover {
+                background: rgba(var(--primary-1), 0.8);
+                border-color: rgba(var(--primary-6), 0.2);
+              }
+            }
+          }
+        }
+
+        .keyword-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+
+          .empty-keywords {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--color-fill-1);
+            border: 1px dashed var(--color-border-3);
+            border-radius: 8px;
+            width: 100%;
+
+            .empty-text {
+              color: var(--color-text-3);
+              font-size: 13px;
+            }
+          }
+
+          .keyword-tag {
+            cursor: pointer;
+            transition: all 0.2s;
+
+            &:hover {
+              transform: translateY(-1px);
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            &.editable {
+              position: relative;
+
+              .copy-icon {
+                margin-left: 4px;
+                cursor: pointer;
+                opacity: 0.6;
+
+                &:hover {
+                  opacity: 1;
+                }
               }
             }
           }

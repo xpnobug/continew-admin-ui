@@ -301,7 +301,7 @@ const onDetail = (record: EntityResp) => {
 const onToggleStatus = async (record: EntityResp) => {
   const newStatus = record.status === 1 ? 0 : 1
   const action = newStatus === 1 ? '启用' : '禁用'
-  
+
   try {
     await updateEntityStatus(record.id, newStatus)
     record.status = newStatus
