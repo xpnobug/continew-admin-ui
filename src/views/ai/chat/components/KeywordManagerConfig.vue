@@ -39,10 +39,10 @@
     <div class="keywords-content">
       <div class="content-tabs">
         <a-tabs v-model:active-key="activeContentTab" size="small">
-<!--          <a-tab-pane key="system" title="系统关键词" />-->
-<!--          <a-tab-pane key="custom" title="自定义关键词" />-->
+          <!--          <a-tab-pane key="system" title="系统关键词" /> -->
+          <!--          <a-tab-pane key="custom" title="自定义关键词" /> -->
           <a-tab-pane key="hot" title="热门推荐" />
-<!--          <a-tab-pane key="seasonal" title="季节推荐" />-->
+          <!--          <a-tab-pane key="seasonal" title="季节推荐" /> -->
           <a-tab-pane key="management" title="关键词库管理" />
         </a-tabs>
       </div>
@@ -61,7 +61,8 @@
                 v-for="keyword in keywords"
                 :key="keyword"
                 class="keyword-tag"
-                :color="getKeywordColor(type)"
+                :class="{ selected: isKeywordSelected(keyword) }"
+                :color="isKeywordSelected(keyword) ? 'red' : getKeywordColor(type)"
                 @click="handleKeywordClick(keyword)"
               >
                 {{ keyword }}
@@ -87,7 +88,8 @@
                 v-for="(keyword, index) in categoryGroup.keywords"
                 :key="index"
                 class="keyword-tag custom"
-                :color="categoryGroup.color"
+                :class="{ selected: isKeywordSelected(keyword.text) }"
+                :color="isKeywordSelected(keyword.text) ? 'red' : categoryGroup.color"
                 closable
                 @close="handleRemoveCustomKeyword(categoryGroup.keywords, index)"
                 @click="handleKeywordClick(keyword.text)"
@@ -116,7 +118,8 @@
               v-for="keyword in hotKeywords"
               :key="keyword"
               class="keyword-tag hot"
-              color="red"
+              :class="{ selected: isKeywordSelected(keyword) }"
+              :color="isKeywordSelected(keyword) ? 'red' : 'red'"
               @click="handleKeywordClick(keyword)"
             >
               {{ keyword }}
@@ -226,7 +229,8 @@
                     v-for="(keyword, index) in keywords"
                     :key="`${categoryId}-${index}`"
                     class="keyword-tag editable"
-                    :color="getKeywordColor(categoryId)"
+                    :class="{ selected: isKeywordSelected(keyword) }"
+                    :color="isKeywordSelected(keyword) ? 'red' : getKeywordColor(categoryId)"
                     closable
                     @close="handleRemoveSystemKeyword(categoryId, index)"
                     @click="handleKeywordClick(keyword)"
@@ -325,7 +329,8 @@
                       v-for="(keyword, index) in getCategoryKeywords(category.id)"
                       :key="`${category.id}-${index}`"
                       class="keyword-tag editable"
-                      :color="category.color"
+                      :class="{ selected: isKeywordSelected(keyword.text) }"
+                      :color="isKeywordSelected(keyword.text) ? 'red' : category.color"
                       closable
                       @close="handleRemoveCustomKeyword(getCategoryKeywords(category.id), index)"
                       @click="handleKeywordClick(keyword.text)"
@@ -727,6 +732,9 @@ const activeManagementTab = ref('system')
 const searchQuery = ref('')
 const selectedMonth = ref(new Date().getMonth() + 1)
 
+// 关键词选择状态
+const selectedKeywords = ref<Set<string>>(new Set())
+
 // 添加关键词
 const addKeywordVisible = ref(false)
 const addKeywordForm = reactive({
@@ -882,7 +890,19 @@ const filteredSystemKeywords = computed(() => {
   return filtered
 })
 
-const hotKeywords = computed(() => keywordConfig.value.hotKeywords || [])
+// 热门推荐显示选中的关键词
+const hotKeywords = computed({
+  get: () => {
+    // 只显示用户选中的关键词
+    return Array.from(selectedKeywords.value)
+  },
+  set: (value) => {
+    // 更新选中的关键词集合
+    selectedKeywords.value = new Set(value)
+    // 同时更新配置中的热门关键词
+    keywordConfig.value = { ...keywordConfig.value, hotKeywords: value }
+  },
+})
 
 const seasonalKeywords = computed(() => {
   const seasonalKeywordsByMonth = keywordConfig.value.seasonalKeywords || {}
@@ -1005,8 +1025,31 @@ const getKeywordInfo = (keyword: string): KeywordInfo => {
   }
 }
 
+// 更新热门推荐中的关键词
+const updateHotKeywords = () => {
+  const selectedArray = Array.from(selectedKeywords.value)
+  // 更新配置中的热门关键词为选中的关键词
+  keywordConfig.value = { ...keywordConfig.value, hotKeywords: selectedArray }
+}
+
+// 关键词选择状态切换
+const toggleKeywordSelection = (keyword: string) => {
+  if (selectedKeywords.value.has(keyword)) {
+    selectedKeywords.value.delete(keyword)
+  } else {
+    selectedKeywords.value.add(keyword)
+  }
+  // 立即更新热门推荐中的关键词
+  updateHotKeywords()
+}
+
+// 关键词是否选中
+const isKeywordSelected = (keyword: string) => {
+  return selectedKeywords.value.has(keyword)
+}
+
 const handleKeywordClick = (keyword: string) => {
-  handleCopyKeyword(keyword)
+  toggleKeywordSelection(keyword)
 }
 
 const handleAddKeyword = () => {
@@ -1156,12 +1199,6 @@ const handleAddCustomKeyword = (categoryId: string) => {
   addKeywordForm.text = ''
   addKeywordForm.description = ''
   addKeywordVisible.value = true
-}
-
-const handleRefreshKeywords = () => {
-  // 刷新热门关键词和季节推荐
-  selectedMonth.value = new Date().getMonth() + 1
-  Message.success('关键词推荐已刷新')
 }
 
 // 系统关键词管理方法
@@ -1510,10 +1547,26 @@ defineExpose({
           .keyword-tag {
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
 
             &:hover {
               transform: translateY(-1px);
               box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            &.selected {
+              &::after {
+                content: '推荐';
+                position: absolute;
+                right: 1px;
+                background: rgb(var(--red-6));
+                color: white;
+                font-size: 8px;
+                padding: 2px 3px;
+                border-radius: 4px;
+                line-height: 1;
+                z-index: 10;
+              }
             }
 
             .copy-icon {
@@ -1525,6 +1578,7 @@ defineExpose({
                 opacity: 1;
               }
             }
+
 
             &.custom {
               border: 1px dashed var(--color-border-3);
@@ -2144,6 +2198,17 @@ defineExpose({
   }
   100% {
     box-shadow: 0 0 0 0 rgb(var(--red-6) / 0%);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
   }
 }
 </style>
