@@ -113,7 +113,18 @@
 
         <!-- 热门推荐 -->
         <div v-if="activeContentTab === 'hot'" class="hot-keywords">
-          <div class="keyword-tags">
+          <!-- 空状态提示 -->
+          <div v-if="hotKeywords.length === 0" class="empty-hot-keywords">
+            <div class="empty-content">
+              <h4>暂无数据</h4>
+              <p>您还没有选择任何关键词，请前往"关键词库管理"页面选择您喜欢的关键词</p>
+              <a-button type="primary" @click="activeContentTab = 'management'">
+                去选择关键词
+              </a-button>
+            </div>
+          </div>
+          <!-- 关键词列表 -->
+          <div v-else class="keyword-tags">
             <a-tag
               v-for="keyword in hotKeywords"
               :key="keyword"
@@ -1644,6 +1655,46 @@ defineExpose({
           display: flex;
           flex-wrap: wrap;
           gap: 8px;
+        }
+      }
+
+      .hot-keywords {
+        .empty-hot-keywords {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 300px;
+          
+          .empty-content {
+            text-align: center;
+            color: var(--color-text-3);
+            max-width: 400px;
+            
+            .empty-icon {
+              font-size: 48px;
+              margin-bottom: 16px;
+              color: var(--color-text-4);
+            }
+            
+            h4 {
+              margin: 0 0 12px 0;
+              font-size: 16px;
+              font-weight: 500;
+              color: var(--color-text-2);
+            }
+            
+            p {
+              margin: 0 0 24px 0;
+              font-size: 14px;
+              line-height: 1.6;
+              color: var(--color-text-3);
+            }
+            
+            .arco-btn {
+              border-radius: 6px;
+              font-weight: 500;
+            }
+          }
         }
       }
 
