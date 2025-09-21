@@ -735,6 +735,9 @@ const selectedMonth = ref(new Date().getMonth() + 1)
 // 关键词选择状态
 const selectedKeywords = ref<Set<string>>(new Set())
 
+// 内部更新标志
+let isInternalUpdate = false
+
 // 添加关键词
 const addKeywordVisible = ref(false)
 const addKeywordForm = reactive({
@@ -822,6 +825,19 @@ const customCategories = computed({
     keywordConfig.value = { ...keywordConfig.value, customCategories: value }
   },
 })
+
+// 初始化选中状态（从配置中加载已保存的热门关键词）
+const initializeSelectedKeywords = () => {
+  const hotKeywordsFromConfig = keywordConfig.value.hotKeywords || []
+  selectedKeywords.value = new Set(hotKeywordsFromConfig)
+}
+
+// 监听配置变化，初始化选中状态（避免循环更新）
+watch(() => keywordConfig.value.hotKeywords, (newHotKeywords) => {
+  if (!isInternalUpdate && newHotKeywords) {
+    selectedKeywords.value = new Set(newHotKeywords)
+  }
+}, { immediate: true })
 
 // 可用颜色配置
 const colorOptions = ref([
@@ -1028,8 +1044,21 @@ const getKeywordInfo = (keyword: string): KeywordInfo => {
 // 更新热门推荐中的关键词
 const updateHotKeywords = () => {
   const selectedArray = Array.from(selectedKeywords.value)
+  
+  // 设置内部更新标志，避免触发监听器
+  isInternalUpdate = true
+  
   // 更新配置中的热门关键词为选中的关键词
-  keywordConfig.value = { ...keywordConfig.value, hotKeywords: selectedArray }
+  const updatedConfig = { ...keywordConfig.value, hotKeywords: selectedArray }
+  keywordConfig.value = updatedConfig
+  
+  // 确保触发父组件更新
+  emit('update:modelValue', updatedConfig)
+  
+  // 重置内部更新标志
+  nextTick(() => {
+    isInternalUpdate = false
+  })
 }
 
 // 关键词选择状态切换
@@ -1466,6 +1495,11 @@ const generateFallbackKeywords = (userInput = '') => {
   // 去重并限制数量
   return [...new Set(keywords)].slice(0, 6)
 }
+
+// 组件初始化（监听器已设置 immediate: true，无需手动调用）
+// onMounted(() => {
+//   initializeSelectedKeywords()
+// })
 
 // 暴露方法给父组件
 defineExpose({
