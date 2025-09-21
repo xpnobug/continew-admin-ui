@@ -41,7 +41,7 @@
         <a-tabs v-model:active-key="activeContentTab" size="small">
 <!--          <a-tab-pane key="system" title="系统关键词" />-->
 <!--          <a-tab-pane key="custom" title="自定义关键词" />-->
-<!--          <a-tab-pane key="hot" title="热门推荐" />-->
+          <a-tab-pane key="hot" title="热门推荐" />
 <!--          <a-tab-pane key="seasonal" title="季节推荐" />-->
           <a-tab-pane key="management" title="关键词库管理" />
         </a-tabs>
