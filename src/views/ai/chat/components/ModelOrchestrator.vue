@@ -15,6 +15,7 @@
       <!-- 选项卡导航固定 -->
       <div class="tabs-header">
         <a-tabs v-model:active-key="activeTab" type="rounded" size="small" :default-active-key="activeTab">
+          <a-tab-pane key="resource" title="模型资源信息" />
           <a-tab-pane key="capability" title="模型能力" />
           <a-tab-pane key="connection" title="连接配置" />
           <a-tab-pane key="parameters" title="参数配置" />
@@ -27,6 +28,10 @@
 
       <!-- 选项卡内容可滚动 -->
       <div class="tabs-content">
+        <div v-if="activeTab === 'resource'" class="tab-content-item">
+          <ModelResourceConfig v-model="modelResourceConfig" />
+        </div>
+
         <div v-if="activeTab === 'capability'" class="tab-content-item">
           <ModelCapabilityEditor v-model="modelCapabilityConfig" />
         </div>
@@ -93,6 +98,7 @@ import ModelParametersConfig from './ModelParametersConfig.vue'
 import ModelContextConfig from './ModelContextConfig.vue'
 import ModelSafetyConfig from './ModelSafetyConfig.vue'
 import KeywordManagerConfig from './KeywordManagerConfig.vue'
+import ModelResourceConfig from './ModelResourceConfig.vue'
 import { type MetaResp, getMeta, listMeta, updateMeta } from '@/apis/ai/meta'
 import { listEntity } from '@/apis/ai/entity'
 
@@ -302,6 +308,24 @@ const modelConnectionConfig = ref({
     certPath: '',
   },
 })
+
+// 资源配置（用于小程序展示的UI资源）
+const modelResourceConfig = ref({
+  // AI头像介绍区域
+  avatar: {
+    imageUrl: 'https://oss3.hnswlt.com/images/static/serviceAi.png',
+    circleBgColor: '#fffbf6',
+    labelText: 'AI导游',
+    labelBgColor: '#e7ab24',
+    introText: '您好！我是您的AI导游，专业为您推荐河南的精彩景点、特色美食和文化体验。',
+  },
+  // 消息文本内容头部背景（children-day_title）
+  messageHeader: {
+    bgImageUrl: 'https://alist.reaicc.com/daily/68d264a8e4b0e7f39653d0e7.gif',
+    height: '90rpx',
+    borderRadius: '20rpx 20rpx 0 0',
+  },
+})
 // 模型配置
 const modelConfig = reactive({
   temperature: 0.7,
@@ -395,7 +419,10 @@ const autoSaveConfig = async () => {
     // 1. 更新模型元数据 (capability 和 connConfig)
     const metaData = {
       ...currentModel.value,
-      capability: JSON.stringify(modelCapabilityConfig.value),
+      capability: JSON.stringify({
+        ...modelCapabilityConfig.value,
+        resourceConfig: modelResourceConfig.value,
+      }),
       connConfig: JSON.stringify(modelConnectionConfig.value),
     }
     await updateMeta(metaData, currentModel.value.id)
@@ -451,7 +478,7 @@ const debouncedAutoSave = () => {
 }
 
 // 监听配置变化
-watch([modelConfig, contextConfig, safetyConfig, modelCapabilityConfig, modelConnectionConfig], () => {
+watch([modelConfig, contextConfig, safetyConfig, modelCapabilityConfig, modelConnectionConfig, modelResourceConfig], () => {
   // 发送配置变化事件
   emit('config-change', {
     model: modelConfig,
@@ -459,6 +486,7 @@ watch([modelConfig, contextConfig, safetyConfig, modelCapabilityConfig, modelCon
     safety: safetyConfig,
     capability: modelCapabilityConfig.value,
     connection: modelConnectionConfig.value,
+    resources: modelResourceConfig.value,
   })
 
   // 自动保存配置
@@ -497,13 +525,15 @@ const loadModelOrchestrationConfig = async (modelId: string) => {
     if (metaData.data.capability) {
       try {
         const capability = JSON.parse(metaData.data.capability)
+        // 拆分资源配置与能力配置
+        const { resourceConfig, ...restCapability } = capability || {}
         // 确保currentPrompt字段存在
-        if (capability.currentPrompt === undefined) {
-          capability.currentPrompt = null
+        if (restCapability.currentPrompt === undefined) {
+          restCapability.currentPrompt = null
         }
         // 确保keywordConfig字段存在
-        if (!capability.keywordConfig) {
-          capability.keywordConfig = {
+        if (!restCapability.keywordConfig) {
+          restCapability.keywordConfig = {
             customKeywords: [],
             customCategories: [],
             enabledSystemCategories: ['scenic', 'food', 'culture', 'activity', 'travel'],
@@ -635,8 +665,8 @@ const loadModelOrchestrationConfig = async (modelId: string) => {
           }
         } else {
           // 为现有配置补充缺失的字段
-          if (!capability.keywordConfig.systemKeywords) {
-            capability.keywordConfig.systemKeywords = {
+          if (!restCapability.keywordConfig.systemKeywords) {
+            restCapability.keywordConfig.systemKeywords = {
               scenic: ['龙门石窟', '少林寺', '白马寺', '清明上河园', '开封府', '云台山', '老君山', '嵩山'],
               food: ['胡辣汤', '烩面', '水席', '道口烧鸡', '开封灌汤包', '安阳血糕', '信阳毛尖'],
               culture: ['中原文化', '河洛文化', '黄河文明', '汉字文化', '武术文化', '佛教文化'],
@@ -644,15 +674,15 @@ const loadModelOrchestrationConfig = async (modelId: string) => {
               travel: ['高铁', '飞机', '自驾', '包车', '公交', '地铁', '出租车', '共享单车'],
             }
           }
-          if (!capability.keywordConfig.hotKeywordsConfig) {
-            capability.keywordConfig.hotKeywordsConfig = {
+          if (!restCapability.keywordConfig.hotKeywordsConfig) {
+            restCapability.keywordConfig.hotKeywordsConfig = {
               autoGenerate: true,
               maxCount: 8,
               updateInterval: 'weekly',
             }
           }
-          if (!capability.keywordConfig.seasonalKeywordsConfig) {
-            capability.keywordConfig.seasonalKeywordsConfig = {
+          if (!restCapability.keywordConfig.seasonalKeywordsConfig) {
+            restCapability.keywordConfig.seasonalKeywordsConfig = {
               autoGenerate: true,
               currentSeason: 'spring',
               customSeasons: {
@@ -664,7 +694,12 @@ const loadModelOrchestrationConfig = async (modelId: string) => {
             }
           }
         }
-        Object.assign(modelCapabilityConfig.value, capability)
+        // 应用能力配置
+        Object.assign(modelCapabilityConfig.value, restCapability)
+        // 应用资源配置
+        if (resourceConfig) {
+          Object.assign(modelResourceConfig.value, resourceConfig)
+        }
       } catch (e) {
         console.warn('Failed to parse capability:', e)
       }
@@ -823,6 +858,7 @@ const getFullConfig = () => {
     safety: safetyConfig,
     capability: modelCapabilityConfig.value,
     connection: modelConnectionConfig.value,
+    resources: modelResourceConfig.value,
   }
 }
 
@@ -854,6 +890,7 @@ defineExpose({
   safetyConfig,
   modelCapabilityConfig,
   modelConnectionConfig,
+  modelResourceConfig,
   keywordManagerRef,
   getFullConfig,
   resetConfig,
@@ -922,7 +959,7 @@ defineExpose({
 
       .tab-content-item {
         height: auto;
-        max-height: 100px;
+        max-height: none;
       }
     }
   }
