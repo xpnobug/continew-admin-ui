@@ -60,6 +60,8 @@ export function getMeta(id: string) {
   return http.get<MetaDetailResp>(`${BASE_URL}/${id}`)
 }
 
+/** @desc 仅获取模型capability（精简响应） */
+
 /** @desc 新增模型元数据 */
 export function addMeta(data: any) {
   return http.post(BASE_URL, data)

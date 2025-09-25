@@ -322,6 +322,7 @@ const modelResourceConfig = ref({
   // 消息文本内容头部背景（children-day_title）
   messageHeader: {
     bgImageUrl: 'https://alist.reaicc.com/daily/68d264a8e4b0e7f39653d0e7.gif',
+    bgColor: '#ffffff',
     height: '90rpx',
     borderRadius: '20rpx 20rpx 0 0',
   },
@@ -959,7 +960,7 @@ defineExpose({
 
       .tab-content-item {
         height: auto;
-        max-height: none;
+        max-height: 100px;
       }
     }
   }
