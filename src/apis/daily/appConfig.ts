@@ -21,6 +21,7 @@ export interface AppConfigResp {
   isCard: string
   isLive: string
   isMemo: string
+  configJson?: string
   status: string
   createUserString: string
   updateUserString: string
@@ -46,6 +47,7 @@ export interface AppConfigDetailResp {
   isCard: string
   isLive: string
   isMemo: string
+  configJson?: string
   status: string
   createUser: string
   createTime: string

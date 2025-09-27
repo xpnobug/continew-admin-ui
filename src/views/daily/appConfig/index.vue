@@ -26,82 +26,7 @@
           <a-tab-pane key="json" title="扩展JSON">
             <a-space direction="vertical" fill>
               <a-card size="small" :bordered="true" title="可视化配置">
-                <a-grid :cols="24" :col-gap="12" :row-gap="8">
-                  <a-grid-item :span="12">
-                    <a-space align="center">
-                      <span class="lbl">悬浮AI按钮</span>
-                      <a-switch v-model="vCfg.features.isAiFab" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="12">
-                    <a-space align="center" fill>
-                      <span class="lbl">按钮文字</span>
-                      <a-input v-model="vCfg.ui.aiFab.label" placeholder="AI" style="width: 200px" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="12">
-                    <a-space align="center" fill>
-                      <span class="lbl">背景样式</span>
-                      <a-input v-model="vCfg.ui.aiFab.background" placeholder="CSS 背景，如 linear-gradient(...)" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="12">
-                    <a-space align="center" fill>
-                      <span class="lbl">跳转路径</span>
-                      <a-input v-model="vCfg.ui.aiFab.route" placeholder="/imaPackages/pages/agent-chat/index" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="12">
-                    <a-space align="center">
-                      <span class="lbl">层级</span>
-                      <a-input-number v-model="vCfg.ui.aiFab.zIndex" :min="0" :step="1" style="width: 140px" placeholder="1002" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="12">
-                    <a-space align="center">
-                      <span class="lbl">尺寸(正方形)</span>
-                      <a-input-number v-model="vCfg.ui.aiFab.size" :min="1" :step="2" style="width: 160px" placeholder="88" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="12">
-                    <a-space align="center">
-                      <span class="lbl">宽/高(可选)</span>
-                      <a-input-number v-model="vCfg.ui.aiFab.width" :min="1" :step="2" style="width: 120px" placeholder="width(px)" />
-                      <a-input-number v-model="vCfg.ui.aiFab.height" :min="1" :step="2" style="width: 120px" placeholder="height(px)" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="12">
-                    <a-space align="center">
-                      <span class="lbl">AI按钮默认位置</span>
-                      <a-input-number v-model="vCfg.ui.aiFab.defaultPosition.left" :min="0" :step="5" style="width: 120px" placeholder="left(px)" />
-                      <a-input-number v-model="vCfg.ui.aiFab.defaultPosition.top" :min="0" :step="5" style="width: 120px" placeholder="top(px)" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="12">
-                    <a-space align="center">
-                      <span class="lbl">边距(px)</span>
-                      <a-input-number v-model="vCfg.ui.aiFab.margin" :min="0" :step="1" style="width: 140px" placeholder="8" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="12">
-                    <a-space align="center">
-                      <span class="lbl">可拖动</span>
-                      <a-switch v-model="vCfg.ui.aiFab.draggable" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="12">
-                    <a-space align="center">
-                      <span class="lbl">吸附边缘</span>
-                      <a-switch v-model="vCfg.ui.aiFab.edgeSnap" />
-                    </a-space>
-                  </a-grid-item>
-                  <a-grid-item :span="24">
-                    <a-space align="center" fill>
-                      <span class="lbl">位置存储键</span>
-                      <a-input v-model="vCfg.ui.aiFab.storageKey" placeholder="ai_fab_pos" style="max-width: 320px" />
-                    </a-space>
-                  </a-grid-item>
-                </a-grid>
+                <AppConfigEditor v-model="editorCfg" @save="onEditorSave" />
               </a-card>
               <a-textarea
                 v-model="form.configJson"
@@ -224,138 +149,61 @@ const save = async () => {
 
 onMounted(loadConfig)
 
-// ------------------ JSON 可视化联动 ------------------
-const vCfg = reactive({
-  features: { isAiFab: true },
-  ui: {
-    aiFab: {
-      label: 'AI',
-      background: 'linear-gradient(-29deg, #bf975c, #d2ad77)',
-      route: '/imaPackages/pages/agent-chat/index',
-      zIndex: 1002,
-      size: 88,
-      width: undefined as number | undefined,
-      height: undefined as number | undefined,
-      defaultPosition: { left: 0, top: 0 },
-      margin: 8,
-      draggable: true,
-      edgeSnap: true,
-      storageKey: 'ai_fab_pos',
-    },
-  },
-})
+// ------------------ JSON 可视化联动（模块化） ------------------
+import AppConfigEditor from './AppConfigEditor.vue'
+import { jsonModules } from './components/registry'
+import { deepClone, getByPath, setByPath } from './components/jsonUtils'
 
+const editorCfg = ref<Record<string, any>>({})
 let syncingFromJson = false
 let syncingToJson = false
+
+function ensureDefaults(obj: any) {
+  const root = typeof obj === 'object' && obj ? obj : {}
+  if (!root.features || typeof root.features !== 'object') root.features = {}
+  jsonModules.forEach((m) => {
+    const cur = getByPath(root, m.path)
+    if (cur === undefined) setByPath(root, m.path, deepClone(m.defaultValue))
+    if (m.featureKey && root.features[m.featureKey] === undefined) root.features[m.featureKey] = false
+  })
+  return root
+}
 
 const parseAndSyncFromJson = () => {
   if (syncingToJson) return
   try {
     const obj = form.configJson ? JSON.parse(form.configJson) : {}
     syncingFromJson = true
-    // features
-    const isAiFab = Boolean(obj?.features?.isAiFab ?? vCfg.features.isAiFab)
-    if (vCfg.features.isAiFab !== isAiFab) vCfg.features.isAiFab = isAiFab
-    // 仅使用 ui.aiFab（保持与前端读取一致）
-    const ai = obj?.ui?.aiFab || {}
-    // 基础
-    if (typeof ai.label === 'string' && vCfg.ui.aiFab.label !== ai.label) vCfg.ui.aiFab.label = ai.label
-    if (typeof ai.background === 'string' && vCfg.ui.aiFab.background !== ai.background) vCfg.ui.aiFab.background = ai.background
-    if (typeof ai.route === 'string' && vCfg.ui.aiFab.route !== ai.route) vCfg.ui.aiFab.route = ai.route
-    if (Number.isFinite(ai.zIndex) && vCfg.ui.aiFab.zIndex !== ai.zIndex) vCfg.ui.aiFab.zIndex = ai.zIndex
-    if (Number.isFinite(ai.size) && vCfg.ui.aiFab.size !== ai.size) vCfg.ui.aiFab.size = ai.size
-    if (Number.isFinite(ai.width) && vCfg.ui.aiFab.width !== ai.width) vCfg.ui.aiFab.width = ai.width
-    if (Number.isFinite(ai.height) && vCfg.ui.aiFab.height !== ai.height) vCfg.ui.aiFab.height = ai.height
-    if (Number.isFinite(ai.margin) && vCfg.ui.aiFab.margin !== ai.margin) vCfg.ui.aiFab.margin = ai.margin
-    if (typeof ai.draggable === 'boolean' && vCfg.ui.aiFab.draggable !== ai.draggable) vCfg.ui.aiFab.draggable = ai.draggable
-    if (typeof ai.edgeSnap === 'boolean' && vCfg.ui.aiFab.edgeSnap !== ai.edgeSnap) vCfg.ui.aiFab.edgeSnap = ai.edgeSnap
-    if (typeof ai.storageKey === 'string' && vCfg.ui.aiFab.storageKey !== ai.storageKey) vCfg.ui.aiFab.storageKey = ai.storageKey
-    const lp = ai.defaultPosition || {}
-    if (Number.isFinite(lp.left) && vCfg.ui.aiFab.defaultPosition.left !== lp.left) vCfg.ui.aiFab.defaultPosition.left = lp.left
-    if (Number.isFinite(lp.top) && vCfg.ui.aiFab.defaultPosition.top !== lp.top) vCfg.ui.aiFab.defaultPosition.top = lp.top
+    editorCfg.value = ensureDefaults(obj)
   } catch (e) {
-    // ignore parse error here,校验在保存时处理
+    // ignore parse error; 保持编辑器当前值
   } finally {
     syncingFromJson = false
   }
 }
 
-const syncVisualToJson = () => {
+const syncEditorToJson = () => {
   if (syncingFromJson) return
   try {
-    const obj = form.configJson ? JSON.parse(form.configJson) : {}
-    // 写入 features
-    obj.features = obj.features || {}
-    obj.features.isAiFab = vCfg.features.isAiFab
-    // 写入 ui.aiFab
-    obj.ui = obj.ui || {}
-    obj.ui.aiFab = obj.ui.aiFab || {}
-    obj.ui.aiFab.label = vCfg.ui.aiFab.label
-    obj.ui.aiFab.background = vCfg.ui.aiFab.background
-    obj.ui.aiFab.route = vCfg.ui.aiFab.route
-    obj.ui.aiFab.zIndex = vCfg.ui.aiFab.zIndex
-    if (vCfg.ui.aiFab.size) {
-      obj.ui.aiFab.size = vCfg.ui.aiFab.size
-      delete obj.ui.aiFab.width
-      delete obj.ui.aiFab.height
-    } else {
-      if (vCfg.ui.aiFab.width) obj.ui.aiFab.width = vCfg.ui.aiFab.width
-      if (vCfg.ui.aiFab.height) obj.ui.aiFab.height = vCfg.ui.aiFab.height
-      delete obj.ui.aiFab.size
-    }
-    obj.ui.aiFab.margin = vCfg.ui.aiFab.margin
-    obj.ui.aiFab.draggable = vCfg.ui.aiFab.draggable
-    obj.ui.aiFab.edgeSnap = vCfg.ui.aiFab.edgeSnap
-    obj.ui.aiFab.storageKey = vCfg.ui.aiFab.storageKey
-    obj.ui.aiFab.defaultPosition = {
-      left: vCfg.ui.aiFab.defaultPosition.left,
-      top: vCfg.ui.aiFab.defaultPosition.top,
-    }
-    const next = JSON.stringify(obj, null, 2)
+    const next = JSON.stringify(editorCfg.value ?? {}, null, 2)
     if (form.configJson !== next) {
       syncingToJson = true
       form.configJson = next
-      // 在下一事件循环取消标记，避免递归
       setTimeout(() => { syncingToJson = false }, 0)
     }
   } catch (e) {
-    // 如果现有JSON不可解析，则以vCfg生成
-    const obj = {
-      features: { isAiFab: vCfg.features.isAiFab },
-      ui: { aiFab: { defaultPosition: { ...vCfg.ui.aiFab.defaultPosition } } },
-    }
-    const next = JSON.stringify(obj, null, 2)
-    if (form.configJson !== next) {
-      syncingToJson = true
-      form.configJson = next
-      setTimeout(() => { syncingToJson = false }, 0)
-    }
-  } finally {
     // no-op
   }
 }
 
 watch(() => form.configJson, parseAndSyncFromJson)
-watch(
-  () => [
-    vCfg.features.isAiFab,
-    vCfg.ui.aiFab.label,
-    vCfg.ui.aiFab.background,
-    vCfg.ui.aiFab.route,
-    vCfg.ui.aiFab.zIndex,
-    vCfg.ui.aiFab.size,
-    vCfg.ui.aiFab.width,
-    vCfg.ui.aiFab.height,
-    vCfg.ui.aiFab.defaultPosition.left,
-    vCfg.ui.aiFab.defaultPosition.top,
-    vCfg.ui.aiFab.margin,
-    vCfg.ui.aiFab.draggable,
-    vCfg.ui.aiFab.edgeSnap,
-    vCfg.ui.aiFab.storageKey,
-  ],
-  syncVisualToJson,
-  { deep: true }
-)
+watch(editorCfg, syncEditorToJson, { deep: true })
+
+const onEditorSave = (val: Record<string, any>) => {
+  editorCfg.value = ensureDefaults(val)
+  syncEditorToJson()
+  Message.success('已同步到JSON')
+}
 </script>
 
 <style scoped lang="scss">
