@@ -211,6 +211,17 @@ const columns: ColumnItem[] = reactive([
       options: common02_type,
     },
   },
+  // 扩展配置
+  {
+    label: '配置JSON',
+    field: 'configJson',
+    type: 'textarea',
+    span: 24,
+    props: {
+      rows: 6,
+      placeholder: '{\n  "features": {\n    "isAiFab": true\n  }\n}'
+    },
+  },
 ])
 
 // 重置
@@ -224,6 +235,13 @@ const save = async () => {
   try {
     const isInvalid = await formRef.value?.formRef?.validate()
     if (isInvalid) return false
+    // 简单校验 JSON（可选）
+    if (form.configJson) {
+      try { JSON.parse(form.configJson) } catch (e) {
+        Message.error('配置JSON格式不正确')
+        return false
+      }
+    }
     if (isUpdate.value) {
       await updateAppConfig(form, dataId.value)
       Message.success('修改成功')
