@@ -12,11 +12,40 @@
       :disabled-column-keys="['name']"
       @refresh="search"
     >
+      <template #auditStatus="{ record }">
+        <a-tag :color="record.auditStatus === 1 ? 'green' : (record.auditStatus === 0 ? 'orange' : 'red')">
+          {{ record.auditStatus === 1 ? '通过' : (record.auditStatus === 0 ? '待审核' : '不通过') }}
+        </a-tag>
+      </template>
       <template #toolbar-left>
-        <a-button @click="reset">
-          <template #icon><icon-refresh /></template>
-          <template #default>重置</template>
-        </a-button>
+        <a-space wrap>
+          <a-select v-model="queryForm.auditStatus" allow-clear placeholder="审核状态" style="width: 120px" @change="search">
+            <a-option :value="0">待审核</a-option>
+            <a-option :value="1">通过</a-option>
+            <a-option :value="2">不通过</a-option>
+          </a-select>
+          <a-select v-model="queryForm.type" allow-clear placeholder="类型" style="width: 120px" @change="search">
+            <a-option :value="0">文字</a-option>
+            <a-option :value="1">图片</a-option>
+            <a-option :value="2">视频</a-option>
+            <a-option :value="3">音频</a-option>
+          </a-select>
+          <a-select v-model="queryForm.isPublic" allow-clear placeholder="是否公开" style="width: 120px" @change="search">
+            <a-option :value="1">公开</a-option>
+            <a-option :value="0">私密</a-option>
+          </a-select>
+          <a-select v-model="queryForm.status" allow-clear placeholder="状态" style="width: 120px" @change="search">
+            <a-option :value="1">启用</a-option>
+            <a-option :value="2">禁用</a-option>
+          </a-select>
+          <a-input-number v-model="queryForm.userId" placeholder="用户ID" hide-button style="width: 140px" @change="search" />
+          <a-input-number v-model="queryForm.circleId" placeholder="圈子ID" hide-button style="width: 140px" @change="search" />
+          <DateRangePicker v-model="dateRange" @update:model-value="onDateChange" @change="search" />
+          <a-button @click="reset">
+            <template #icon><icon-refresh /></template>
+            <template #default>重置</template>
+          </a-button>
+        </a-space>
       </template>
       <template #toolbar-right>
         <a-button v-permission="['daily:dynamics:create']" type="primary" @click="onAdd">
@@ -124,6 +153,8 @@
         <a-space>
           <a-link v-permission="['daily:dynamics:get']" title="详情" @click="onDetail(record)">详情</a-link>
           <a-link v-permission="['daily:dynamics:update']" title="修改" @click="onUpdate(record)">修改</a-link>
+          <a-link v-permission="['daily:dynamics:update']" title="通过" @click="onAudit(record, 1)" v-if="record.auditStatus !== 1">通过</a-link>
+          <a-link v-permission="['daily:dynamics:update']" title="拒绝" @click="onAudit(record, 2)" v-if="record.auditStatus !== 2">拒绝</a-link>
           <a-link
             v-permission="['daily:dynamics:delete']"
             status="danger"
@@ -146,11 +177,14 @@
 import type { TableInstance } from '@arco-design/web-vue'
 import DynamicsAddModal from './DynamicsAddModal.vue'
 import DynamicsDetailDrawer from './DynamicsDetailDrawer.vue'
-import { type DynamicsQuery, type DynamicsResp, deleteDynamics, exportDynamics, listDynamics } from '@/apis/daily/dynamics'
+import { type DynamicsQuery, type DynamicsResp, deleteDynamics, exportDynamics, listDynamicsAdmin, auditDynamics } from '@/apis/daily/dynamics'
 import { useDownload, useTable } from '@/hooks'
+import DateRangePicker from '@/components/DateRangePicker/index.vue'
+import dayjs from 'dayjs'
 import { useDict } from '@/hooks/app'
 import { isMobile } from '@/utils'
 import has from '@/utils/has'
+import { Message } from '@arco-design/web-vue'
 
 defineOptions({ name: 'Dynamics' })
 
@@ -158,7 +192,26 @@ const { common02_type: _common02_type, common_type: _common_type } = useDict('co
 
 const queryForm = reactive<DynamicsQuery>({
   sort: ['id,desc'],
+  auditStatus: undefined,
+  type: undefined,
+  isPublic: undefined,
+  status: undefined,
+  userId: undefined,
+  circleId: undefined,
+  createTimeStart: undefined,
+  createTimeEnd: undefined,
 })
+
+const dateRange = ref<Date[] | undefined>(undefined)
+const onDateChange = (val?: Date[]) => {
+  if (!val || val.length < 2) {
+    queryForm.createTimeStart = undefined
+    queryForm.createTimeEnd = undefined
+    return
+  }
+  queryForm.createTimeStart = dayjs(val[0]).format('YYYY-MM-DD HH:mm:ss')
+  queryForm.createTimeEnd = dayjs(val[1]).format('YYYY-MM-DD HH:mm:ss')
+}
 
 const {
   tableData: dataList,
@@ -166,7 +219,7 @@ const {
   pagination,
   search,
   handleDelete,
-} = useTable((page) => listDynamics({ ...queryForm, ...page }), { immediate: true })
+} = useTable((page) => listDynamicsAdmin({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
   {
     title: '发布用户',
@@ -204,6 +257,12 @@ const columns: TableInstance['columns'] = [
     title: '置顶状态',
     dataIndex: 'isTop',
     slotName: 'isTop',
+    width: 100,
+  },
+  {
+    title: '审核状态',
+    dataIndex: 'auditStatus',
+    slotName: 'auditStatus',
     width: 100,
   },
   {
@@ -277,6 +336,17 @@ const DynamicsDetailDrawerRef = ref<InstanceType<typeof DynamicsDetailDrawer>>()
 // 详情
 const onDetail = (record: DynamicsResp) => {
   DynamicsDetailDrawerRef.value?.onOpen(record.id)
+}
+
+// 审核
+const onAudit = async (record: DynamicsResp, status: number) => {
+  try {
+    await auditDynamics(record.id, status)
+    Message.success(status === 1 ? '审核通过' : '已标记为不通过')
+    search()
+  } catch (err) {
+    // 错误由拦截器统一提示
+  }
 }
 
 // 解析位置信息
