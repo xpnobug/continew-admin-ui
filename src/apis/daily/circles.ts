@@ -4,11 +4,11 @@ const BASE_URL = '/daily/circles'
 
 export interface CirclesResp {
   name: string
-  isHot: string
-  isNew: string
-  membersCount: string
-  dynamicsCount: string
-  status: string
+  isHot: number
+  isNew: number
+  membersCount: number
+  dynamicsCount: number
+  status: number
   createUserString: string
   updateUserString: string
   disabled: boolean
@@ -20,11 +20,11 @@ export interface CirclesDetailResp {
   avatar: string
   banner: string
   creatorId: string
-  isHot: string
-  isNew: string
-  membersCount: string
-  dynamicsCount: string
-  status: string
+  isHot: number
+  isNew: number
+  membersCount: number
+  dynamicsCount: number
+  status: number
   createUser: string
   createTime: string
   updateUser: string
@@ -34,6 +34,10 @@ export interface CirclesDetailResp {
 }
 export interface CirclesQuery {
   name: string | undefined
+  status?: number
+  isHot?: number
+  isNew?: number
+  type?: string
   sort: Array<string>
 }
 export interface CirclesPageQuery extends CirclesQuery, PageQuery {}

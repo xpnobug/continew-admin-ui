@@ -154,13 +154,29 @@ const queryForm = reactive<CirclesQuery>({
   sort: ['id,desc'],
 })
 
+// 将“类型”筛选映射为 isHot/isNew
+const buildQuery = (page: any) => {
+  const map: any = { ...queryForm, ...page }
+  if (map.type === 'hot') {
+    map.isHot = 1
+    map.isNew = undefined
+  } else if (map.type === 'new') {
+    map.isNew = 1
+    map.isHot = undefined
+  } else {
+    map.isHot = map.isHot ?? undefined
+    map.isNew = map.isNew ?? undefined
+  }
+  return map
+}
+
 const {
   tableData: dataList,
   loading,
   pagination,
   search,
   handleDelete,
-} = useTable((page) => listCircles({ ...queryForm, ...page }), { immediate: true })
+} = useTable((page) => listCircles(buildQuery(page)), { immediate: true })
 const columns: TableInstance['columns'] = [
   {
     title: '圈子信息',

@@ -102,7 +102,15 @@ const formRef = ref<InstanceType<typeof GiForm>>()
 const { common_type } = useDict('common_type')
 
 const [form, resetForm] = useResetReactive({
-  // todo 待补充
+  name: '',
+  description: '',
+  avatar: '',
+  banner: '',
+  isHot: false, // 前端使用布尔，保存时转换为 0/1
+  isNew: false,
+  membersCount: 0,
+  dynamicsCount: 0,
+  status: 1,
 })
 
 // 文件选择器
@@ -259,11 +267,17 @@ const save = async () => {
   try {
     const isInvalid = await formRef.value?.formRef?.validate()
     if (isInvalid) return false
+    // 转换布尔 -> 数值
+    const payload: any = {
+      ...form,
+      isHot: form.isHot ? 1 : 0,
+      isNew: form.isNew ? 1 : 0,
+    }
     if (isUpdate.value) {
-      await updateCircles(form, dataId.value)
+      await updateCircles(payload, dataId.value)
       Message.success('修改成功')
     } else {
-      await addCircles(form)
+      await addCircles(payload)
       Message.success('新增成功')
     }
     emit('save-success')
@@ -285,7 +299,11 @@ const onUpdate = async (id: string) => {
   reset()
   dataId.value = id
   const { data } = await getCircles(id)
-  Object.assign(form, data)
+  Object.assign(form, {
+    ...data,
+    isHot: !!data.isHot,
+    isNew: !!data.isNew,
+  })
   visible.value = true
 }
 
