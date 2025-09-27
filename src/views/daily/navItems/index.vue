@@ -10,6 +10,10 @@
       :pagination="pagination"
       :disabled-tools="['size']"
       :disabled-column-keys="['name']"
+      :row-selection="{ type: 'checkbox', showCheckedAll: true }"
+      :selected-keys="selectedKeys"
+      @select="select"
+      @select-all="selectAll"
       @refresh="search"
     >
       <template #toolbar-left>
@@ -61,6 +65,14 @@
         </div>
       </template>
       <template #toolbar-right>
+        <a-button v-permission="['daily:navItems:update']" :disabled="!selectedKeys.length" :title="!selectedKeys.length ? '请选择' : ''" @click="onBatchVisible(true)">
+          <template #icon><icon-check /></template>
+          <template #default>批量可见</template>
+        </a-button>
+        <a-button v-permission="['daily:navItems:update']" :disabled="!selectedKeys.length" :title="!selectedKeys.length ? '请选择' : ''" status="warning" @click="onBatchVisible(false)">
+          <template #icon><icon-eye-invisible /></template>
+          <template #default>批量隐藏</template>
+        </a-button>
         <a-button v-permission="['daily:navItems:create']" type="primary" @click="onAdd">
           <template #icon><icon-plus /></template>
           <template #default>新增</template>
@@ -148,11 +160,12 @@
 import type { TableInstance } from '@arco-design/web-vue'
 import NavItemsAddModal from './NavItemsAddModal.vue'
 import NavItemsDetailDrawer from './NavItemsDetailDrawer.vue'
-import { type NavItemsQuery, type NavItemsResp, deleteNavItems, exportNavItems, listNavItems } from '@/apis/daily/navItems'
+import { type NavItemsQuery, type NavItemsResp, deleteNavItems, exportNavItems, listNavItems, batchUpdateVisibility } from '@/apis/daily/navItems'
 import { useDownload, useTable } from '@/hooks'
 import { useDict } from '@/hooks/app'
 import { isMobile } from '@/utils'
 import has from '@/utils/has'
+import { Message } from '@arco-design/web-vue'
 
 defineOptions({ name: 'NavItems' })
 
@@ -182,6 +195,9 @@ const {
   pagination,
   search,
   handleDelete,
+  selectedKeys,
+  select,
+  selectAll,
 } = useTable((page) => listNavItems({ ...queryForm, ...page }), { immediate: true })
 const columns: TableInstance['columns'] = [
   {
@@ -297,6 +313,15 @@ const NavItemsDetailDrawerRef = ref<InstanceType<typeof NavItemsDetailDrawer>>()
 // 详情
 const onDetail = (record: NavItemsResp) => {
   NavItemsDetailDrawerRef.value?.onOpen(record.id)
+}
+
+// 批量设置可见性
+const onBatchVisible = async (visible: boolean) => {
+  try {
+    await batchUpdateVisibility(selectedKeys.value as (string|number)[], visible)
+    Message.success(visible ? '已批量设置为可见' : '已批量设置为隐藏')
+    search()
+  } catch (e) {}
 }
 </script>
 

@@ -87,3 +87,8 @@ export function deleteNavItems(id: string) {
 export function exportNavItems(query: NavItemsQuery) {
   return http.download(`${BASE_URL}/export`, query)
 }
+
+/** @desc 批量设置可见性 */
+export function batchUpdateVisibility(ids: (string|number)[], isVisible: boolean) {
+  return http.put(`${BASE_URL}/ops/visibility`, { ids, isVisible })
+}

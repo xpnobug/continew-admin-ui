@@ -41,9 +41,8 @@ export function useTable<T extends U, U = T>(api: Api<T>, options?: Options<T, U
   // 多选
   const selectedKeys = ref<(string | number)[]>([])
   const select: TableInstance['onSelect'] = (rowKeys) => {
-    if (Array.isArray(rowKey)) {
-      selectedKeys.value = rowKeys
-    }
+    // 直接同步选择的 keys，保持与 a-table 行选择一致
+    selectedKeys.value = rowKeys
   }
 
   // 全选
