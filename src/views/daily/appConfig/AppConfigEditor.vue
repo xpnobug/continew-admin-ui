@@ -18,13 +18,12 @@
           <a-space>
             <a-button type="outline" size="small" @click="openImport">导入</a-button>
             <a-button type="outline" size="small" @click="exportJson">导出</a-button>
-            <a-button type="primary" size="small" @click="onSave">保存</a-button>
           </a-space>
         </a-space>
       </a-grid-item>
       <a-grid-item :span="18" class="main">
         <a-card v-if="active" :title="active.title" :bordered="true">
-          <component :is="active.component" :value="getModuleValue(active)" :features="features" :on-change="(val: any, f?: Record<string, any>) => updateModule(active, val, f)" />
+          <component :is="active.component" :value="getModuleValue(active)" :features="features" :apply="(val: any, f?: Record<string, any>) => updateModule(active, val, f)" />
         </a-card>
         <a-empty v-else description="请选择左侧模块" />
       </a-grid-item>
@@ -43,7 +42,7 @@ import { getByPath, setByPath, ensurePath, deepClone } from './components/jsonUt
 import type { JsonModule } from './components/types'
 
 const props = defineProps<{ modelValue?: Record<string, any> }>()
-const emit = defineEmits<{ (e: 'update:modelValue', v: Record<string, any>): void; (e: 'save', v: Record<string, any>): void }>()
+const emit = defineEmits<{ (e: 'update:modelValue', v: Record<string, any>): void }>()
 
 const config = ref<Record<string, any>>(deepClone(props.modelValue ?? {}))
 
@@ -138,9 +137,7 @@ function ensureRoot(obj: any) {
   return root
 }
 
-function onSave() {
-  emit('save', deepClone(config.value))
-}
+// 移除显式保存按钮，改为实时同步由上层接管
 </script>
 
 <style scoped>
@@ -152,4 +149,3 @@ function onSave() {
 .title { cursor: pointer; }
 .arco-list-item.active { background: var(--color-fill-2); }
 </style>
-

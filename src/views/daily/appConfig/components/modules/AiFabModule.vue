@@ -20,6 +20,18 @@
     </a-grid-item>
     <a-grid-item :span="12">
       <a-space align="center" fill>
+        <span class="lbl">背景图片</span>
+        <a-input v-model="model.bgImage" placeholder="请选择背景图片或填写 URL" readonly>
+          <template #suffix>
+            <a-button type="text" size="mini" @click="openBgSelector">
+              <icon-folder /> 选择
+            </a-button>
+          </template>
+        </a-input>
+      </a-space>
+    </a-grid-item>
+    <a-grid-item :span="12">
+      <a-space align="center" fill>
         <span class="lbl">跳转路径</span>
         <a-input v-model="model.route" placeholder="/imaPackages/pages/agent-chat/index" />
       </a-space>
@@ -75,6 +87,16 @@
       </a-space>
     </a-grid-item>
   </a-grid>
+  <!-- 文件选择器：背景图片 -->
+  <FileSelector
+    v-model="bgSelectorVisible"
+    title="选择背景图片"
+    :allow-file-types="['jpg','jpeg','png','gif','webp','svg']"
+    :only-file="true"
+    :select-multiple="false"
+    @select="onBgSelected"
+    @cancel="bgSelectorVisible = false"
+  />
 </template>
 
 <script lang="ts">
@@ -87,6 +109,7 @@ export const meta: JsonModuleMeta = {
   defaultValue: {
     label: 'AI',
     background: 'linear-gradient(-29deg, #bf975c, #d2ad77)',
+    bgImage: '',
     route: '/imaPackages/pages/agent-chat/index',
     zIndex: 1002,
     size: 88,
@@ -102,24 +125,69 @@ export const meta: JsonModuleMeta = {
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { deepClone } from '../jsonUtils'
+import FileSelector from '@/views/system/file/components/FileSelector/FileSelector.vue'
+import type { FileItem } from '@/apis/system/file'
 
 const props = defineProps<{
   value: Record<string, any>
   features: Record<string, any>
-  onChange: (val: Record<string, any>, features?: Record<string, any>) => void
+  apply: (val: Record<string, any>, features?: Record<string, any>) => void
 }>()
 
-const model = computed({
-  get: () => props.value,
-  set: (val) => props.onChange(val, props.features),
-})
-const features = computed({
-  get: () => props.features,
-  set: (val) => props.onChange(model.value, val),
-})
+// 本地副本，避免直接改动父组件的 prop，同时便于侦听深度变更
+const localValue = ref<Record<string, any>>(deepClone(props.value || {}))
+const localFeatures = ref<Record<string, any>>(deepClone(props.features || {}))
+const syncingFromParent = ref(false)
+
+watch(
+  () => props.value,
+  (v) => {
+    syncingFromParent.value = true
+    localValue.value = deepClone(v || {})
+  },
+  { deep: true }
+)
+watch(
+  () => props.features,
+  (v) => {
+    syncingFromParent.value = true
+    localFeatures.value = deepClone(v || {})
+  },
+  { deep: true }
+)
+
+watch(
+  [localValue, localFeatures],
+  ([v, f]) => {
+    if (syncingFromParent.value) {
+      syncingFromParent.value = false
+      return
+    }
+    // 任何字段变更均同步给父组件（实时）
+    props.apply(deepClone(v), deepClone(f))
+  },
+  { deep: true }
+)
+
+const model = computed(() => localValue.value)
+const features = computed(() => localFeatures.value)
+
+// 文件选择：背景图片
+const bgSelectorVisible = ref(false)
+const openBgSelector = () => { bgSelectorVisible.value = true }
+const onBgSelected = (fileInfo: FileItem | FileItem[]) => {
+  const file = Array.isArray(fileInfo) ? fileInfo[0] : fileInfo
+  if (file && (file as any).url) {
+    localValue.value.bgImage = (file as any).url as any
+  }
+  bgSelectorVisible.value = false
+}
 </script>
 
 <style scoped>
 .lbl { color: var(--color-text-2); min-width: 96px; display: inline-block; }
 </style>
+
+ 

@@ -26,7 +26,7 @@
           <a-tab-pane key="json" title="扩展JSON">
             <a-space direction="vertical" fill>
               <a-card size="small" :bordered="true" title="可视化配置">
-                <AppConfigEditor v-model="editorCfg" @save="onEditorSave" />
+                <AppConfigEditor v-model="editorCfg" />
               </a-card>
               <a-textarea
                 v-model="form.configJson"
@@ -59,6 +59,7 @@ const formRefBase = ref<InstanceType<typeof GiForm>>()
 const activeTab = ref('base')
 const dataId = ref<string>('')
 const saving = ref(false)
+let autoSaveTimer: any = null
 
 const [form, resetForm] = useResetReactive({
   appName: '',
@@ -190,6 +191,7 @@ const syncEditorToJson = () => {
       syncingToJson = true
       form.configJson = next
       setTimeout(() => { syncingToJson = false }, 0)
+      scheduleAutoSave()
     }
   } catch (e) {
     // no-op
@@ -199,10 +201,39 @@ const syncEditorToJson = () => {
 watch(() => form.configJson, parseAndSyncFromJson)
 watch(editorCfg, syncEditorToJson, { deep: true })
 
-const onEditorSave = (val: Record<string, any>) => {
-  editorCfg.value = ensureDefaults(val)
-  syncEditorToJson()
-  Message.success('已同步到JSON')
+// 取消显式保存回调，改为实时同步由 watcher 完成
+
+function scheduleAutoSave() {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer)
+  autoSaveTimer = setTimeout(() => {
+    autoSaveTimer = null
+    autoSave()
+  }, 800) // 800ms 防抖
+}
+
+async function autoSave() {
+  // 若未加载到任何数据（首次创建前），不自动保存
+  if (!form.appName && !form.configJson) return
+  // 校验 JSON
+  try { if (form.configJson) JSON.parse(form.configJson) } catch { return }
+  // 避免与手动保存冲突
+  if (saving.value) return
+  try {
+    saving.value = true
+    if (dataId.value) {
+      await updateAppConfig(form, dataId.value)
+    } else {
+      const res = await addAppConfig(form)
+      // 兼容接口返回结构
+      const newId = (res && (res.id || res.data?.id)) || ''
+      if (newId) dataId.value = String(newId)
+    }
+    Message.success('已自动保存')
+  } catch (e) {
+    // 静默失败（可按需提示）
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
