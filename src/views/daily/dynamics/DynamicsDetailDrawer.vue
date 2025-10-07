@@ -50,20 +50,24 @@
         </a-descriptions>
 
         <!-- 媒体内容展示 -->
-        <div v-if="dataDetail?.imgs?.length || dataDetail?.video || dataDetail?.audio" class="media-content">
+        <div v-if="dataDetail?.imgs || dataDetail?.video || dataDetail?.audio" class="media-content">
           <h4>媒体内容</h4>
           <!-- 图片展示 -->
           <div v-if="dataDetail?.imgs?.length" class="images-grid">
-            <div v-for="img in dataDetail.imgs" :key="img.id" class="image-item">
-              <a-image
-                :src="img.url"
-                :width="120"
-                :height="120"
-                fit="cover"
-                show-loader
-                :preview="{ src: img.url }"
-              />
-            </div>
+            <a-image-preview-group infinite>
+              <div v-for="img in dataDetail.imgs" :key="img.id || img.url" class="image-item">
+                <div class="image-wrap">
+                  <a-image
+                    :src="img.url"
+                    :width="120"
+                    :height="120"
+                    fit="cover"
+                    show-loader
+                  />
+                  <div v-if="img.width && img.height" class="image-meta">{{ img.width }}x{{ img.height }}</div>
+                </div>
+              </div>
+            </a-image-preview-group>
           </div>
           <!-- 视频展示 -->
           <div v-if="dataDetail?.video" class="video-content">
@@ -74,12 +78,18 @@
               class="video-player"
             />
             <div class="video-info">
-              <span>尺寸: {{ dataDetail.video.width }}x{{ dataDetail.video.height }}</span>
+              <span v-if="dataDetail.video.width && dataDetail.video.height">尺寸: {{ dataDetail.video.width }}x{{ dataDetail.video.height }}</span>
+              <span v-if="dataDetail.video.duration" style="margin-left: 12px;">时长: {{ dataDetail.video.duration }}s</span>
+              <a v-if="dataDetail.video.url" :href="dataDetail.video.url" target="_blank" style="margin-left: 12px;">在新标签打开</a>
             </div>
           </div>
           <!-- 音频展示 -->
           <div v-if="dataDetail?.audio" class="audio-content">
             <audio :src="dataDetail.audio.url" controls class="audio-player" />
+            <div class="audio-info">
+              <span v-if="dataDetail.audio?.duration">时长: {{ dataDetail.audio.duration }}s</span>
+              <a v-if="dataDetail.audio?.url" :href="dataDetail.audio.url" target="_blank" style="margin-left: 12px;">在新标签打开</a>
+            </div>
           </div>
         </div>
       </a-card>
@@ -292,6 +302,24 @@ defineExpose({ onOpen })
         border-radius: 6px;
         overflow: hidden;
       }
+
+      .image-wrap {
+        position: relative;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .image-meta {
+        position: absolute;
+        right: 4px;
+        bottom: 4px;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        border-radius: 3px;
+        padding: 0 4px;
+        font-size: 10px;
+        line-height: 16px;
+      }
     }
 
     .video-content {
@@ -312,6 +340,11 @@ defineExpose({ onOpen })
       .audio-player {
         width: 100%;
         max-width: 400px;
+      }
+      .audio-info {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--color-text-3);
       }
     }
   }

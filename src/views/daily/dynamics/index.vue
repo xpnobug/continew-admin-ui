@@ -12,6 +12,58 @@
       :disabled-column-keys="['name']"
       @refresh="search"
     >
+      <template #media="{ record }">
+        <div class="media-cell">
+          <template v-if="record.type === 1 && record.imgs?.length">
+            <a-image-preview-group infinite>
+              <a-image
+                v-for="img in record.imgs.slice(0, 3)"
+                :key="img.id || img.url"
+                :src="img.url"
+                :width="40"
+                :height="40"
+                fit="cover"
+                show-loader
+              />
+              <!-- 隐藏的图片用于预览 -->
+              <a-image
+                v-for="img in record.imgs.slice(3)"
+                :key="'hidden-' + (img.id || img.url)"
+                :src="img.url"
+                :width="0"
+                :height="0"
+                style="display: none;"
+              />
+            </a-image-preview-group>
+            <span v-if="record.imgs.length > 3" class="more">+{{ record.imgs.length - 3 }}</span>
+          </template>
+          <template v-else-if="record.type === 2 && record.video">
+            <div class="video-preview" @click="onPreviewVideo(record.video)">
+              <a-image
+                :src="record.video.coverUrl || record.video.url"
+                :width="60"
+                :height="40"
+                fit="cover"
+                show-loader
+                :preview="false"
+              >
+                <template #extra>
+                  <icon-video-camera style="color: #fff" />
+                </template>
+              </a-image>
+            </div>
+          </template>
+          <template v-else-if="record.type === 3 && record.audio">
+            <a-tag color="orange" size="small">
+              <template #icon><icon-sound /></template>
+              音频
+            </a-tag>
+          </template>
+          <template v-else>
+            <span class="text-gray">无</span>
+          </template>
+        </div>
+      </template>
       <template #auditStatus="{ record }">
         <a-tag :color="record.auditStatus === 1 ? 'green' : (record.auditStatus === 0 ? 'orange' : 'red')">
           {{ record.auditStatus === 1 ? '通过' : (record.auditStatus === 0 ? '待审核' : '不通过') }}
@@ -170,6 +222,25 @@
 
     <DynamicsAddModal ref="DynamicsAddModalRef" @save-success="search" />
     <DynamicsDetailDrawer ref="DynamicsDetailDrawerRef" />
+
+    <!-- 视频预览模态框 -->
+    <a-modal
+      v-model:visible="videoPreviewVisible"
+      title="视频预览"
+      :footer="false"
+      :width="800"
+      unmount-on-close
+    >
+      <video
+        v-if="currentVideo"
+        :src="currentVideo.url"
+        :poster="currentVideo.coverUrl"
+        controls
+        style="width: 100%; max-height: 500px;"
+      >
+        您的浏览器不支持 video 标签。
+      </video>
+    </a-modal>
   </div>
 </template>
 
@@ -234,6 +305,12 @@ const columns: TableInstance['columns'] = [
     width: 200,
     ellipsis: true,
     tooltip: true,
+  },
+  {
+    title: '媒体',
+    dataIndex: 'media',
+    slotName: 'media',
+    width: 140,
   },
   {
     title: '动态类型',
@@ -358,6 +435,15 @@ const getLocationName = (location: string) => {
     return location
   }
 }
+
+// 视频预览
+const videoPreviewVisible = ref(false)
+const currentVideo = ref<{ url: string; coverUrl?: string } | null>(null)
+
+const onPreviewVideo = (video: { url: string; coverUrl?: string }) => {
+  currentVideo.value = video
+  videoPreviewVisible.value = true
+}
 </script>
 
 <style scoped lang="scss">
@@ -410,6 +496,29 @@ const getLocationName = (location: string) => {
     line-height: 16px;
     font-size: 10px;
     min-width: 16px;
+  }
+}
+
+.media-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  .arco-image {
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .more {
+    font-size: 12px;
+    color: var(--color-text-3);
+  }
+}
+
+.video-preview {
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    opacity: 0.9;
   }
 }
 </style>
