@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
-import { getAppSetting, getAiFabSetting, getCommentSetting, getCheckinSetting, getMultipartUploadSetting, saveAppSetting, saveAiFabSetting, saveCommentSetting, saveCheckinSetting, saveMultipartUploadSetting } from '@/apis/system/setting'
+import { getAppSetting, getAiFabSetting, getCommentSetting, getCheckinSetting, getMultipartUploadSetting, getUserCenterSetting, saveAppSetting, saveAiFabSetting, saveCommentSetting, saveCheckinSetting, saveMultipartUploadSetting, saveUserCenterSetting } from '@/apis/system/setting'
 import type { JsonModule } from './components/types'
 import AppConfigEditor from './AppConfigEditor.vue'
 
@@ -53,6 +53,10 @@ const io = {
       const { data } = await getMultipartUploadSetting<any>()
       return data ?? {}
     }
+    if (m.key === 'userCenter') {
+      const { data } = await getUserCenterSetting<any>()
+      return data ?? {}
+    }
     return {}
   },
   async save(m: JsonModule, v: any) {
@@ -61,6 +65,7 @@ const io = {
     if (m.key === 'comment') return saveCommentSetting(v)
     if (m.key === 'checkin') return saveCheckinSetting(v)
     if (m.key === 'multipartUpload') return saveMultipartUploadSetting(v)
+    if (m.key === 'userCenter') return saveUserCenterSetting(v)
   },
 }
 

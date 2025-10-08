@@ -34,3 +34,19 @@ export function getCheckinSetting<T = any>() {
 export function saveCheckinSetting<T = any>(data: any) {
   return http.post<T>(`${BASE_URL}/checkin`, data)
 }
+
+// 模块化配置：分片上传配置
+export function getMultipartUploadSetting<T = any>() {
+  return http.get<T>(`${BASE_URL}/multipart-upload`)
+}
+export function saveMultipartUploadSetting<T = any>(data: any) {
+  return http.post<T>(`${BASE_URL}/multipart-upload`, data)
+}
+
+// 模块化配置：个人中心配置
+export function getUserCenterSetting<T = any>() {
+  return http.get<T>(`${BASE_URL}/user-center`)
+}
+export function saveUserCenterSetting<T = any>(data: any) {
+  return http.post<T>(`${BASE_URL}/user-center`, data)
+}
