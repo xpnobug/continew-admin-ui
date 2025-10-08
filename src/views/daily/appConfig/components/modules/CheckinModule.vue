@@ -4,6 +4,12 @@
       <a-grid :cols="24" :col-gap="12" :row-gap="8">
         <a-grid-item :span="8">
           <a-space align="center">
+            <span class="lbl">页面标题</span>
+            <a-input v-model="model.pageTitle" placeholder="打卡签到" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="8">
+          <a-space align="center">
             <span class="lbl">签到总天数</span>
             <a-input-number v-model="model.totalDays" :min="1" :max="365" :step="1" style="width: 140px" />
           </a-space>
@@ -98,40 +104,46 @@
         <a-grid-item :span="8">
           <a-space direction="vertical" fill>
             <span class="lbl">已签到图标</span>
-            <a-input v-model="model.icons.signed" placeholder="/static/welfare/signed.png" readonly>
-              <template #suffix>
-                <a-button type="text" size="mini" @click="openIconSelector('signed')">
-                  <icon-folder /> 选择
-                </a-button>
-              </template>
-            </a-input>
-            <img v-if="model.icons.signed" :src="model.icons.signed" style="width: 48px; height: 48px; object-fit: contain; border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px;" />
+            <a-space align="center" fill>
+              <a-input v-model="model.icons.signed" placeholder="/static/welfare/signed.png" readonly style="flex: 1">
+                <template #suffix>
+                  <a-button type="text" size="mini" @click="openIconSelector('signed')">
+                    <icon-folder /> 选择
+                  </a-button>
+                </template>
+              </a-input>
+              <img v-if="model.icons.signed" :src="model.icons.signed" class="icon-preview" />
+            </a-space>
           </a-space>
         </a-grid-item>
         <a-grid-item :span="8">
           <a-space direction="vertical" fill>
             <span class="lbl">未签到图标</span>
-            <a-input v-model="model.icons.unsigned" placeholder="/static/welfare/no_signed.png" readonly>
-              <template #suffix>
-                <a-button type="text" size="mini" @click="openIconSelector('unsigned')">
-                  <icon-folder /> 选择
-                </a-button>
-              </template>
-            </a-input>
-            <img v-if="model.icons.unsigned" :src="model.icons.unsigned" style="width: 48px; height: 48px; object-fit: contain; border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px;" />
+            <a-space align="center" fill>
+              <a-input v-model="model.icons.unsigned" placeholder="/static/welfare/no_signed.png" readonly style="flex: 1">
+                <template #suffix>
+                  <a-button type="text" size="mini" @click="openIconSelector('unsigned')">
+                    <icon-folder /> 选择
+                  </a-button>
+                </template>
+              </a-input>
+              <img v-if="model.icons.unsigned" :src="model.icons.unsigned" class="icon-preview" />
+            </a-space>
           </a-space>
         </a-grid-item>
         <a-grid-item :span="8">
           <a-space direction="vertical" fill>
             <span class="lbl">积分奖励图标</span>
-            <a-input v-model="model.icons.reward" placeholder="/static/welfare/carrot_points.png" readonly>
-              <template #suffix>
-                <a-button type="text" size="mini" @click="openIconSelector('reward')">
-                  <icon-folder /> 选择
-                </a-button>
-              </template>
-            </a-input>
-            <img v-if="model.icons.reward" :src="model.icons.reward" style="width: 48px; height: 48px; object-fit: contain; border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px;" />
+            <a-space align="center" fill>
+              <a-input v-model="model.icons.reward" placeholder="/static/welfare/carrot_points.png" readonly style="flex: 1">
+                <template #suffix>
+                  <a-button type="text" size="mini" @click="openIconSelector('reward')">
+                    <icon-folder /> 选择
+                  </a-button>
+                </template>
+              </a-input>
+              <img v-if="model.icons.reward" :src="model.icons.reward" class="icon-preview" />
+            </a-space>
           </a-space>
         </a-grid-item>
       </a-grid>
@@ -182,27 +194,31 @@
         <a-grid-item :span="12">
           <a-space direction="vertical" fill>
             <span class="lbl">标题背景图</span>
-            <a-input v-model="model.shareTask.titleBgImage" placeholder="/static/otherPages/static/images/task_title_bg.png" readonly>
-              <template #suffix>
-                <a-button type="text" size="mini" @click="openIconSelector('shareTaskTitleBg')">
-                  <icon-folder /> 选择
-                </a-button>
-              </template>
-            </a-input>
-            <img v-if="model.shareTask.titleBgImage" :src="model.shareTask.titleBgImage" style="width: 100%; height: 32px; object-fit: contain; border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px;" />
+            <a-space align="center" fill>
+              <a-input v-model="model.shareTask.titleBgImage" placeholder="/static/otherPages/static/images/task_title_bg.png" readonly style="flex: 1">
+                <template #suffix>
+                  <a-button type="text" size="mini" @click="openIconSelector('shareTaskTitleBg')">
+                    <icon-folder /> 选择
+                  </a-button>
+                </template>
+              </a-input>
+              <img v-if="model.shareTask.titleBgImage" :src="model.shareTask.titleBgImage" class="title-bg-preview" />
+            </a-space>
           </a-space>
         </a-grid-item>
         <a-grid-item :span="12">
           <a-space direction="vertical" fill>
             <span class="lbl">分享图标</span>
-            <a-input v-model="model.shareTask.icon" placeholder="/static/otherPages/static/images/share_icon.png" readonly>
-              <template #suffix>
-                <a-button type="text" size="mini" @click="openIconSelector('shareTaskIcon')">
-                  <icon-folder /> 选择
-                </a-button>
-              </template>
-            </a-input>
-            <img v-if="model.shareTask.icon" :src="model.shareTask.icon" style="width: 48px; height: 48px; object-fit: contain; border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px;" />
+            <a-space align="center" fill>
+              <a-input v-model="model.shareTask.icon" placeholder="/static/otherPages/static/images/share_icon.png" readonly style="flex: 1">
+                <template #suffix>
+                  <a-button type="text" size="mini" @click="openIconSelector('shareTaskIcon')">
+                    <icon-folder /> 选择
+                  </a-button>
+                </template>
+              </a-input>
+              <img v-if="model.shareTask.icon" :src="model.shareTask.icon" class="icon-preview" />
+            </a-space>
           </a-space>
         </a-grid-item>
         <a-grid-item :span="12">
@@ -279,6 +295,36 @@
             </a-input-number>
           </a-space>
         </a-grid-item>
+        <a-grid-item :span="24">
+          <a-divider orientation="left">分享内容配置</a-divider>
+        </a-grid-item>
+        <a-grid-item :span="12">
+          <a-space direction="vertical" fill>
+            <span class="lbl">分享标题</span>
+            <a-input v-model="model.shareTask.shareConfig.title" placeholder="来打卡签到，领取每日积分奖励！" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="12">
+          <a-space direction="vertical" fill>
+            <span class="lbl">分享路径</span>
+            <a-input v-model="model.shareTask.shareConfig.path" placeholder="/subPackages/welfare/index" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="24">
+          <a-space direction="vertical" fill>
+            <span class="lbl">分享图片</span>
+            <a-space align="center" fill>
+              <a-input v-model="model.shareTask.shareConfig.imageUrl" placeholder="/static/share/checkin_share.png" readonly style="flex: 1">
+                <template #suffix>
+                  <a-button type="text" size="mini" @click="openIconSelector('shareImage')">
+                    <icon-folder /> 选择
+                  </a-button>
+                </template>
+              </a-input>
+              <img v-if="model.shareTask.shareConfig.imageUrl" :src="model.shareTask.shareConfig.imageUrl" class="share-image-preview" />
+            </a-space>
+          </a-space>
+        </a-grid-item>
       </a-grid>
     </a-card>
 
@@ -298,6 +344,7 @@ export const meta: JsonModuleMeta = {
   title: '签到配置',
   path: ['modules', 'checkin'],
   defaultValue: {
+    pageTitle: '打卡签到',
     totalDays: 30,
     defaultExpandDays: 14,
     resetOnMiss: true,
@@ -338,7 +385,12 @@ export const meta: JsonModuleMeta = {
         fontSize: 14
       },
       rewardPoints: 10,
-      requiredCount: 1
+      requiredCount: 1,
+      shareConfig: {
+        title: '来打卡签到，领取每日积分奖励！',
+        path: '/subPackages/welfare/index',
+        imageUrl: '/static/share/checkin_share.png'
+      }
     },
     tips: [
       '连续签到可获得更多积分,断签将重置进度',
@@ -367,9 +419,9 @@ const showAllDays = ref(false)
 
 // 图标文件选择器
 const iconSelectorVisible = ref(false)
-const currentIconType = ref<'signed' | 'unsigned' | 'reward' | 'shareTaskIcon' | 'shareTaskTitleBg'>('signed')
+const currentIconType = ref<'signed' | 'unsigned' | 'reward' | 'shareTaskIcon' | 'shareTaskTitleBg' | 'shareImage'>('signed')
 
-const openIconSelector = (type: 'signed' | 'unsigned' | 'reward' | 'shareTaskIcon' | 'shareTaskTitleBg') => {
+const openIconSelector = (type: 'signed' | 'unsigned' | 'reward' | 'shareTaskIcon' | 'shareTaskTitleBg' | 'shareImage') => {
   currentIconType.value = type
   iconSelectorVisible.value = true
 }
@@ -383,6 +435,10 @@ const onIconSelected = (fileInfo: FileItem | FileItem[]) => {
     } else if (currentIconType.value === 'shareTaskTitleBg') {
       if (!localValue.value.shareTask) localValue.value.shareTask = {}
       localValue.value.shareTask.titleBgImage = (file as any).url
+    } else if (currentIconType.value === 'shareImage') {
+      if (!localValue.value.shareTask) localValue.value.shareTask = {}
+      if (!localValue.value.shareTask.shareConfig) localValue.value.shareTask.shareConfig = {}
+      localValue.value.shareTask.shareConfig.imageUrl = (file as any).url
     } else {
       if (!localValue.value.icons) localValue.value.icons = {}
       localValue.value.icons[currentIconType.value] = (file as any).url
@@ -435,6 +491,7 @@ function normalize(v: Record<string, any>) {
     const x = Number.isFinite(n) ? Number(n) : fallback
     return Math.min(max, Math.max(min, x))
   }
+  v.pageTitle = typeof v.pageTitle === 'string' ? v.pageTitle : '打卡签到'
   v.totalDays = clamp(v.totalDays, 1, 365, 30)
   v.defaultExpandDays = clamp(v.defaultExpandDays, 1, v.totalDays, Math.min(14, v.totalDays))
   v.resetOnMiss = !!v.resetOnMiss
@@ -464,6 +521,10 @@ function normalize(v: Record<string, any>) {
   v.shareTask.buttonStyle.fontSize = clamp(v.shareTask.buttonStyle.fontSize, 12, 32, 14)
   v.shareTask.rewardPoints = clamp(v.shareTask.rewardPoints, 0, 9999, 10)
   v.shareTask.requiredCount = clamp(v.shareTask.requiredCount, 1, 100, 1)
+  v.shareTask.shareConfig = v.shareTask.shareConfig || {}
+  v.shareTask.shareConfig.title = typeof v.shareTask.shareConfig.title === 'string' ? v.shareTask.shareConfig.title : '来打卡签到，领取每日积分奖励！'
+  v.shareTask.shareConfig.path = typeof v.shareTask.shareConfig.path === 'string' ? v.shareTask.shareConfig.path : '/subPackages/welfare/index'
+  v.shareTask.shareConfig.imageUrl = typeof v.shareTask.shareConfig.imageUrl === 'string' ? v.shareTask.shareConfig.imageUrl : '/static/share/checkin_share.png'
   v.rewards = (v.rewards && typeof v.rewards === 'object') ? v.rewards : {}
   // 不强制填充所有天数奖励，保留后端已有；仅确保类型为数字或未定义
   Object.keys(v.rewards).forEach((k) => {
@@ -525,4 +586,31 @@ const tipsText = computed({
 <style scoped>
 .lbl { color: var(--color-text-2); min-width: 96px; display: inline-block; }
 .day-label { color: var(--color-text-2); font-size: 12px; min-width: 50px; }
+.icon-preview {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 4px;
+  flex-shrink: 0;
+}
+.title-bg-preview {
+  width: 80px;
+  height: 32px;
+  object-fit: contain;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 4px;
+  flex-shrink: 0;
+}
+.share-image-preview {
+  width: 100px;
+  height: 80px;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 4px;
+  flex-shrink: 0;
+}
 </style>
