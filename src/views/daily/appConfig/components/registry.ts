@@ -17,6 +17,9 @@ export const jsonModules: JsonModule[] = Object.entries(raw)
   })
   .filter(Boolean) as JsonModule[]
 
-// 可选：按 key 或自定义权重排序
-// jsonModules.sort((a, b) => (a.key > b.key ? 1 : -1))
-
+// 排序：基础配置优先，其余保持相对顺序
+jsonModules.sort((a, b) => {
+  if (a.key === 'basicInfo') return -1
+  if (b.key === 'basicInfo') return 1
+  return 0
+})

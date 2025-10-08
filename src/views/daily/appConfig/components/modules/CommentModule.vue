@@ -5,12 +5,6 @@
         <a-grid-item :span="12">
           <a-space align="center">
             <span class="lbl">启用评论</span>
-            <a-switch v-model="features.isComment" />
-          </a-space>
-        </a-grid-item>
-        <a-grid-item :span="12">
-          <a-space align="center">
-            <span class="lbl">允许评论</span>
             <a-switch v-model="model.enabled" />
           </a-space>
         </a-grid-item>
@@ -171,7 +165,6 @@ export const meta: JsonModuleMeta = {
   key: 'comment',
   title: '评论与审核',
   path: ['modules', 'comment'],
-  featureKey: 'isComment',
   defaultValue: {
     enabled: true,
     mode: 'post',
@@ -214,12 +207,10 @@ import { deepClone } from '../jsonUtils'
 
 const props = defineProps<{
   value: Record<string, any>
-  features: Record<string, any>
-  apply: (val: Record<string, any>, features?: Record<string, any>) => void
+  apply: (val: Record<string, any>) => void
 }>()
 
 const localValue = ref<Record<string, any>>(deepClone(props.value || {}))
-const localFeatures = ref<Record<string, any>>(deepClone(props.features || {}))
 const syncingFromParent = ref(false)
 
 watch(
@@ -231,28 +222,27 @@ watch(
   { deep: true }
 )
 watch(
-  () => props.features,
+  () => props.value,
   (v) => {
     syncingFromParent.value = true
-    localFeatures.value = deepClone(v || {})
+    localValue.value = deepClone(v || {})
   },
   { deep: true }
 )
 
 watch(
-  [localValue, localFeatures],
-  ([v, f]) => {
+  () => localValue.value,
+  (v) => {
     if (syncingFromParent.value) {
       syncingFromParent.value = false
       return
     }
-    props.apply(deepClone(v), deepClone(f))
+    props.apply(deepClone(v))
   },
   { deep: true }
 )
 
 const model = computed(() => localValue.value)
-const features = computed(() => localFeatures.value)
 
 // 文本域 <-> 数组 映射
 const nl = /\r?\n/

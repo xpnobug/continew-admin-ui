@@ -2,8 +2,8 @@
   <a-grid :cols="24" :col-gap="12" :row-gap="8">
     <a-grid-item :span="12">
       <a-space align="center">
-        <span class="lbl">悬浮AI按钮</span>
-        <a-switch v-model="features.isAiFab" />
+        <span class="lbl">启用</span>
+        <a-switch v-model="model.enabled" />
       </a-space>
     </a-grid-item>
     <a-grid-item :span="12">
@@ -105,8 +105,8 @@ export const meta: JsonModuleMeta = {
   key: 'aiFab',
   title: 'AI 按钮',
   path: ['ui', 'aiFab'],
-  featureKey: 'isAiFab',
   defaultValue: {
+    enabled: false,
     label: 'AI',
     background: 'linear-gradient(-29deg, #bf975c, #d2ad77)',
     bgImage: '',
@@ -132,13 +132,11 @@ import type { FileItem } from '@/apis/system/file'
 
 const props = defineProps<{
   value: Record<string, any>
-  features: Record<string, any>
-  apply: (val: Record<string, any>, features?: Record<string, any>) => void
+  apply: (val: Record<string, any>) => void
 }>()
 
 // 本地副本，避免直接改动父组件的 prop，同时便于侦听深度变更
 const localValue = ref<Record<string, any>>(deepClone(props.value || {}))
-const localFeatures = ref<Record<string, any>>(deepClone(props.features || {}))
 const syncingFromParent = ref(false)
 
 watch(
@@ -150,29 +148,19 @@ watch(
   { deep: true }
 )
 watch(
-  () => props.features,
+  () => localValue.value,
   (v) => {
-    syncingFromParent.value = true
-    localFeatures.value = deepClone(v || {})
-  },
-  { deep: true }
-)
-
-watch(
-  [localValue, localFeatures],
-  ([v, f]) => {
     if (syncingFromParent.value) {
       syncingFromParent.value = false
       return
     }
     // 任何字段变更均同步给父组件（实时）
-    props.apply(deepClone(v), deepClone(f))
+    props.apply(deepClone(v))
   },
   { deep: true }
 )
 
 const model = computed(() => localValue.value)
-const features = computed(() => localFeatures.value)
 
 // 文件选择：背景图片
 const bgSelectorVisible = ref(false)
@@ -189,5 +177,3 @@ const onBgSelected = (fileInfo: FileItem | FileItem[]) => {
 <style scoped>
 .lbl { color: var(--color-text-2); min-width: 96px; display: inline-block; }
 </style>
-
- 
