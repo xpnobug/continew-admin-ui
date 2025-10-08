@@ -165,6 +165,123 @@
       </a-space>
     </a-card>
 
+    <a-card :bordered="true" size="small" title="分享任务配置">
+      <a-grid :cols="24" :col-gap="12" :row-gap="8">
+        <a-grid-item :span="8">
+          <a-space align="center">
+            <span class="lbl">启用分享任务</span>
+            <a-switch v-model="model.shareTask.enabled" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="24">
+          <a-space direction="vertical" fill>
+            <span class="lbl">任务标题</span>
+            <a-input v-model="model.shareTask.title" placeholder="分享任务" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="12">
+          <a-space direction="vertical" fill>
+            <span class="lbl">标题背景图</span>
+            <a-input v-model="model.shareTask.titleBgImage" placeholder="/static/otherPages/static/images/task_title_bg.png" readonly>
+              <template #suffix>
+                <a-button type="text" size="mini" @click="openIconSelector('shareTaskTitleBg')">
+                  <icon-folder /> 选择
+                </a-button>
+              </template>
+            </a-input>
+            <img v-if="model.shareTask.titleBgImage" :src="model.shareTask.titleBgImage" style="width: 100%; height: 32px; object-fit: contain; border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px;" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="12">
+          <a-space direction="vertical" fill>
+            <span class="lbl">分享图标</span>
+            <a-input v-model="model.shareTask.icon" placeholder="/static/otherPages/static/images/share_icon.png" readonly>
+              <template #suffix>
+                <a-button type="text" size="mini" @click="openIconSelector('shareTaskIcon')">
+                  <icon-folder /> 选择
+                </a-button>
+              </template>
+            </a-input>
+            <img v-if="model.shareTask.icon" :src="model.shareTask.icon" style="width: 48px; height: 48px; object-fit: contain; border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px;" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="12">
+          <a-space direction="vertical" fill>
+            <span class="lbl">任务名称</span>
+            <a-input v-model="model.shareTask.taskName" placeholder="分享好友" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="12">
+          <a-space direction="vertical" fill>
+            <span class="lbl">任务描述</span>
+            <a-input v-model="model.shareTask.taskDesc" placeholder="推荐1个新用户，获得10个积分" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="8">
+          <a-space direction="vertical" fill>
+            <span class="lbl">按钮文案</span>
+            <a-input v-model="model.shareTask.buttonText" placeholder="去分享" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="8">
+          <a-space direction="vertical" fill>
+            <span class="lbl">奖励积分</span>
+            <a-input-number v-model="model.shareTask.rewardPoints" :min="0" :step="1" placeholder="10" style="width: 100%" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="8">
+          <a-space direction="vertical" fill>
+            <span class="lbl">需要推荐人数</span>
+            <a-input-number v-model="model.shareTask.requiredCount" :min="1" :step="1" placeholder="1" style="width: 100%" />
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="8">
+          <a-space direction="vertical" fill>
+            <span class="lbl">按钮背景色</span>
+            <a-input v-model="model.shareTask.buttonStyle.backgroundColor" placeholder="#FF6B6B">
+              <template #prefix>
+                <div :style="{ width: '16px', height: '16px', backgroundColor: model.shareTask.buttonStyle.backgroundColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+              </template>
+              <template #suffix>
+                <a-popover trigger="click" position="bottom" v-model:popup-visible="showShareBgColorPicker">
+                  <template #content>
+                    <ColorPicker theme="light" :color="model.shareTask.buttonStyle.backgroundColor || '#FF6B6B'" :sucker-hide="true" @change-color="onPickShareBgColor" />
+                  </template>
+                  <a-button type="text" size="mini">取色</a-button>
+                </a-popover>
+              </template>
+            </a-input>
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="8">
+          <a-space direction="vertical" fill>
+            <span class="lbl">按钮字体颜色</span>
+            <a-input v-model="model.shareTask.buttonStyle.color" placeholder="#FFFFFF">
+              <template #prefix>
+                <div :style="{ width: '16px', height: '16px', backgroundColor: model.shareTask.buttonStyle.color, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+              </template>
+              <template #suffix>
+                <a-popover trigger="click" position="bottom" v-model:popup-visible="showShareTextColorPicker">
+                  <template #content>
+                    <ColorPicker theme="light" :color="model.shareTask.buttonStyle.color || '#FFFFFF'" :sucker-hide="true" @change-color="onPickShareTextColor" />
+                  </template>
+                  <a-button type="text" size="mini">取色</a-button>
+                </a-popover>
+              </template>
+            </a-input>
+          </a-space>
+        </a-grid-item>
+        <a-grid-item :span="8">
+          <a-space direction="vertical" fill>
+            <span class="lbl">按钮字体大小</span>
+            <a-input-number v-model="model.shareTask.buttonStyle.fontSize" :min="12" :max="32" :step="1" placeholder="14" style="width: 100%">
+              <template #append>px</template>
+            </a-input-number>
+          </a-space>
+        </a-grid-item>
+      </a-grid>
+    </a-card>
+
     <a-card :bordered="true" size="small" title="温馨提示">
       <a-space direction="vertical" fill>
         <span class="lbl">提示内容（每行一个）</span>
@@ -207,6 +324,22 @@ export const meta: JsonModuleMeta = {
       unsigned: '/static/welfare/no_signed.png',
       reward: '/static/welfare/carrot_points.png'
     },
+    shareTask: {
+      enabled: true,
+      title: '分享任务',
+      titleBgImage: '/static/otherPages/static/images/task_title_bg.png',
+      icon: '/static/otherPages/static/images/share_icon.png',
+      taskName: '分享好友',
+      taskDesc: '推荐1个新用户，获得10个积分',
+      buttonText: '去分享',
+      buttonStyle: {
+        backgroundColor: '#FF6B6B',
+        color: '#FFFFFF',
+        fontSize: 14
+      },
+      rewardPoints: 10,
+      requiredCount: 1
+    },
     tips: [
       '连续签到可获得更多积分,断签将重置进度',
       '若遇异常,可稍后重试或联系管理员'
@@ -234,9 +367,9 @@ const showAllDays = ref(false)
 
 // 图标文件选择器
 const iconSelectorVisible = ref(false)
-const currentIconType = ref<'signed' | 'unsigned' | 'reward'>('signed')
+const currentIconType = ref<'signed' | 'unsigned' | 'reward' | 'shareTaskIcon' | 'shareTaskTitleBg'>('signed')
 
-const openIconSelector = (type: 'signed' | 'unsigned' | 'reward') => {
+const openIconSelector = (type: 'signed' | 'unsigned' | 'reward' | 'shareTaskIcon' | 'shareTaskTitleBg') => {
   currentIconType.value = type
   iconSelectorVisible.value = true
 }
@@ -244,8 +377,16 @@ const openIconSelector = (type: 'signed' | 'unsigned' | 'reward') => {
 const onIconSelected = (fileInfo: FileItem | FileItem[]) => {
   const file = Array.isArray(fileInfo) ? fileInfo[0] : fileInfo
   if (file && (file as any).url) {
-    if (!localValue.value.icons) localValue.value.icons = {}
-    localValue.value.icons[currentIconType.value] = (file as any).url
+    if (currentIconType.value === 'shareTaskIcon') {
+      if (!localValue.value.shareTask) localValue.value.shareTask = {}
+      localValue.value.shareTask.icon = (file as any).url
+    } else if (currentIconType.value === 'shareTaskTitleBg') {
+      if (!localValue.value.shareTask) localValue.value.shareTask = {}
+      localValue.value.shareTask.titleBgImage = (file as any).url
+    } else {
+      if (!localValue.value.icons) localValue.value.icons = {}
+      localValue.value.icons[currentIconType.value] = (file as any).url
+    }
   }
   iconSelectorVisible.value = false
 }
@@ -253,6 +394,8 @@ const onIconSelected = (fileInfo: FileItem | FileItem[]) => {
 // 颜色选择器
 const showBgColorPicker = ref(false)
 const showTextColorPicker = ref(false)
+const showShareBgColorPicker = ref(false)
+const showShareTextColorPicker = ref(false)
 
 interface ColorObj { hex: string }
 
@@ -267,6 +410,22 @@ const onPickTextColor = (c: ColorObj) => {
   if (/^#[0-9A-Fa-f]{6}$/.test(c.hex)) {
     if (!localValue.value.buttonStyle) localValue.value.buttonStyle = {}
     localValue.value.buttonStyle.color = c.hex
+  }
+}
+
+const onPickShareBgColor = (c: ColorObj) => {
+  if (/^#[0-9A-Fa-f]{6}$/.test(c.hex)) {
+    if (!localValue.value.shareTask) localValue.value.shareTask = {}
+    if (!localValue.value.shareTask.buttonStyle) localValue.value.shareTask.buttonStyle = {}
+    localValue.value.shareTask.buttonStyle.backgroundColor = c.hex
+  }
+}
+
+const onPickShareTextColor = (c: ColorObj) => {
+  if (/^#[0-9A-Fa-f]{6}$/.test(c.hex)) {
+    if (!localValue.value.shareTask) localValue.value.shareTask = {}
+    if (!localValue.value.shareTask.buttonStyle) localValue.value.shareTask.buttonStyle = {}
+    localValue.value.shareTask.buttonStyle.color = c.hex
   }
 }
 
@@ -291,6 +450,20 @@ function normalize(v: Record<string, any>) {
   v.icons.signed = typeof v.icons.signed === 'string' ? v.icons.signed : '/static/welfare/signed.png'
   v.icons.unsigned = typeof v.icons.unsigned === 'string' ? v.icons.unsigned : '/static/welfare/no_signed.png'
   v.icons.reward = typeof v.icons.reward === 'string' ? v.icons.reward : '/static/welfare/carrot_points.png'
+  v.shareTask = v.shareTask || {}
+  v.shareTask.enabled = typeof v.shareTask.enabled === 'boolean' ? v.shareTask.enabled : true
+  v.shareTask.title = typeof v.shareTask.title === 'string' ? v.shareTask.title : '分享任务'
+  v.shareTask.titleBgImage = typeof v.shareTask.titleBgImage === 'string' ? v.shareTask.titleBgImage : '/static/otherPages/static/images/task_title_bg.png'
+  v.shareTask.icon = typeof v.shareTask.icon === 'string' ? v.shareTask.icon : '/static/otherPages/static/images/share_icon.png'
+  v.shareTask.taskName = typeof v.shareTask.taskName === 'string' ? v.shareTask.taskName : '分享好友'
+  v.shareTask.taskDesc = typeof v.shareTask.taskDesc === 'string' ? v.shareTask.taskDesc : '推荐1个新用户，获得10个积分'
+  v.shareTask.buttonText = typeof v.shareTask.buttonText === 'string' ? v.shareTask.buttonText : '去分享'
+  v.shareTask.buttonStyle = v.shareTask.buttonStyle || {}
+  v.shareTask.buttonStyle.backgroundColor = typeof v.shareTask.buttonStyle.backgroundColor === 'string' ? v.shareTask.buttonStyle.backgroundColor : '#FF6B6B'
+  v.shareTask.buttonStyle.color = typeof v.shareTask.buttonStyle.color === 'string' ? v.shareTask.buttonStyle.color : '#FFFFFF'
+  v.shareTask.buttonStyle.fontSize = clamp(v.shareTask.buttonStyle.fontSize, 12, 32, 14)
+  v.shareTask.rewardPoints = clamp(v.shareTask.rewardPoints, 0, 9999, 10)
+  v.shareTask.requiredCount = clamp(v.shareTask.requiredCount, 1, 100, 1)
   v.rewards = (v.rewards && typeof v.rewards === 'object') ? v.rewards : {}
   // 不强制填充所有天数奖励，保留后端已有；仅确保类型为数字或未定义
   Object.keys(v.rewards).forEach((k) => {
