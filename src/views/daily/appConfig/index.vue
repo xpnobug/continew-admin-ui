@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
-import { getAppSetting, getAiFabSetting, getCommentSetting, saveAppSetting, saveAiFabSetting, saveCommentSetting } from '@/apis/system/setting'
+import { getAppSetting, getAiFabSetting, getCommentSetting, getCheckinSetting, saveAppSetting, saveAiFabSetting, saveCommentSetting, saveCheckinSetting } from '@/apis/system/setting'
 import type { JsonModule } from './components/types'
 import AppConfigEditor from './AppConfigEditor.vue'
 
@@ -45,12 +45,17 @@ const io = {
       const { data } = await getCommentSetting<any>()
       return data ?? {}
     }
+    if (m.key === 'checkin') {
+      const { data } = await getCheckinSetting<any>()
+      return data ?? {}
+    }
     return {}
   },
   async save(m: JsonModule, v: any) {
     if (m.key === 'basicInfo') return saveAppSetting(v)
     if (m.key === 'aiFab') return saveAiFabSetting(v)
     if (m.key === 'comment') return saveCommentSetting(v)
+    if (m.key === 'checkin') return saveCheckinSetting(v)
   },
 }
 

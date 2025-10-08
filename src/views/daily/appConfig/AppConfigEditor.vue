@@ -38,7 +38,7 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { jsonModules } from './components/registry'
-import { getByPath, setByPath, deepClone } from './components/jsonUtils'
+import { getByPath, setByPath, deepClone, mergeDeep } from './components/jsonUtils'
 import type { JsonModule } from './components/types'
 
 type EditorIO = {
@@ -55,6 +55,9 @@ const useIo = computed(() => !!props.io)
 const config = ref<Record<string, any>>(deepClone(props.modelValue ?? {}))
 const moduleValues = ref<Record<string, any>>({})
 const saveTimers = ref<Record<string, any>>({})
+const moduleLoaded = ref<Record<string, boolean>>({})
+// 记录每个模块最近一次保存（或加载）时的快照，用于脏检查
+const lastSaved = ref<Record<string, any>>({})
 
 watch(
   () => props.modelValue,
@@ -97,7 +100,10 @@ function getModuleValue(m: JsonModule) {
 async function updateModule(m: JsonModule, val: Record<string, any>) {
   if (useIo.value && props.io) {
     moduleValues.value[m.key] = val
-    scheduleModuleSave(m)
+    // 只有在模块已加载后才自动保存（避免初始化时触发保存）
+    if (moduleLoaded.value[m.key]) {
+      scheduleModuleSave(m)
+    }
     return
   }
   setByPath(config.value, m.path, val)
@@ -110,7 +116,12 @@ function scheduleModuleSave(m: JsonModule) {
   if (saveTimers.value[key]) clearTimeout(saveTimers.value[key])
   saveTimers.value[key] = setTimeout(async () => {
     try {
-      await props.io!.save(m, moduleValues.value[key])
+      const current = moduleValues.value[key]
+      // 无变化则不触发保存
+      if (JSON.stringify(current) === JSON.stringify(lastSaved.value[key])) return
+      await props.io!.save(m, current)
+      // 更新快照
+      lastSaved.value[key] = deepClone(current)
       Message.success({ content: `已自动保存 · ${m.title}`, duration: 1000 })
     } finally {
       saveTimers.value[key] = null
@@ -164,7 +175,13 @@ function ensureRoot(obj: any) {
 async function loadActive() {
   if (!useIo.value || !props.io || !active.value) return
   const data = await props.io.load(active.value)
-  moduleValues.value[active.value.key] = deepClone(data ?? active.value.defaultValue)
+  // 与默认值深度合并，确保未提供字段按默认值回显
+  const merged = mergeDeep(active.value.defaultValue, data ?? {})
+  moduleValues.value[active.value.key] = deepClone(merged)
+  // 标记模块已加载，后续修改才会触发自动保存
+  moduleLoaded.value[active.value.key] = true
+  // 记录加载后的基线，用于后续脏检查
+  lastSaved.value[active.value.key] = deepClone(moduleValues.value[active.value.key])
 }
 
 watch(
@@ -193,7 +210,10 @@ async function saveAll() {
   if (!useIo.value || !props.io) return
   for (const m of jsonModules) {
     const v = moduleValues.value[m.key]
-    if (v !== undefined) await props.io.save(m, v)
+    if (v !== undefined) {
+      await props.io.save(m, v)
+      lastSaved.value[m.key] = deepClone(v)
+    }
   }
 }
 
@@ -203,7 +223,9 @@ function getValues() {
 function reset() {
   if (useIo.value) {
     moduleValues.value = {}
-    loadActiveIfNeeded()
+    lastSaved.value = {}
+    // 重新加载当前激活模块的数据
+    loadActive()
   } else {
     config.value = {}
   }

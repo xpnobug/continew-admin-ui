@@ -26,3 +26,11 @@ export function getCommentSetting<T = any>() {
 export function saveCommentSetting<T = any>(data: any) {
   return http.post<T>(`${BASE_URL}/comment`, data)
 }
+
+// 模块化配置：签到配置
+export function getCheckinSetting<T = any>() {
+  return http.get<T>(`${BASE_URL}/checkin`)
+}
+export function saveCheckinSetting<T = any>(data: any) {
+  return http.post<T>(`${BASE_URL}/checkin`, data)
+}
