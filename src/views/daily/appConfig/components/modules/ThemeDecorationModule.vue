@@ -179,7 +179,19 @@
                     placeholder="颜色值"
                     size="small"
                     style="width: 140px; margin: 0 4px;"
-                  />
+                  >
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: color.value || '#ccc', border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" :popup-visible="colorPickerVisible[`${configIndex}-${colorIndex}`]" @update:popup-visible="(v) => updateColorPickerVisible(`${configIndex}-${colorIndex}`, v)">
+                        <template #content>
+                          <ColorPicker theme="light" :color="color.value || '#FFFFFF'" :sucker-hide="true" @change-color="(c) => onPickColorOption(c, config, colorIndex)" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
                   <a-button
                     type="text"
                     status="danger"
@@ -250,27 +262,87 @@
         <a-row :gutter="12">
           <a-col :span="8">
             <a-form-item label="经期颜色">
-              <a-input v-model="editingTheme.colors.period" />
+              <a-input v-model="editingTheme.colors.period">
+                <template #prefix>
+                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.period, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                </template>
+                <template #suffix>
+                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.period">
+                    <template #content>
+                      <ColorPicker theme="light" :color="editingTheme.colors.period || '#FF8FAE'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'period')" />
+                    </template>
+                    <a-button type="text" size="mini">取色</a-button>
+                  </a-popover>
+                </template>
+              </a-input>
             </a-form-item>
           </a-col>
           <a-col :span="8">
             <a-form-item label="预测经期颜色">
-              <a-input v-model="editingTheme.colors.predicted" />
+              <a-input v-model="editingTheme.colors.predicted">
+                <template #prefix>
+                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.predicted, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                </template>
+                <template #suffix>
+                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.predicted">
+                    <template #content>
+                      <ColorPicker theme="light" :color="editingTheme.colors.predicted || '#FCBED5'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'predicted')" />
+                    </template>
+                    <a-button type="text" size="mini">取色</a-button>
+                  </a-popover>
+                </template>
+              </a-input>
             </a-form-item>
           </a-col>
           <a-col :span="8">
             <a-form-item label="排卵期颜色">
-              <a-input v-model="editingTheme.colors.ovulation" />
+              <a-input v-model="editingTheme.colors.ovulation">
+                <template #prefix>
+                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.ovulation, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                </template>
+                <template #suffix>
+                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.ovulation">
+                    <template #content>
+                      <ColorPicker theme="light" :color="editingTheme.colors.ovulation || '#B09CFF'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'ovulation')" />
+                    </template>
+                    <a-button type="text" size="mini">取色</a-button>
+                  </a-popover>
+                </template>
+              </a-input>
             </a-form-item>
           </a-col>
           <a-col :span="8">
             <a-form-item label="排卵日颜色">
-              <a-input v-model="editingTheme.colors.ovulationDay" />
+              <a-input v-model="editingTheme.colors.ovulationDay">
+                <template #prefix>
+                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.ovulationDay, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                </template>
+                <template #suffix>
+                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.ovulationDay">
+                    <template #content>
+                      <ColorPicker theme="light" :color="editingTheme.colors.ovulationDay || '#FFC400'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'ovulationDay')" />
+                    </template>
+                    <a-button type="text" size="mini">取色</a-button>
+                  </a-popover>
+                </template>
+              </a-input>
             </a-form-item>
           </a-col>
           <a-col :span="8">
             <a-form-item label="选中日期颜色">
-              <a-input v-model="editingTheme.colors.selected" />
+              <a-input v-model="editingTheme.colors.selected">
+                <template #prefix>
+                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.selected, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                </template>
+                <template #suffix>
+                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.selected">
+                    <template #content>
+                      <ColorPicker theme="light" :color="editingTheme.colors.selected || '#FF8FAE'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'selected')" />
+                    </template>
+                    <a-button type="text" size="mini">取色</a-button>
+                  </a-popover>
+                </template>
+              </a-input>
             </a-form-item>
           </a-col>
         </a-row>
@@ -280,27 +352,87 @@
         <a-row :gutter="12">
           <a-col :span="8">
             <a-form-item label="日历背景色">
-              <a-input v-model="editingTheme.calendarBg" />
+              <a-input v-model="editingTheme.calendarBg">
+                <template #prefix>
+                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.calendarBg, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                </template>
+                <template #suffix>
+                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.calendarBg">
+                    <template #content>
+                      <ColorPicker theme="light" :color="editingTheme.calendarBg || '#fff'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'calendarBg')" />
+                    </template>
+                    <a-button type="text" size="mini">取色</a-button>
+                  </a-popover>
+                </template>
+              </a-input>
             </a-form-item>
           </a-col>
           <a-col :span="8">
             <a-form-item label="个人中心背景色">
-              <a-input v-model="editingTheme.mineBgColor" />
+              <a-input v-model="editingTheme.mineBgColor">
+                <template #prefix>
+                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.mineBgColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                </template>
+                <template #suffix>
+                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.mineBgColor">
+                    <template #content>
+                      <ColorPicker theme="light" :color="editingTheme.mineBgColor || '#F5F5F5'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'mineBgColor')" />
+                    </template>
+                    <a-button type="text" size="mini">取色</a-button>
+                  </a-popover>
+                </template>
+              </a-input>
             </a-form-item>
           </a-col>
           <a-col :span="8">
             <a-form-item label="头部背景色">
-              <a-input v-model="editingTheme.headerBgColor" />
+              <a-input v-model="editingTheme.headerBgColor">
+                <template #prefix>
+                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.headerBgColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                </template>
+                <template #suffix>
+                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.headerBgColor">
+                    <template #content>
+                      <ColorPicker theme="light" :color="editingTheme.headerBgColor || '#fff'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'headerBgColor')" />
+                    </template>
+                    <a-button type="text" size="mini">取色</a-button>
+                  </a-popover>
+                </template>
+              </a-input>
             </a-form-item>
           </a-col>
           <a-col :span="8">
             <a-form-item label="AI聊天背景色">
-              <a-input v-model="editingTheme.aiChatBgColor" />
+              <a-input v-model="editingTheme.aiChatBgColor">
+                <template #prefix>
+                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.aiChatBgColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                </template>
+                <template #suffix>
+                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.aiChatBgColor">
+                    <template #content>
+                      <ColorPicker theme="light" :color="editingTheme.aiChatBgColor || '#ffecf3'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'aiChatBgColor')" />
+                    </template>
+                    <a-button type="text" size="mini">取色</a-button>
+                  </a-popover>
+                </template>
+              </a-input>
             </a-form-item>
           </a-col>
           <a-col :span="8">
             <a-form-item label="记录边框颜色">
-              <a-input v-model="editingTheme.recordBorderColor" />
+              <a-input v-model="editingTheme.recordBorderColor">
+                <template #prefix>
+                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.recordBorderColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                </template>
+                <template #suffix>
+                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.recordBorderColor">
+                    <template #content>
+                      <ColorPicker theme="light" :color="editingTheme.recordBorderColor || '#fcbed5'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'recordBorderColor')" />
+                    </template>
+                    <a-button type="text" size="mini">取色</a-button>
+                  </a-popover>
+                </template>
+              </a-input>
             </a-form-item>
           </a-col>
         </a-row>
@@ -341,6 +473,8 @@ import { Message } from '@arco-design/web-vue'
 import { deepClone } from '../jsonUtils'
 import FileSelector from '@/views/system/file/components/FileSelector/FileSelector.vue'
 import type { FileItem } from '@/apis/system/file'
+import { ColorPicker } from 'vue-color-kit'
+import 'vue-color-kit/dist/vue-color-kit.css'
 
 const props = defineProps<{
   value: Record<string, any>
@@ -384,6 +518,51 @@ const fileSelectorVisible = ref(false)
 const fileSelectorTitle = ref('选择文件')
 const currentFileField = ref('')
 const currentAvatarRecord = ref<any>(null)
+
+// 颜色选择器状态
+const colorPickerVisible = ref<Record<string, boolean>>({})
+const themeColorPicker = ref({
+  period: false,
+  predicted: false,
+  ovulation: false,
+  ovulationDay: false,
+  selected: false
+})
+const themeBgColorPicker = ref({
+  calendarBg: false,
+  mineBgColor: false,
+  headerBgColor: false,
+  aiChatBgColor: false,
+  recordBorderColor: false
+})
+
+interface ColorObj { hex: string }
+
+// 更新颜色选择器显示状态
+const updateColorPickerVisible = (key: string, visible: boolean) => {
+  colorPickerVisible.value[key] = visible
+}
+
+// 颜色配置取色回调
+const onPickColorOption = (c: ColorObj, config: any, optionIndex: number) => {
+  if (/^#[0-9A-Fa-f]{6}$/.test(c.hex)) {
+    config.colors[optionIndex].value = c.hex
+  }
+}
+
+// 主题颜色取色回调
+const onPickThemeColor = (c: ColorObj, colorKey: string) => {
+  if (/^#[0-9A-Fa-f]{6}$/.test(c.hex) && editingTheme.value) {
+    editingTheme.value.colors[colorKey] = c.hex
+  }
+}
+
+// 主题背景色取色回调
+const onPickThemeBgColor = (c: ColorObj, bgKey: string) => {
+  if (/^#[0-9A-Fa-f]{6}$/.test(c.hex) && editingTheme.value) {
+    editingTheme.value[bgKey] = c.hex
+  }
+}
 
 // 新增主题
 const addTheme = () => {
