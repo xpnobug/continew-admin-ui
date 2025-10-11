@@ -50,3 +50,11 @@ export function getUserCenterSetting<T = any>() {
 export function saveUserCenterSetting<T = any>(data: any) {
   return http.post<T>(`${BASE_URL}/user-center`, data)
 }
+
+// 模块化配置：主题装扮配置
+export function getThemeDecorationSetting<T = any>() {
+  return http.get<T>(`${BASE_URL}/themeDecoration`)
+}
+export function saveThemeDecorationSetting<T = any>(data: any) {
+  return http.post<T>(`${BASE_URL}/themeDecoration`, data)
+}
