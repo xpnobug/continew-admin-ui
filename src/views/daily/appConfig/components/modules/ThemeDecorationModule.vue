@@ -212,230 +212,456 @@
     <a-modal
       v-model:visible="themeModalVisible"
       title="编辑主题详情"
-      width="900px"
+      width="1100px"
+      fullscreen
       @ok="saveThemeEdit"
       @cancel="cancelThemeEdit"
     >
       <a-form :model="editingTheme" layout="vertical" v-if="editingTheme">
-        <a-row :gutter="12">
-          <a-col :span="12">
-            <a-form-item label="主题ID" required>
-              <a-input v-model="editingTheme.id" :disabled="!isNewTheme" />
-            </a-form-item>
-          </a-col>
-          <a-col :span="12">
-            <a-form-item label="主题名称" required>
-              <a-input v-model="editingTheme.name" />
-            </a-form-item>
-          </a-col>
-          <a-col :span="24">
-            <a-form-item label="主题描述">
-              <a-textarea v-model="editingTheme.description" :auto-size="{ minRows: 2, maxRows: 4 }" />
-            </a-form-item>
-          </a-col>
-          <a-col :span="12">
-            <a-form-item label="首页背景图">
-              <a-input v-model="editingTheme.homeBgImage" readonly>
-                <template #suffix>
-                  <a-button type="text" size="mini" @click="selectThemeImage('homeBgImage')">
-                    <icon-folder /> 选择
-                  </a-button>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-          <a-col :span="12">
-            <a-form-item label="个人中心背景图">
-              <a-input v-model="editingTheme.mineBgImage" readonly>
-                <template #suffix>
-                  <a-button type="text" size="mini" @click="selectThemeImage('mineBgImage')">
-                    <icon-folder /> 选择
-                  </a-button>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-        </a-row>
+        <!-- 基础信息 -->
+        <a-collapse :default-active-key="['basic', 'preview', 'colors', 'backgrounds', 'tabbar', 'icons']" :bordered="false">
+          <a-collapse-item key="basic" header="基础信息">
+            <a-row :gutter="12">
+              <a-col :span="8">
+                <a-form-item label="主题ID" required>
+                  <a-input v-model="editingTheme.id" :disabled="!isNewTheme" />
+                </a-form-item>
+              </a-col>
+              <a-col :span="8">
+                <a-form-item label="主题名称" required>
+                  <a-input v-model="editingTheme.name" />
+                </a-form-item>
+              </a-col>
+              <a-col :span="8">
+                <a-form-item label="排序序号">
+                  <a-input-number v-model="editingTheme.sortOrder" :min="0" style="width: 100%" />
+                </a-form-item>
+              </a-col>
+              <a-col :span="24">
+                <a-form-item label="主题描述">
+                  <a-textarea v-model="editingTheme.description" :auto-size="{ minRows: 2, maxRows: 4 }" placeholder="请输入主题描述" />
+                </a-form-item>
+              </a-col>
+            </a-row>
+          </a-collapse-item>
 
-        <!-- 颜色配置 -->
-        <a-divider>颜色配置</a-divider>
-        <a-row :gutter="12">
-          <a-col :span="8">
-            <a-form-item label="经期颜色">
-              <a-input v-model="editingTheme.colors.period">
-                <template #prefix>
-                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.period, border: '1px solid #ddd', borderRadius: '2px' }"></div>
-                </template>
-                <template #suffix>
-                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.period">
-                    <template #content>
-                      <ColorPicker theme="light" :color="editingTheme.colors.period || '#FF8FAE'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'period')" />
+          <!-- 预览图和背景图 -->
+          <a-collapse-item key="preview" header="预览图和背景图">
+            <a-row :gutter="12">
+              <a-col :span="12">
+                <a-form-item label="首页背景图">
+                  <a-input v-model="editingTheme.homeBgImage" readonly>
+                    <template #suffix>
+                      <a-button type="text" size="mini" @click="selectThemeImage('homeBgImage')">
+                        <icon-folder /> 选择
+                      </a-button>
                     </template>
-                    <a-button type="text" size="mini">取色</a-button>
-                  </a-popover>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-          <a-col :span="8">
-            <a-form-item label="预测经期颜色">
-              <a-input v-model="editingTheme.colors.predicted">
-                <template #prefix>
-                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.predicted, border: '1px solid #ddd', borderRadius: '2px' }"></div>
-                </template>
-                <template #suffix>
-                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.predicted">
-                    <template #content>
-                      <ColorPicker theme="light" :color="editingTheme.colors.predicted || '#FCBED5'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'predicted')" />
+                  </a-input>
+                  <a-image v-if="editingTheme.homeBgImage" :src="editingTheme.homeBgImage" width="100%" style="margin-top: 8px;" />
+                </a-form-item>
+              </a-col>
+              <a-col :span="12">
+                <a-form-item label="个人中心背景图">
+                  <a-input v-model="editingTheme.mineBgImage" readonly>
+                    <template #suffix>
+                      <a-button type="text" size="mini" @click="selectThemeImage('mineBgImage')">
+                        <icon-folder /> 选择
+                      </a-button>
                     </template>
-                    <a-button type="text" size="mini">取色</a-button>
-                  </a-popover>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-          <a-col :span="8">
-            <a-form-item label="排卵期颜色">
-              <a-input v-model="editingTheme.colors.ovulation">
-                <template #prefix>
-                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.ovulation, border: '1px solid #ddd', borderRadius: '2px' }"></div>
-                </template>
-                <template #suffix>
-                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.ovulation">
-                    <template #content>
-                      <ColorPicker theme="light" :color="editingTheme.colors.ovulation || '#B09CFF'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'ovulation')" />
-                    </template>
-                    <a-button type="text" size="mini">取色</a-button>
-                  </a-popover>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-          <a-col :span="8">
-            <a-form-item label="排卵日颜色">
-              <a-input v-model="editingTheme.colors.ovulationDay">
-                <template #prefix>
-                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.ovulationDay, border: '1px solid #ddd', borderRadius: '2px' }"></div>
-                </template>
-                <template #suffix>
-                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.ovulationDay">
-                    <template #content>
-                      <ColorPicker theme="light" :color="editingTheme.colors.ovulationDay || '#FFC400'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'ovulationDay')" />
-                    </template>
-                    <a-button type="text" size="mini">取色</a-button>
-                  </a-popover>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-          <a-col :span="8">
-            <a-form-item label="选中日期颜色">
-              <a-input v-model="editingTheme.colors.selected">
-                <template #prefix>
-                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.selected, border: '1px solid #ddd', borderRadius: '2px' }"></div>
-                </template>
-                <template #suffix>
-                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.selected">
-                    <template #content>
-                      <ColorPicker theme="light" :color="editingTheme.colors.selected || '#FF8FAE'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'selected')" />
-                    </template>
-                    <a-button type="text" size="mini">取色</a-button>
-                  </a-popover>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-        </a-row>
+                  </a-input>
+                  <a-image v-if="editingTheme.mineBgImage" :src="editingTheme.mineBgImage" width="100%" style="margin-top: 8px;" />
+                </a-form-item>
+              </a-col>
+              <a-col :span="24">
+                <a-form-item label="主题预览图">
+                  <a-space direction="vertical" fill>
+                    <a-button type="outline" size="small" @click="addPreviewImage">
+                      <icon-plus /> 添加预览图
+                    </a-button>
+                    <a-space wrap>
+                      <div v-for="(img, imgIndex) in editingTheme.images" :key="imgIndex" class="preview-image-item">
+                        <a-image :src="img" width="150" height="150" fit="cover" />
+                        <div class="preview-image-actions">
+                          <a-button type="text" size="mini" @click="editPreviewImage(imgIndex)">
+                            <icon-edit /> 修改
+                          </a-button>
+                          <a-button type="text" status="danger" size="mini" @click="deletePreviewImage(imgIndex)">
+                            <icon-delete /> 删除
+                          </a-button>
+                        </div>
+                      </div>
+                    </a-space>
+                  </a-space>
+                </a-form-item>
+              </a-col>
+            </a-row>
+          </a-collapse-item>
 
-        <!-- 背景色配置 -->
-        <a-divider>背景色配置</a-divider>
-        <a-row :gutter="12">
-          <a-col :span="8">
-            <a-form-item label="日历背景色">
-              <a-input v-model="editingTheme.calendarBg">
-                <template #prefix>
-                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.calendarBg, border: '1px solid #ddd', borderRadius: '2px' }"></div>
-                </template>
-                <template #suffix>
-                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.calendarBg">
-                    <template #content>
-                      <ColorPicker theme="light" :color="editingTheme.calendarBg || '#fff'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'calendarBg')" />
+          <!-- 主题颜色配置 -->
+          <a-collapse-item key="colors" header="主题颜色配置">
+            <a-row :gutter="12">
+              <a-col :span="8">
+                <a-form-item label="经期颜色">
+                  <a-input v-model="editingTheme.colors.period">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.period, border: '1px solid #ddd', borderRadius: '2px' }"></div>
                     </template>
-                    <a-button type="text" size="mini">取色</a-button>
-                  </a-popover>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-          <a-col :span="8">
-            <a-form-item label="个人中心背景色">
-              <a-input v-model="editingTheme.mineBgColor">
-                <template #prefix>
-                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.mineBgColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
-                </template>
-                <template #suffix>
-                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.mineBgColor">
-                    <template #content>
-                      <ColorPicker theme="light" :color="editingTheme.mineBgColor || '#F5F5F5'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'mineBgColor')" />
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.period">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.colors.period || '#FF8FAE'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'period')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
                     </template>
-                    <a-button type="text" size="mini">取色</a-button>
-                  </a-popover>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-          <a-col :span="8">
-            <a-form-item label="头部背景色">
-              <a-input v-model="editingTheme.headerBgColor">
-                <template #prefix>
-                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.headerBgColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
-                </template>
-                <template #suffix>
-                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.headerBgColor">
-                    <template #content>
-                      <ColorPicker theme="light" :color="editingTheme.headerBgColor || '#fff'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'headerBgColor')" />
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="8">
+                <a-form-item label="预测经期颜色">
+                  <a-input v-model="editingTheme.colors.predicted">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.predicted, border: '1px solid #ddd', borderRadius: '2px' }"></div>
                     </template>
-                    <a-button type="text" size="mini">取色</a-button>
-                  </a-popover>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-          <a-col :span="8">
-            <a-form-item label="AI聊天背景色">
-              <a-input v-model="editingTheme.aiChatBgColor">
-                <template #prefix>
-                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.aiChatBgColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
-                </template>
-                <template #suffix>
-                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.aiChatBgColor">
-                    <template #content>
-                      <ColorPicker theme="light" :color="editingTheme.aiChatBgColor || '#ffecf3'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'aiChatBgColor')" />
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.predicted">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.colors.predicted || '#FCBED5'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'predicted')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
                     </template>
-                    <a-button type="text" size="mini">取色</a-button>
-                  </a-popover>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-          <a-col :span="8">
-            <a-form-item label="记录边框颜色">
-              <a-input v-model="editingTheme.recordBorderColor">
-                <template #prefix>
-                  <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.recordBorderColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
-                </template>
-                <template #suffix>
-                  <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.recordBorderColor">
-                    <template #content>
-                      <ColorPicker theme="light" :color="editingTheme.recordBorderColor || '#fcbed5'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'recordBorderColor')" />
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="8">
+                <a-form-item label="排卵期颜色">
+                  <a-input v-model="editingTheme.colors.ovulation">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.ovulation, border: '1px solid #ddd', borderRadius: '2px' }"></div>
                     </template>
-                    <a-button type="text" size="mini">取色</a-button>
-                  </a-popover>
-                </template>
-              </a-input>
-            </a-form-item>
-          </a-col>
-        </a-row>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.ovulation">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.colors.ovulation || '#B09CFF'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'ovulation')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="8">
+                <a-form-item label="排卵日颜色">
+                  <a-input v-model="editingTheme.colors.ovulationDay">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.ovulationDay, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.ovulationDay">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.colors.ovulationDay || '#FFC400'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'ovulationDay')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="8">
+                <a-form-item label="选中日期颜色">
+                  <a-input v-model="editingTheme.colors.selected">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.colors.selected, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="themeColorPicker.selected">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.colors.selected || '#FF8FAE'" :sucker-hide="true" @change-color="(c) => onPickThemeColor(c, 'selected')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+            </a-row>
+          </a-collapse-item>
+
+          <!-- 页面背景色配置 -->
+          <a-collapse-item key="backgrounds" header="页面背景色配置">
+            <a-row :gutter="12">
+              <a-col :span="8">
+                <a-form-item label="日历背景色">
+                  <a-input v-model="editingTheme.calendarBg">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.calendarBg, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.calendarBg">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.calendarBg || '#fff'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'calendarBg')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="8">
+                <a-form-item label="个人中心背景色">
+                  <a-input v-model="editingTheme.mineBgColor">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.mineBgColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.mineBgColor">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.mineBgColor || '#F5F5F5'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'mineBgColor')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="8">
+                <a-form-item label="头部背景色">
+                  <a-input v-model="editingTheme.headerBgColor">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.headerBgColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.headerBgColor">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.headerBgColor || '#fff'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'headerBgColor')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="8">
+                <a-form-item label="AI聊天背景色">
+                  <a-input v-model="editingTheme.aiChatBgColor">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.aiChatBgColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.aiChatBgColor">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.aiChatBgColor || '#ffecf3'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'aiChatBgColor')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="8">
+                <a-form-item label="记录边框颜色">
+                  <a-input v-model="editingTheme.recordBorderColor">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.recordBorderColor, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="themeBgColorPicker.recordBorderColor">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.recordBorderColor || '#fcbed5'" :sucker-hide="true" @change-color="(c) => onPickThemeBgColor(c, 'recordBorderColor')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+            </a-row>
+          </a-collapse-item>
+
+          <!-- 底部导航栏背景色配置 -->
+          <a-collapse-item key="tabbar" header="底部导航栏背景色配置">
+            <a-row :gutter="12">
+              <a-col :span="6">
+                <a-form-item label="首页导航栏背景色">
+                  <a-input v-model="editingTheme.tabbarBgColor.home">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.tabbarBgColor.home, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="tabbarBgColorPicker.home">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.tabbarBgColor.home || '#fff'" :sucker-hide="true" @change-color="(c) => onPickTabbarBgColor(c, 'home')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="6">
+                <a-form-item label="发现页导航栏背景色">
+                  <a-input v-model="editingTheme.tabbarBgColor.find">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.tabbarBgColor.find, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="tabbarBgColorPicker.find">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.tabbarBgColor.find || '#fff'" :sucker-hide="true" @change-color="(c) => onPickTabbarBgColor(c, 'find')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="6">
+                <a-form-item label="AI聊天导航栏背景色">
+                  <a-input v-model="editingTheme.tabbarBgColor.aiChat">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.tabbarBgColor.aiChat, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="tabbarBgColorPicker.aiChat">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.tabbarBgColor.aiChat || '#fff'" :sucker-hide="true" @change-color="(c) => onPickTabbarBgColor(c, 'aiChat')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+              <a-col :span="6">
+                <a-form-item label="我的页导航栏背景色">
+                  <a-input v-model="editingTheme.tabbarBgColor.mine">
+                    <template #prefix>
+                      <div :style="{ width: '16px', height: '16px', backgroundColor: editingTheme.tabbarBgColor.mine, border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                    </template>
+                    <template #suffix>
+                      <a-popover trigger="click" position="bottom" v-model:popup-visible="tabbarBgColorPicker.mine">
+                        <template #content>
+                          <ColorPicker theme="light" :color="editingTheme.tabbarBgColor.mine || '#fff'" :sucker-hide="true" @change-color="(c) => onPickTabbarBgColor(c, 'mine')" />
+                        </template>
+                        <a-button type="text" size="mini">取色</a-button>
+                      </a-popover>
+                    </template>
+                  </a-input>
+                </a-form-item>
+              </a-col>
+            </a-row>
+          </a-collapse-item>
+
+          <!-- 底部导航图标配置 -->
+          <a-collapse-item key="icons" header="底部导航图标配置">
+            <a-row :gutter="12">
+              <!-- 首页图标 -->
+              <a-col :span="12">
+                <a-card size="small" title="首页图标">
+                  <a-form-item label="未选中图标">
+                    <a-input v-model="editingTheme.tabIcons.home.normal" readonly>
+                      <template #suffix>
+                        <a-button type="text" size="mini" @click="selectTabIcon('home', 'normal')">
+                          <icon-folder /> 选择
+                        </a-button>
+                      </template>
+                    </a-input>
+                    <a-image v-if="editingTheme.tabIcons.home.normal" :src="editingTheme.tabIcons.home.normal" width="60" style="margin-top: 8px;" />
+                  </a-form-item>
+                  <a-form-item label="选中图标">
+                    <a-input v-model="editingTheme.tabIcons.home.active" readonly>
+                      <template #suffix>
+                        <a-button type="text" size="mini" @click="selectTabIcon('home', 'active')">
+                          <icon-folder /> 选择
+                        </a-button>
+                      </template>
+                    </a-input>
+                    <a-image v-if="editingTheme.tabIcons.home.active" :src="editingTheme.tabIcons.home.active" width="60" style="margin-top: 8px;" />
+                  </a-form-item>
+                </a-card>
+              </a-col>
+
+              <!-- 发现页图标 -->
+              <a-col :span="12">
+                <a-card size="small" title="发现页图标">
+                  <a-form-item label="未选中图标">
+                    <a-input v-model="editingTheme.tabIcons.find.normal" readonly>
+                      <template #suffix>
+                        <a-button type="text" size="mini" @click="selectTabIcon('find', 'normal')">
+                          <icon-folder /> 选择
+                        </a-button>
+                      </template>
+                    </a-input>
+                    <a-image v-if="editingTheme.tabIcons.find.normal" :src="editingTheme.tabIcons.find.normal" width="60" style="margin-top: 8px;" />
+                  </a-form-item>
+                  <a-form-item label="选中图标">
+                    <a-input v-model="editingTheme.tabIcons.find.active" readonly>
+                      <template #suffix>
+                        <a-button type="text" size="mini" @click="selectTabIcon('find', 'active')">
+                          <icon-folder /> 选择
+                        </a-button>
+                      </template>
+                    </a-input>
+                    <a-image v-if="editingTheme.tabIcons.find.active" :src="editingTheme.tabIcons.find.active" width="60" style="margin-top: 8px;" />
+                  </a-form-item>
+                </a-card>
+              </a-col>
+
+              <!-- AI聊天图标 -->
+              <a-col :span="12">
+                <a-card size="small" title="AI聊天图标">
+                  <a-form-item label="未选中图标">
+                    <a-input v-model="editingTheme.tabIcons.aiChat.normal" readonly>
+                      <template #suffix>
+                        <a-button type="text" size="mini" @click="selectTabIcon('aiChat', 'normal')">
+                          <icon-folder /> 选择
+                        </a-button>
+                      </template>
+                    </a-input>
+                    <a-image v-if="editingTheme.tabIcons.aiChat.normal" :src="editingTheme.tabIcons.aiChat.normal" width="60" style="margin-top: 8px;" />
+                  </a-form-item>
+                  <a-form-item label="选中图标">
+                    <a-input v-model="editingTheme.tabIcons.aiChat.active" readonly>
+                      <template #suffix>
+                        <a-button type="text" size="mini" @click="selectTabIcon('aiChat', 'active')">
+                          <icon-folder /> 选择
+                        </a-button>
+                      </template>
+                    </a-input>
+                    <a-image v-if="editingTheme.tabIcons.aiChat.active" :src="editingTheme.tabIcons.aiChat.active" width="60" style="margin-top: 8px;" />
+                  </a-form-item>
+                </a-card>
+              </a-col>
+
+              <!-- 我的页图标 -->
+              <a-col :span="12">
+                <a-card size="small" title="我的页图标">
+                  <a-form-item label="未选中图标">
+                    <a-input v-model="editingTheme.tabIcons.mine.normal" readonly>
+                      <template #suffix>
+                        <a-button type="text" size="mini" @click="selectTabIcon('mine', 'normal')">
+                          <icon-folder /> 选择
+                        </a-button>
+                      </template>
+                    </a-input>
+                    <a-image v-if="editingTheme.tabIcons.mine.normal" :src="editingTheme.tabIcons.mine.normal" width="60" style="margin-top: 8px;" />
+                  </a-form-item>
+                  <a-form-item label="选中图标">
+                    <a-input v-model="editingTheme.tabIcons.mine.active" readonly>
+                      <template #suffix>
+                        <a-button type="text" size="mini" @click="selectTabIcon('mine', 'active')">
+                          <icon-folder /> 选择
+                        </a-button>
+                      </template>
+                    </a-input>
+                    <a-image v-if="editingTheme.tabIcons.mine.active" :src="editingTheme.tabIcons.mine.active" width="60" style="margin-top: 8px;" />
+                  </a-form-item>
+                </a-card>
+              </a-col>
+            </a-row>
+          </a-collapse-item>
+        </a-collapse>
       </a-form>
     </a-modal>
 
@@ -518,6 +744,9 @@ const fileSelectorVisible = ref(false)
 const fileSelectorTitle = ref('选择文件')
 const currentFileField = ref('')
 const currentAvatarRecord = ref<any>(null)
+const currentPreviewImageIndex = ref<number>(-1)
+const currentTabIconTab = ref<string>('')
+const currentTabIconState = ref<string>('')
 
 // 颜色选择器状态
 const colorPickerVisible = ref<Record<string, boolean>>({})
@@ -534,6 +763,12 @@ const themeBgColorPicker = ref({
   headerBgColor: false,
   aiChatBgColor: false,
   recordBorderColor: false
+})
+const tabbarBgColorPicker = ref({
+  home: false,
+  find: false,
+  aiChat: false,
+  mine: false
 })
 
 interface ColorObj { hex: string }
@@ -561,6 +796,13 @@ const onPickThemeColor = (c: ColorObj, colorKey: string) => {
 const onPickThemeBgColor = (c: ColorObj, bgKey: string) => {
   if (/^#[0-9A-Fa-f]{6}$/.test(c.hex) && editingTheme.value) {
     editingTheme.value[bgKey] = c.hex
+  }
+}
+
+// 导航栏背景色取色回调
+const onPickTabbarBgColor = (c: ColorObj, tabKey: string) => {
+  if (/^#[0-9A-Fa-f]{6}$/.test(c.hex) && editingTheme.value) {
+    editingTheme.value.tabbarBgColor[tabKey] = c.hex
   }
 }
 
@@ -675,10 +917,42 @@ const selectAvatarImage = (record: any) => {
   fileSelectorVisible.value = true
 }
 
+// 添加预览图
+const addPreviewImage = () => {
+  currentPreviewImageIndex.value = -1
+  currentFileField.value = 'previewImage'
+  fileSelectorTitle.value = '选择主题预览图'
+  fileSelectorVisible.value = true
+}
+
+// 编辑预览图
+const editPreviewImage = (index: number) => {
+  currentPreviewImageIndex.value = index
+  currentFileField.value = 'previewImage'
+  fileSelectorTitle.value = '选择主题预览图'
+  fileSelectorVisible.value = true
+}
+
+// 删除预览图
+const deletePreviewImage = (index: number) => {
+  if (editingTheme.value && editingTheme.value.images) {
+    editingTheme.value.images.splice(index, 1)
+  }
+}
+
 // 选择主题图片
 const selectThemeImage = (field: string) => {
   currentFileField.value = field
   fileSelectorTitle.value = '选择主题图片'
+  fileSelectorVisible.value = true
+}
+
+// 选择导航图标
+const selectTabIcon = (tab: string, state: string) => {
+  currentTabIconTab.value = tab
+  currentTabIconState.value = state
+  currentFileField.value = 'tabIcon'
+  fileSelectorTitle.value = `选择${tab === 'home' ? '首页' : tab === 'find' ? '发现页' : tab === 'aiChat' ? 'AI聊天' : '我的页'}${state === 'normal' ? '未选中' : '选中'}图标`
   fileSelectorVisible.value = true
 }
 
@@ -689,8 +963,36 @@ const onFileSelected = (fileInfo: FileItem | FileItem[]) => {
     const url = (file as any).url
 
     if (currentFileField.value === 'avatar' && currentAvatarRecord.value) {
+      // 头像图片
       currentAvatarRecord.value.avatarPath = url
+    } else if (currentFileField.value === 'previewImage' && editingTheme.value) {
+      // 主题预览图
+      if (currentPreviewImageIndex.value >= 0) {
+        // 编辑已有预览图
+        editingTheme.value.images[currentPreviewImageIndex.value] = url
+      } else {
+        // 添加新预览图
+        if (!editingTheme.value.images) {
+          editingTheme.value.images = []
+        }
+        editingTheme.value.images.push(url)
+      }
+    } else if (currentFileField.value === 'tabIcon' && editingTheme.value) {
+      // 导航图标
+      if (!editingTheme.value.tabIcons) {
+        editingTheme.value.tabIcons = {
+          home: { normal: '', active: '' },
+          find: { normal: '', active: '' },
+          aiChat: { normal: '', active: '' },
+          mine: { normal: '', active: '' }
+        }
+      }
+      if (!editingTheme.value.tabIcons[currentTabIconTab.value]) {
+        editingTheme.value.tabIcons[currentTabIconTab.value] = { normal: '', active: '' }
+      }
+      editingTheme.value.tabIcons[currentTabIconTab.value][currentTabIconState.value] = url
     } else if (editingTheme.value && currentFileField.value) {
+      // 其他主题图片字段
       editingTheme.value[currentFileField.value] = url
     }
   }
@@ -733,5 +1035,29 @@ const deleteColorOption = (configIndex: number, colorIndex: number) => {
   border-radius: 4px;
   border: 1px solid var(--color-border);
   margin-right: 8px;
+}
+
+.preview-image-item {
+  position: relative;
+  display: inline-block;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.preview-image-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 4px;
+}
+
+.preview-image-item:hover .preview-image-actions {
+  opacity: 1;
 }
 </style>
