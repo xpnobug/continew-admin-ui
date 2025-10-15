@@ -208,6 +208,304 @@
       </a-space>
     </a-card>
 
+    <!-- 展示与文案配置（分组归类） -->
+    <a-card :bordered="true" size="small" title="展示与文案配置（小程序回显）">
+      <a-space direction="vertical" fill :size="16">
+        <!-- 积分价格配置 -->
+        <a-card size="small" :bordered="false" class="ui-config-section">
+          <template #title>
+            <span class="section-title">积分价格配置</span>
+            <span class="section-desc">用于显示主题/头像解锁价格</span>
+          </template>
+          <a-row :gutter="16">
+            <a-col :span="8">
+              <a-form-item label="积分图标" label-col-flex="120px">
+                <a-input v-model="model.uiOptions.pointsIconUrl" readonly>
+                  <template #suffix>
+                    <a-button type="text" size="mini" @click="selectUiPointsIcon">
+                      <icon-folder /> 选择
+                    </a-button>
+                  </template>
+                </a-input>
+                <a-image v-if="model.uiOptions.pointsIconUrl" :src="model.uiOptions.pointsIconUrl" width="50" height="50" style="margin-top: 8px;" fit="contain" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="价格文字颜色" label-col-flex="120px">
+                <a-input v-model="model.uiOptions.pointsTextColor" placeholder="#333333">
+                  <template #prefix>
+                    <div :style="{ width: '16px', height: '16px', backgroundColor: model.uiOptions.pointsTextColor || '#333333', border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                  </template>
+                  <template #suffix>
+                    <a-popover trigger="click" position="bottom" v-model:popup-visible="uiColorPicker.pointsTextColor">
+                      <template #content>
+                        <ColorPicker theme="light" :color="model.uiOptions.pointsTextColor || '#333333'" :sucker-hide="true" @change-color="(c) => onPickUiColor(c, 'pointsTextColor')" />
+                      </template>
+                      <a-button type="text" size="mini">取色</a-button>
+                    </a-popover>
+                  </template>
+                </a-input>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="价格背景颜色" label-col-flex="120px">
+                <a-input v-model="model.uiOptions.pointsBgColor" placeholder="#f9d8e2">
+                  <template #prefix>
+                    <div :style="{ width: '16px', height: '16px', backgroundColor: model.uiOptions.pointsBgColor || '#f9d8e2', border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                  </template>
+                  <template #suffix>
+                    <a-popover trigger="click" position="bottom" v-model:popup-visible="uiColorPicker.pointsBgColor">
+                      <template #content>
+                        <ColorPicker theme="light" :color="model.uiOptions.pointsBgColor || '#f9d8e2'" :sucker-hide="true" @change-color="(c) => onPickUiColor(c, 'pointsBgColor')" />
+                      </template>
+                      <a-button type="text" size="mini">取色</a-button>
+                    </a-popover>
+                  </template>
+                </a-input>
+              </a-form-item>
+            </a-col>
+          </a-row>
+          <!-- 积分价格预览效果 -->
+          <a-row :gutter="16">
+            <a-col :span="24">
+              <a-form-item label="显示效果预览" label-col-flex="120px">
+                <div class="price-preview-wrapper">
+                  <div class="price-pill-preview" :style="{ backgroundColor: model.uiOptions.pointsBgColor || '#f9d8e2' }">
+                    <img v-if="model.uiOptions.pointsIconUrl" :src="model.uiOptions.pointsIconUrl" class="preview-icon" />
+                    <span v-else class="preview-icon-placeholder">图</span>
+                    <span :style="{ color: model.uiOptions.pointsTextColor || '#333333' }">200</span>
+                  </div>
+                  <span class="preview-hint">（主题卡片上的价格标签示例）</span>
+                </div>
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-card>
+
+        <!-- 使用中徽章配置 -->
+        <a-card size="small" :bordered="false" class="ui-config-section">
+          <template #title>
+            <span class="section-title">使用中徽章</span>
+            <span class="section-desc">显示在当前正在使用的主题/头像上</span>
+          </template>
+          <a-row :gutter="16">
+            <a-col :span="6">
+              <a-form-item label="徽章文案" label-col-flex="100px">
+                <a-input v-model="model.uiOptions.texts.usingBadge" placeholder="使用中" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="6">
+              <a-form-item label="文字颜色" label-col-flex="100px">
+                <a-input v-model="model.uiOptions.usingBadgeTextColor" placeholder="#ffffff">
+                  <template #prefix>
+                    <div :style="{ width: '16px', height: '16px', backgroundColor: model.uiOptions.usingBadgeTextColor || '#ffffff', border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                  </template>
+                  <template #suffix>
+                    <a-popover trigger="click" position="bottom" v-model:popup-visible="uiColorPicker.usingBadgeTextColor">
+                      <template #content>
+                        <ColorPicker theme="light" :color="model.uiOptions.usingBadgeTextColor || '#ffffff'" :sucker-hide="true" @change-color="(c) => onPickUiColor(c, 'usingBadgeTextColor')" />
+                      </template>
+                      <a-button type="text" size="mini">取色</a-button>
+                    </a-popover>
+                  </template>
+                </a-input>
+              </a-form-item>
+            </a-col>
+            <a-col :span="6">
+              <a-form-item label="背景-起始色" label-col-flex="100px">
+                <a-input v-model="model.uiOptions.usingBadgeBgStart" placeholder="#ff8fae">
+                  <template #prefix>
+                    <div :style="{ width: '16px', height: '16px', backgroundColor: model.uiOptions.usingBadgeBgStart || '#ff8fae', border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                  </template>
+                  <template #suffix>
+                    <a-popover trigger="click" position="bottom" v-model:popup-visible="uiColorPicker.usingBadgeBgStart">
+                      <template #content>
+                        <ColorPicker theme="light" :color="model.uiOptions.usingBadgeBgStart || '#ff8fae'" :sucker-hide="true" @change-color="(c) => onPickUiColor(c, 'usingBadgeBgStart')" />
+                      </template>
+                      <a-button type="text" size="mini">取色</a-button>
+                    </a-popover>
+                  </template>
+                </a-input>
+              </a-form-item>
+            </a-col>
+            <a-col :span="6">
+              <a-form-item label="背景-结束色" label-col-flex="100px">
+                <a-input v-model="model.uiOptions.usingBadgeBgEnd" placeholder="#ff6f9f">
+                  <template #prefix>
+                    <div :style="{ width: '16px', height: '16px', backgroundColor: model.uiOptions.usingBadgeBgEnd || '#ff6f9f', border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                  </template>
+                  <template #suffix>
+                    <a-popover trigger="click" position="bottom" v-model:popup-visible="uiColorPicker.usingBadgeBgEnd">
+                      <template #content>
+                        <ColorPicker theme="light" :color="model.uiOptions.usingBadgeBgEnd || '#ff6f9f'" :sucker-hide="true" @change-color="(c) => onPickUiColor(c, 'usingBadgeBgEnd')" />
+                      </template>
+                      <a-button type="text" size="mini">取色</a-button>
+                    </a-popover>
+                  </template>
+                </a-input>
+              </a-form-item>
+            </a-col>
+          </a-row>
+          <!-- 使用中徽章预览 -->
+          <a-row :gutter="16">
+            <a-col :span="24">
+              <a-form-item label="显示效果预览" label-col-flex="100px">
+                <div class="badge-preview-wrapper">
+                  <div class="badge-preview" :style="{ background: `linear-gradient(102deg, ${model.uiOptions.usingBadgeBgStart || '#ff8fae'} 10%, ${model.uiOptions.usingBadgeBgEnd || '#ff6f9f'} 90%)`, color: model.uiOptions.usingBadgeTextColor || '#ffffff' }">
+                    {{ model.uiOptions.texts.usingBadge || '使用中' }}
+                  </div>
+                  <span class="preview-hint">（主题卡片左上角显示）</span>
+                </div>
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-card>
+
+        <!-- 已解锁徽章配置 -->
+        <a-card size="small" :bordered="false" class="ui-config-section">
+          <template #title>
+            <span class="section-title">已解锁徽章</span>
+            <span class="section-desc">显示在已解锁但未使用的主题/头像上</span>
+          </template>
+          <a-row :gutter="16">
+            <a-col :span="6">
+              <a-form-item label="徽章文案" label-col-flex="100px">
+                <a-input v-model="model.uiOptions.texts.unlockedBadge" placeholder="已解锁" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="6">
+              <a-form-item label="文字颜色" label-col-flex="100px">
+                <a-input v-model="model.uiOptions.unlockedBadgeTextColor" placeholder="#544000">
+                  <template #prefix>
+                    <div :style="{ width: '16px', height: '16px', backgroundColor: model.uiOptions.unlockedBadgeTextColor || '#544000', border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                  </template>
+                  <template #suffix>
+                    <a-popover trigger="click" position="bottom" v-model:popup-visible="uiColorPicker.unlockedBadgeTextColor">
+                      <template #content>
+                        <ColorPicker theme="light" :color="model.uiOptions.unlockedBadgeTextColor || '#544000'" :sucker-hide="true" @change-color="(c) => onPickUiColor(c, 'unlockedBadgeTextColor')" />
+                      </template>
+                      <a-button type="text" size="mini">取色</a-button>
+                    </a-popover>
+                  </template>
+                </a-input>
+              </a-form-item>
+            </a-col>
+            <a-col :span="6">
+              <a-form-item label="背景-起始色" label-col-flex="100px">
+                <a-input v-model="model.uiOptions.unlockedBadgeBgStart" placeholder="#ffecf0">
+                  <template #prefix>
+                    <div :style="{ width: '16px', height: '16px', backgroundColor: model.uiOptions.unlockedBadgeBgStart || '#ffecf0', border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                  </template>
+                  <template #suffix>
+                    <a-popover trigger="click" position="bottom" v-model:popup-visible="uiColorPicker.unlockedBadgeBgStart">
+                      <template #content>
+                        <ColorPicker theme="light" :color="model.uiOptions.unlockedBadgeBgStart || '#ffecf0'" :sucker-hide="true" @change-color="(c) => onPickUiColor(c, 'unlockedBadgeBgStart')" />
+                      </template>
+                      <a-button type="text" size="mini">取色</a-button>
+                    </a-popover>
+                  </template>
+                </a-input>
+              </a-form-item>
+            </a-col>
+            <a-col :span="6">
+              <a-form-item label="背景-结束色" label-col-flex="100px">
+                <a-input v-model="model.uiOptions.unlockedBadgeBgEnd" placeholder="#f7cbd8">
+                  <template #prefix>
+                    <div :style="{ width: '16px', height: '16px', backgroundColor: model.uiOptions.unlockedBadgeBgEnd || '#f7cbd8', border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                  </template>
+                  <template #suffix>
+                    <a-popover trigger="click" position="bottom" v-model:popup-visible="uiColorPicker.unlockedBadgeBgEnd">
+                      <template #content>
+                        <ColorPicker theme="light" :color="model.uiOptions.unlockedBadgeBgEnd || '#f7cbd8'" :sucker-hide="true" @change-color="(c) => onPickUiColor(c, 'unlockedBadgeBgEnd')" />
+                      </template>
+                      <a-button type="text" size="mini">取色</a-button>
+                    </a-popover>
+                  </template>
+                </a-input>
+              </a-form-item>
+            </a-col>
+          </a-row>
+          <!-- 已解锁徽章预览 -->
+          <a-row :gutter="16">
+            <a-col :span="24">
+              <a-form-item label="显示效果预览" label-col-flex="100px">
+                <div class="badge-preview-wrapper">
+                  <div class="badge-preview" :style="{ background: `linear-gradient(102deg, ${model.uiOptions.unlockedBadgeBgStart || '#ffecf0'} 11%, ${model.uiOptions.unlockedBadgeBgEnd || '#f7cbd8'})`, color: model.uiOptions.unlockedBadgeTextColor || '#544000' }">
+                    {{ model.uiOptions.texts.unlockedBadge || '已解锁' }}
+                  </div>
+                  <span class="preview-hint">（主题卡片左上角显示）</span>
+                </div>
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-card>
+
+        <!-- 主题详情页按钮配置 -->
+        <a-card size="small" :bordered="false" class="ui-config-section">
+          <template #title>
+            <span class="section-title">主题详情页按钮</span>
+            <span class="section-desc">主题详情页底部操作按钮的文案配置</span>
+          </template>
+          <a-row :gutter="16">
+            <a-col :span="8">
+              <a-form-item label="解锁按钮背景色" label-col-flex="120px">
+                <a-input v-model="model.uiOptions.unlockButtonBgColor" placeholder="#ffe387">
+                  <template #prefix>
+                    <div :style="{ width: '16px', height: '16px', backgroundColor: model.uiOptions.unlockButtonBgColor || '#ffe387', border: '1px solid #ddd', borderRadius: '2px' }"></div>
+                  </template>
+                  <template #suffix>
+                    <a-popover trigger="click" position="bottom" v-model:popup-visible="uiColorPicker.unlockButtonBgColor">
+                      <template #content>
+                        <ColorPicker theme="light" :color="model.uiOptions.unlockButtonBgColor || '#ffe387'" :sucker-hide="true" @change-color="(c) => onPickUiColor(c, 'unlockButtonBgColor')" />
+                      </template>
+                      <a-button type="text" size="mini">取色</a-button>
+                    </a-popover>
+                  </template>
+                </a-input>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="解锁按钮文案" label-col-flex="120px">
+                <a-input v-model="model.uiOptions.texts.unlockButtonLabel" placeholder="解锁" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="会员免费文案" label-col-flex="120px">
+                <a-input v-model="model.uiOptions.texts.vipFreeLabel" placeholder="会员免费" />
+              </a-form-item>
+            </a-col>
+          </a-row>
+          <a-row :gutter="16">
+            <a-col :span="8">
+              <a-form-item label="应用按钮文案" label-col-flex="120px">
+                <a-input v-model="model.uiOptions.texts.applyButtonLabel" placeholder="应用" />
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item label="已应用文案" label-col-flex="120px">
+                <a-input v-model="model.uiOptions.texts.appliedLabel" placeholder="使用中" />
+              </a-form-item>
+            </a-col>
+          </a-row>
+          <!-- 按钮预览 -->
+          <a-row :gutter="16">
+            <a-col :span="24">
+              <a-form-item label="按钮效果预览" label-col-flex="120px">
+                <div class="button-preview-wrapper">
+                  <button class="button-preview unlock-button" :style="{ backgroundColor: model.uiOptions.unlockButtonBgColor || '#ffe387' }">
+                    200 <img v-if="model.uiOptions.pointsIconUrl" :src="model.uiOptions.pointsIconUrl" class="button-icon" /> {{ model.uiOptions.texts.unlockButtonLabel || '解锁' }}
+                  </button>
+                  <button class="button-preview vip-button">{{ model.uiOptions.texts.vipFreeLabel || '会员免费' }}</button>
+                  <button class="button-preview apply-button">{{ model.uiOptions.texts.applyButtonLabel || '应用' }}</button>
+                  <div class="button-preview applied-state">{{ model.uiOptions.texts.appliedLabel || '使用中' }}</div>
+                </div>
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-card>
+      </a-space>
+    </a-card>
+
     <!-- 主题编辑弹窗 -->
     <a-modal
       v-model:visible="themeModalVisible"
@@ -688,7 +986,29 @@ export const meta: JsonModuleMeta = {
   defaultValue: {
     themes: [],
     avatars: [],
-    colorConfigs: []
+    colorConfigs: [],
+    uiOptions: {
+      pointsIconUrl: '',
+      pointsTextColor: '#333333',
+      pointsBgColor: '#f9d8e2',
+      unlockButtonBgColor: '#ffe387',
+      usingBadgeBgStart: '#ff8fae',
+      usingBadgeBgEnd: '#ff6f9f',
+      usingBadgeBg: 'linear-gradient(102deg, #ff8fae 10%, #ff6f9f 90%)',
+      usingBadgeTextColor: '#ffffff',
+      unlockedBadgeBgStart: '#ffecf0',
+      unlockedBadgeBgEnd: '#f7cbd8',
+      unlockedBadgeBg: 'linear-gradient(102deg, #ffecf0 11%, #f7cbd8)',
+      unlockedBadgeTextColor: '#544000',
+      texts: {
+        usingBadge: '使用中',
+        unlockedBadge: '已解锁',
+        unlockButtonLabel: '解锁',
+        vipFreeLabel: '会员免费',
+        applyButtonLabel: '应用',
+        appliedLabel: '使用中'
+      }
+    }
   },
 }
 </script>
@@ -733,6 +1053,61 @@ watch(
 
 const model = computed(() => localValue.value)
 
+// 保底：确保 uiOptions 结构存在，避免模板访问报错
+const ensureUiOptions = () => {
+  if (!model.value.uiOptions) {
+    model.value.uiOptions = {
+      pointsIconUrl: '',
+      pointsTextColor: '#333333',
+      pointsBgColor: '#f9d8e2',
+      unlockButtonBgColor: '#ffe387',
+      usingBadgeBgStart: '#ff8fae',
+      usingBadgeBgEnd: '#ff6f9f',
+      usingBadgeBg: 'linear-gradient(102deg, #ff8fae 10%, #ff6f9f 90%)',
+      usingBadgeTextColor: '#ffffff',
+      unlockedBadgeBgStart: '#ffecf0',
+      unlockedBadgeBgEnd: '#f7cbd8',
+      unlockedBadgeBg: 'linear-gradient(102deg, #ffecf0 11%, #f7cbd8)',
+      unlockedBadgeTextColor: '#544000',
+      texts: {
+        usingBadge: '使用中',
+        unlockedBadge: '已解锁',
+        unlockButtonLabel: '解锁',
+        vipFreeLabel: '会员免费',
+        applyButtonLabel: '应用',
+        appliedLabel: '使用中'
+      }
+    }
+  } else {
+    if (!model.value.uiOptions.texts) {
+      model.value.uiOptions.texts = {
+        usingBadge: '使用中',
+        unlockedBadge: '已解锁',
+        unlockButtonLabel: '解锁',
+        vipFreeLabel: '会员免费',
+        applyButtonLabel: '应用',
+        appliedLabel: '使用中'
+      }
+    }
+    if (!model.value.uiOptions.usingBadgeBgStart) model.value.uiOptions.usingBadgeBgStart = '#ff8fae'
+    if (!model.value.uiOptions.usingBadgeBgEnd) model.value.uiOptions.usingBadgeBgEnd = '#ff6f9f'
+    if (!model.value.uiOptions.unlockedBadgeBgStart) model.value.uiOptions.unlockedBadgeBgStart = '#ffecf0'
+    if (!model.value.uiOptions.unlockedBadgeBgEnd) model.value.uiOptions.unlockedBadgeBgEnd = '#f7cbd8'
+  }
+}
+
+ensureUiOptions()
+watch(() => model.value.uiOptions, () => ensureUiOptions(), { deep: true })
+// 监听徽章渐变颜色变化，自动拼接CSS
+watch(
+  () => [model.value.uiOptions?.usingBadgeBgStart, model.value.uiOptions?.usingBadgeBgEnd],
+  () => updateBadgeGradient('using')
+)
+watch(
+  () => [model.value.uiOptions?.unlockedBadgeBgStart, model.value.uiOptions?.unlockedBadgeBgEnd],
+  () => updateBadgeGradient('unlocked')
+)
+
 // 主题编辑
 const themeModalVisible = ref(false)
 const editingTheme = ref<any>(null)
@@ -771,6 +1146,19 @@ const tabbarBgColorPicker = ref({
   mine: false
 })
 
+// UI展示配置颜色选择器状态
+const uiColorPicker = ref<Record<string, boolean>>({
+  pointsTextColor: false,
+  pointsBgColor: false,
+  unlockButtonBgColor: false,
+  usingBadgeTextColor: false,
+  unlockedBadgeTextColor: false,
+  usingBadgeBgStart: false,
+  usingBadgeBgEnd: false,
+  unlockedBadgeBgStart: false,
+  unlockedBadgeBgEnd: false
+})
+
 interface ColorObj { hex: string }
 
 // 更新颜色选择器显示状态
@@ -803,6 +1191,28 @@ const onPickThemeBgColor = (c: ColorObj, bgKey: string) => {
 const onPickTabbarBgColor = (c: ColorObj, tabKey: string) => {
   if (/^#[0-9A-Fa-f]{6}$/.test(c.hex) && editingTheme.value) {
     editingTheme.value.tabbarBgColor[tabKey] = c.hex
+  }
+}
+
+// UI展示配置取色回调
+const onPickUiColor = (c: ColorObj, key: string) => {
+  if (/^#[0-9A-Fa-f]{6}$/.test(c.hex)) {
+    if (!model.value.uiOptions) model.value.uiOptions = {}
+    model.value.uiOptions[key] = c.hex
+  }
+}
+
+// 根据起止色更新徽章背景CSS
+const updateBadgeGradient = (type: 'using' | 'unlocked') => {
+  if (!model.value.uiOptions) return
+  if (type === 'using') {
+    const start = model.value.uiOptions.usingBadgeBgStart || '#ff8fae'
+    const end = model.value.uiOptions.usingBadgeBgEnd || '#ff6f9f'
+    model.value.uiOptions.usingBadgeBg = `linear-gradient(102deg, ${start} 10%, ${end} 90%)`
+  } else {
+    const start = model.value.uiOptions.unlockedBadgeBgStart || '#ffecf0'
+    const end = model.value.uiOptions.unlockedBadgeBgEnd || '#f7cbd8'
+    model.value.uiOptions.unlockedBadgeBg = `linear-gradient(102deg, ${start} 11%, ${end})`
   }
 }
 
@@ -947,6 +1357,13 @@ const selectThemeImage = (field: string) => {
   fileSelectorVisible.value = true
 }
 
+// 选择UI积分图标
+const selectUiPointsIcon = () => {
+  currentFileField.value = 'ui.pointsIconUrl'
+  fileSelectorTitle.value = '选择积分图标'
+  fileSelectorVisible.value = true
+}
+
 // 选择导航图标
 const selectTabIcon = (tab: string, state: string) => {
   currentTabIconTab.value = tab
@@ -991,6 +1408,9 @@ const onFileSelected = (fileInfo: FileItem | FileItem[]) => {
         editingTheme.value.tabIcons[currentTabIconTab.value] = { normal: '', active: '' }
       }
       editingTheme.value.tabIcons[currentTabIconTab.value][currentTabIconState.value] = url
+    } else if (currentFileField.value === 'ui.pointsIconUrl') {
+      if (!model.value.uiOptions) model.value.uiOptions = {}
+      model.value.uiOptions.pointsIconUrl = url
     } else if (editingTheme.value && currentFileField.value) {
       // 其他主题图片字段
       editingTheme.value[currentFileField.value] = url
@@ -1059,5 +1479,127 @@ const deleteColorOption = (configIndex: number, colorIndex: number) => {
 
 .preview-image-item:hover .preview-image-actions {
   opacity: 1;
+}
+
+/* UI配置区域样式 */
+.ui-config-section {
+  background: var(--color-fill-1);
+}
+
+.ui-config-section .section-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text-1);
+  margin-right: 8px;
+}
+
+.ui-config-section .section-desc {
+  font-size: 12px;
+  color: var(--color-text-3);
+  font-weight: normal;
+}
+
+/* 积分价格预览 */
+.price-preview-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.price-pill-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.price-pill-preview .preview-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.price-pill-preview .preview-icon-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: #ccc;
+  border-radius: 2px;
+  font-size: 10px;
+  color: #fff;
+}
+
+.preview-hint {
+  font-size: 12px;
+  color: var(--color-text-3);
+}
+
+/* 徽章预览 */
+.badge-preview-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 16px;
+  border-radius: 0 0 12px 0;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+/* 按钮预览 */
+.button-preview-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.button-preview {
+  padding: 8px 24px;
+  border-radius: 20px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: default;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.button-preview.unlock-button {
+  color: #333;
+}
+
+.button-preview.vip-button {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #333;
+}
+
+.button-preview.apply-button {
+  background: #165dff;
+  color: #fff;
+}
+
+.button-preview.applied-state {
+  background: #e8e8e8;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.button-preview .button-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 </style>
