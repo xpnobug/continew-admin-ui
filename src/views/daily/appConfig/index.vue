@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
-import { getAppSetting, getAiFabSetting, getCommentSetting, getCheckinSetting, getMultipartUploadSetting, getUserCenterSetting, getThemeDecorationSetting, saveAppSetting, saveAiFabSetting, saveCommentSetting, saveCheckinSetting, saveMultipartUploadSetting, saveUserCenterSetting, saveThemeDecorationSetting } from '@/apis/system/setting'
+import { getAppSetting, getAiFabSetting, getCommentSetting, getCheckinSetting, getMultipartUploadSetting, getUserCenterSetting, getThemeDecorationSetting, getCommonSidebarSetting, saveAppSetting, saveAiFabSetting, saveCommentSetting, saveCheckinSetting, saveMultipartUploadSetting, saveUserCenterSetting, saveThemeDecorationSetting, saveCommonSidebarSetting } from '@/apis/system/setting'
 import type { JsonModule } from './components/types'
 import AppConfigEditor from './AppConfigEditor.vue'
 
@@ -61,6 +61,10 @@ const io = {
       const { data } = await getThemeDecorationSetting<any>()
       return data ?? {}
     }
+    if (m.key === 'commonSidebar') {
+      const { data } = await getCommonSidebarSetting<any>()
+      return data ?? {}
+    }
     return {}
   },
   async save(m: JsonModule, v: any) {
@@ -71,6 +75,7 @@ const io = {
     if (m.key === 'multipartUpload') return saveMultipartUploadSetting(v)
     if (m.key === 'userCenter') return saveUserCenterSetting(v)
     if (m.key === 'themeDecoration') return saveThemeDecorationSetting(v)
+    if (m.key === 'commonSidebar') return saveCommonSidebarSetting(v)
   },
 }
 

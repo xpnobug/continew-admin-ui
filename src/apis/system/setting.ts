@@ -58,3 +58,11 @@ export function getThemeDecorationSetting<T = any>() {
 export function saveThemeDecorationSetting<T = any>(data: any) {
   return http.post<T>(`${BASE_URL}/themeDecoration`, data)
 }
+
+// 模块化配置：常用设置（侧边栏）
+export function getCommonSidebarSetting<T = any>() {
+  return http.get<T>(`${BASE_URL}/commonSidebar`)
+}
+export function saveCommonSidebarSetting<T = any>(data: any) {
+  return http.post<T>(`${BASE_URL}/commonSidebar`, data)
+}
