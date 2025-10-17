@@ -684,6 +684,20 @@
                 </a-form-item>
               </a-col>
             </a-row>
+            <a-row :gutter="12" style="margin-top: 12px">
+              <a-col :span="12">
+                <a-form-item label="排卵日图标">
+                  <a-input v-model="editingTheme.ovulationDayIcon" readonly>
+                    <template #suffix>
+                      <a-button type="text" size="mini" @click="selectThemeImage('ovulationDayIcon')">
+                        <icon-folder /> 选择
+                      </a-button>
+                    </template>
+                  </a-input>
+                  <a-image v-if="editingTheme.ovulationDayIcon" :src="editingTheme.ovulationDayIcon" width="60" height="60" style="margin-top: 8px;" fit="contain" />
+                </a-form-item>
+              </a-col>
+            </a-row>
           </a-collapse-item>
 
           <!-- 页面背景色配置 -->
@@ -1254,7 +1268,8 @@ const addTheme = () => {
       find: { normal: '', active: '' },
       aiChat: { normal: '', active: '' },
       mine: { normal: '', active: '' }
-    }
+    },
+    ovulationDayIcon: 'https://images.lvtu1120.cn/images/calendar_star.png'
   }
   themeModalVisible.value = true
 }
