@@ -398,8 +398,13 @@ const startTypewriter = (targetMessage: ChatMessage) => {
         console.log('⌨️ 打字机输出字符:', char, '消息内容长度:', targetMessage.content.length, '缓冲区剩余:', typewriterBuffer.value.length)
       }
 
-      // 平滑滚动到底部
-      nextTick(() => scrollToBottom())
+      // 关键修复：强制触发 Vue 响应式更新和视图刷新
+      // 使用 nextTick 确保每次字符添加后都触发一次视图更新周期
+      nextTick(() => {
+        scrollToBottom()
+        // 强制刷新渲染（通过访问响应式属性触发依赖追踪）
+        void messages.value.length
+      })
     } else if (!isStreaming.value) {
       // 如果缓冲区为空且不再流式传输，停止打字机
       if (import.meta.env.DEV) {
@@ -420,6 +425,55 @@ const startTypewriter = (targetMessage: ChatMessage) => {
   }, typewriterSpeed.value)
 }
 
+// 使用数组索引的打字机效果（解决Vue响应式追踪问题）
+const startTypewriterByIndex = (messageIndex: number) => {
+  if (typewriterTimer.value) {
+    window.clearInterval(typewriterTimer.value)
+  }
+
+  typewriterTimer.value = window.setInterval(() => {
+    // 检查消息索引是否有效
+    if (messageIndex >= messages.value.length) {
+      stopTypewriter()
+      return
+    }
+
+    if (typewriterBuffer.value.length > 0) {
+      // 逐字符添加到消息内容中
+      const char = typewriterBuffer.value.charAt(0)
+      // 关键：直接通过数组索引修改，Vue 3可以追踪到这个变化
+      messages.value[messageIndex].content += char
+      typewriterBuffer.value = typewriterBuffer.value.slice(1)
+
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log('⌨️ 打字机输出字符:', char, '消息内容长度:', messages.value[messageIndex].content.length, '缓冲区剩余:', typewriterBuffer.value.length)
+      }
+
+      // 触发滚动
+      nextTick(() => {
+        scrollToBottom()
+      })
+    } else if (!isStreaming.value) {
+      // 如果缓冲区为空且不再流式传输，停止打字机
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log('⏹️ 停止打字机 - 缓冲区为空且流式已结束')
+      }
+      stopTypewriter()
+      // 确保消息状态更新
+      if (messages.value[messageIndex].streaming) {
+        messages.value[messageIndex].streaming = false
+        messages.value[messageIndex].completed = true
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log('✅ 消息状态已更新为完成:', messages.value[messageIndex].content)
+        }
+      }
+    }
+  }, typewriterSpeed.value)
+}
+
 // 构建聊天请求
 const buildChatRequest = (userMessage: string): ChatRequest => {
   const chatHistory: APIChatMessage[] = []
@@ -432,13 +486,16 @@ const buildChatRequest = (userMessage: string): ChatRequest => {
     })
   }
 
-  // 添加历史消息（取最后10条对话）
+  // 添加历史消息（取最后10条对话，但不包括刚添加的当前用户消息）
+  // 注意：sendMessage中已经将用户消息添加到messages数组，所以这里需要排除最后一条
   const recentMessages = messages.value
     .filter((msg) => !msg.streaming) // 过滤掉正在流式传输的消息
-    .slice(-10)
+    .filter((msg) => msg.content && msg.content.trim().length > 0) // 过滤掉空内容的消息
+    .slice(0, -1) // 排除最后一条消息（刚添加的用户消息）
+    .slice(-10) // 取最后10条
     .map((msg) => ({
       role: msg.role,
-      content: msg.content,
+      content: msg.content.trim(),
     } as APIChatMessage))
 
   chatHistory.push(...recentMessages)
@@ -517,12 +574,14 @@ const handleStreamChat = async (userMessage: string) => {
   }
 
   messages.value.push(assistantMessage)
+  const messageIndex = messages.value.length - 1  // 记录消息在数组中的索引
+
   await nextTick()
   scrollToBottom(true) // 强制滚动
 
   // 清空打字机缓冲区并启动打字机效果
   typewriterBuffer.value = ''
-  startTypewriter(assistantMessage)
+  startTypewriterByIndex(messageIndex)  // 使用索引而不是对象引用
 
   try {
     // 准备聊天请求
@@ -554,17 +613,20 @@ const handleStreamChat = async (userMessage: string) => {
         console.error('❌ Stream chat error:', error)
         // 停止打字机效果
         stopTypewriter()
-        // 将剩余缓冲区内容立即添加到消息
-        if (typewriterBuffer.value) {
-          assistantMessage.content += typewriterBuffer.value
+        // 将剩余缓冲区内容立即添加到消息（使用索引确保响应式）
+        if (typewriterBuffer.value && messageIndex < messages.value.length) {
+          messages.value[messageIndex].content += typewriterBuffer.value
           typewriterBuffer.value = ''
         }
-        assistantMessage.streaming = false
-        assistantMessage.completed = true
-        if (assistantMessage.content.trim()) {
-          assistantMessage.content += '\n\n[流式响应中断]'
-        } else {
-          assistantMessage.content = '流式响应发生错误，请重试。'
+        // 更新消息状态（使用索引确保响应式）
+        if (messageIndex < messages.value.length) {
+          messages.value[messageIndex].streaming = false
+          messages.value[messageIndex].completed = true
+          if (messages.value[messageIndex].content.trim()) {
+            messages.value[messageIndex].content += '\n\n[流式响应中断]'
+          } else {
+            messages.value[messageIndex].content = '流式响应发生错误，请重试。'
+          }
         }
         Message.error(`流式对话失败: ${error.message}`)
       },
@@ -579,24 +641,28 @@ const handleStreamChat = async (userMessage: string) => {
 
         // 流式完成后立即处理剩余内容
         const finishTypewriter = () => {
+          if (messageIndex >= messages.value.length) {
+            return
+          }
+
           if (typewriterBuffer.value.length > 0) {
             if (import.meta.env.DEV) {
               // eslint-disable-next-line no-console
               console.log('🏁 流式完成，立即添加剩余内容:', typewriterBuffer.value)
             }
-            // 立即添加剩余缓冲区内容到消息
-            assistantMessage.content += typewriterBuffer.value
+            // 立即添加剩余缓冲区内容到消息（使用索引确保响应式）
+            messages.value[messageIndex].content += typewriterBuffer.value
             typewriterBuffer.value = ''
           }
 
-          // 停止打字机并更新状态
+          // 停止打字机并更新状态（使用索引确保响应式）
           stopTypewriter()
-          assistantMessage.streaming = false
-          assistantMessage.completed = true
+          messages.value[messageIndex].streaming = false
+          messages.value[messageIndex].completed = true
 
           if (import.meta.env.DEV) {
             // eslint-disable-next-line no-console
-            console.log('🎯 流式消息最终完成:', assistantMessage.content)
+            console.log('🎯 流式消息最终完成:', messages.value[messageIndex].content)
           }
 
           // 强制触发响应式更新
@@ -615,14 +681,17 @@ const handleStreamChat = async (userMessage: string) => {
     console.error('Failed to start stream chat:', error)
     // 停止打字机效果
     stopTypewriter()
-    // 将剩余缓冲区内容立即添加到消息
-    if (typewriterBuffer.value) {
-      assistantMessage.content += typewriterBuffer.value
+    // 将剩余缓冲区内容立即添加到消息（使用索引确保响应式）
+    if (typewriterBuffer.value && messageIndex < messages.value.length) {
+      messages.value[messageIndex].content += typewriterBuffer.value
       typewriterBuffer.value = ''
     }
-    assistantMessage.streaming = false
-    assistantMessage.completed = true
-    assistantMessage.content = '抱歉，流式对话启动失败。请检查网络连接或稍后重试。'
+    // 更新消息状态（使用索引确保响应式）
+    if (messageIndex < messages.value.length) {
+      messages.value[messageIndex].streaming = false
+      messages.value[messageIndex].completed = true
+      messages.value[messageIndex].content = '抱歉，流式对话启动失败。请检查网络连接或稍后重试。'
+    }
     Message.error('流式对话启动失败')
   } finally {
     isStreaming.value = false

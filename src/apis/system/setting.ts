@@ -66,3 +66,11 @@ export function getCommonSidebarSetting<T = any>() {
 export function saveCommonSidebarSetting<T = any>(data: any) {
   return http.post<T>(`${BASE_URL}/commonSidebar`, data)
 }
+
+// 模块化配置：基础数据项配置
+export function getBasicRecordItemsSetting<T = any>() {
+  return http.get<T>(`${BASE_URL}/basicRecordItems`)
+}
+export function saveBasicRecordItemsSetting<T = any>(data: any) {
+  return http.post<T>(`${BASE_URL}/basicRecordItems`, data)
+}

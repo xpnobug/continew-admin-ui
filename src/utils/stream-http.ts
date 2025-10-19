@@ -213,26 +213,16 @@ export class StreamHttpClient {
         const chunk = decoder.decode(value, { stream: true })
         buffer += chunk
 
-        // 处理连续的 data: 块
-        await this.processStreamBuffer(buffer, onMessage, onError)
+        // 处理连续的 data: 块，返回已处理的位置
+        const processedIndex = await this.processStreamBuffer(buffer, onMessage, onError)
 
-        // 清空已处理的buffer，保留未完成的部分
-        const lastDataIndex = buffer.lastIndexOf('data:')
-        if (lastDataIndex !== -1) {
-          // 查找最后一个完整的data块的结束位置
-          const afterLastData = buffer.substring(lastDataIndex)
-          try {
-            // 尝试解析最后一个data块，如果解析失败说明数据不完整
-            const match = afterLastData.match(/^data:(.+?)(?=data:|$)/)
-            if (match) {
-              JSON.parse(match[1])
-              // 解析成功，清空buffer
-              buffer = ''
-            }
-          } catch {
-            // 解析失败，保留从最后一个data开始的部分
-            buffer = afterLastData
+        // 移除已处理的部分，只保留未处理的数据
+        if (processedIndex > 0) {
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.log(`🧹 清理buffer: 已处理${processedIndex}字符，剩余${buffer.length - processedIndex}字符`)
           }
+          buffer = buffer.substring(processedIndex)
         }
       }
 
@@ -247,13 +237,15 @@ export class StreamHttpClient {
 
   /**
    * 处理流式数据缓冲区
+   * @returns 已处理到的位置索引
    */
   private async processStreamBuffer(
     buffer: string,
     onMessage: (data: any) => void,
     onError?: (error: Error) => void,
-  ): Promise<void> {
+  ): Promise<number> {
     let startIndex = 0
+    let lastProcessedIndex = 0
 
     while (true) {
       // 查找下一个 "data:" 的位置
@@ -262,8 +254,15 @@ export class StreamHttpClient {
         break
       }
 
-      // 从 "data:" 后开始查找JSON对象
-      const jsonStart = dataIndex + 5 // "data:".length
+      // 从 "data:" 后开始查找JSON对象，跳过可能的空格
+      let jsonStart = dataIndex + 5 // "data:".length
+
+      // 跳过data:后的空格
+      while (jsonStart < buffer.length && buffer[jsonStart] === ' ') {
+        jsonStart++
+      }
+
+      // 检查是否是JSON对象的开始
       if (jsonStart >= buffer.length || buffer[jsonStart] !== '{') {
         startIndex = dataIndex + 1
         continue
@@ -319,11 +318,18 @@ export class StreamHttpClient {
           if (data.error) {
             console.error('❌ 流式响应错误:', data.error)
             onError?.(new Error(data.error))
-            return
+            return lastProcessedIndex
           }
 
           // 调用消息处理回调
           onMessage(data)
+
+          // 更新已处理位置（包含换行符）
+          lastProcessedIndex = jsonEnd
+          // 跳过可能的换行符
+          while (lastProcessedIndex < buffer.length && (buffer[lastProcessedIndex] === '\n' || buffer[lastProcessedIndex] === '\r')) {
+            lastProcessedIndex++
+          }
         } catch (error) {
           console.warn('⚠️ 解析流式响应数据失败:', {
             dataStr,
@@ -338,6 +344,8 @@ export class StreamHttpClient {
         startIndex = dataIndex + 1
       }
     }
+
+    return lastProcessedIndex
   }
 
   /**
