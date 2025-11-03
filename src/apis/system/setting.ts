@@ -74,3 +74,11 @@ export function getBasicRecordItemsSetting<T = any>() {
 export function saveBasicRecordItemsSetting<T = any>(data: any) {
   return http.post<T>(`${BASE_URL}/basicRecordItems`, data)
 }
+
+// 模块化配置：微信小程序配置
+export function getWxMaConfigSetting<T = any>() {
+  return http.get<T>(`${BASE_URL}/wxMaConfig`)
+}
+export function saveWxMaConfigSetting<T = any>(data: any) {
+  return http.post<T>(`${BASE_URL}/wxMaConfig`, data)
+}

@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { Message } from '@arco-design/web-vue'
-import { getAppSetting, getAiFabSetting, getCommentSetting, getCheckinSetting, getMultipartUploadSetting, getUserCenterSetting, getThemeDecorationSetting, getCommonSidebarSetting, getBasicRecordItemsSetting, saveAppSetting, saveAiFabSetting, saveCommentSetting, saveCheckinSetting, saveMultipartUploadSetting, saveUserCenterSetting, saveThemeDecorationSetting, saveCommonSidebarSetting, saveBasicRecordItemsSetting } from '@/apis/system/setting'
+import { getAppSetting, getAiFabSetting, getCommentSetting, getCheckinSetting, getMultipartUploadSetting, getUserCenterSetting, getThemeDecorationSetting, getCommonSidebarSetting, getBasicRecordItemsSetting, getWxMaConfigSetting, saveAppSetting, saveAiFabSetting, saveCommentSetting, saveCheckinSetting, saveMultipartUploadSetting, saveUserCenterSetting, saveThemeDecorationSetting, saveCommonSidebarSetting, saveBasicRecordItemsSetting, saveWxMaConfigSetting } from '@/apis/system/setting'
 import type { JsonModule } from './components/types'
 import AppConfigEditor from './AppConfigEditor.vue'
 
@@ -69,6 +69,10 @@ const io = {
       const { data } = await getBasicRecordItemsSetting<any>()
       return data ?? {}
     }
+    if (m.key === 'wxMaConfig') {
+      const { data } = await getWxMaConfigSetting<any>()
+      return data ?? {}
+    }
     return {}
   },
   async save(m: JsonModule, v: any) {
@@ -81,6 +85,7 @@ const io = {
     if (m.key === 'themeDecoration') return saveThemeDecorationSetting(v)
     if (m.key === 'commonSidebar') return saveCommonSidebarSetting(v)
     if (m.key === 'basicRecordItems') return saveBasicRecordItemsSetting(v)
+    if (m.key === 'wxMaConfig') return saveWxMaConfigSetting(v)
   },
 }
 
