@@ -5,6 +5,7 @@ export * from './monitor'
 export * from './system'
 export * from './code'
 export * from './schedule'
+export * from './mcp'
 
 export * from './area/type'
 export * from './auth/type'

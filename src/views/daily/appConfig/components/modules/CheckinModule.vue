@@ -105,7 +105,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">已签到图标</span>
             <a-space align="center" fill>
-              <a-input v-model="model.icons.signed" placeholder="/static/welfare/signed.png" readonly style="flex: 1">
+              <a-input v-model="model.icons.signed" placeholder="/static/welfare/signed.png" allow-clear style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('signed')">
                     <icon-folder /> 选择
@@ -120,7 +120,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">未签到图标</span>
             <a-space align="center" fill>
-              <a-input v-model="model.icons.unsigned" placeholder="/static/welfare/no_signed.png" readonly style="flex: 1">
+              <a-input v-model="model.icons.unsigned" placeholder="/static/welfare/no_signed.png" allow-clear style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('unsigned')">
                     <icon-folder /> 选择
@@ -135,7 +135,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">积分奖励图标</span>
             <a-space align="center" fill>
-              <a-input v-model="model.icons.reward" placeholder="/static/welfare/carrot_points.png" readonly style="flex: 1">
+              <a-input v-model="model.icons.reward" placeholder="/static/welfare/carrot_points.png" allow-clear style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('reward')">
                     <icon-folder /> 选择
@@ -195,7 +195,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">标题背景图</span>
             <a-space align="center" fill>
-              <a-input v-model="model.shareTask.titleBgImage" placeholder="/static/otherPages/static/images/task_title_bg.png" readonly style="flex: 1">
+              <a-input v-model="model.shareTask.titleBgImage" placeholder="/static/otherPages/static/images/task_title_bg.png" allow-clear style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('shareTaskTitleBg')">
                     <icon-folder /> 选择
@@ -210,7 +210,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">分享图标</span>
             <a-space align="center" fill>
-              <a-input v-model="model.shareTask.icon" placeholder="/static/otherPages/static/images/share_icon.png" readonly style="flex: 1">
+              <a-input v-model="model.shareTask.icon" placeholder="/static/otherPages/static/images/share_icon.png" allow-clear style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('shareTaskIcon')">
                     <icon-folder /> 选择
@@ -314,7 +314,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">分享图片</span>
             <a-space align="center" fill>
-              <a-input v-model="model.shareTask.shareConfig.imageUrl" placeholder="/static/share/checkin_share.png" readonly style="flex: 1">
+              <a-input v-model="model.shareTask.shareConfig.imageUrl" placeholder="/static/share/checkin_share.png" allow-clear style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('shareImage')">
                     <icon-folder /> 选择

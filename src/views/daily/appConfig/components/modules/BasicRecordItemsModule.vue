@@ -181,7 +181,11 @@
         </a-row>
 
         <a-form-item label="图标URL" required>
-          <a-input v-model="editingItem.icon" placeholder="图标地址" readonly>
+          <a-input
+            v-model="editingItem.icon"
+            placeholder="可粘贴 https:// 图片地址，或通过右侧选择上传"
+            allow-clear
+          >
             <template #suffix>
               <a-button type="text" size="mini" @click="selectItemIcon">
                 <icon-folder /> 选择

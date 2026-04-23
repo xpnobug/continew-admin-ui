@@ -98,7 +98,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">打卡图标</span>
             <a-space align="center" fill>
-              <a-input v-model="model.checkin.icon" readonly placeholder="/static/img/qd.png" style="flex: 1">
+              <a-input v-model="model.checkin.icon" allow-clear placeholder="/static/img/qd.png" style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('checkinIcon')">
                     <icon-folder /> 选择
@@ -155,7 +155,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">活动图标</span>
             <a-space align="center" fill>
-              <a-input v-model="model.modules.activityIcon" readonly placeholder="/static/img/hd.png" style="flex: 1">
+              <a-input v-model="model.modules.activityIcon" allow-clear placeholder="/static/img/hd.png" style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('activityIcon')">
                     <icon-folder /> 选择
@@ -193,7 +193,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">圈子图标</span>
             <a-space align="center" fill>
-              <a-input v-model="model.modules.circleIcon" readonly placeholder="/static/img/qz.png" style="flex: 1">
+              <a-input v-model="model.modules.circleIcon" allow-clear placeholder="/static/img/qz.png" style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('circleIcon')">
                     <icon-folder /> 选择
@@ -231,7 +231,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">购物车图标</span>
             <a-space align="center" fill>
-              <a-input v-model="model.modules.cartIcon" readonly placeholder="/static/img/gwc.png" style="flex: 1">
+              <a-input v-model="model.modules.cartIcon" allow-clear placeholder="/static/img/gwc.png" style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('cartIcon')">
                     <icon-folder /> 选择
@@ -269,7 +269,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">订单图标</span>
             <a-space align="center" fill>
-              <a-input v-model="model.modules.orderIcon" readonly placeholder="/static/img/dd.png" style="flex: 1">
+              <a-input v-model="model.modules.orderIcon" allow-clear placeholder="/static/img/dd.png" style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('orderIcon')">
                     <icon-folder /> 选择
@@ -307,7 +307,7 @@
           <a-space direction="vertical" fill>
             <span class="lbl">卡券图标</span>
             <a-space align="center" fill>
-              <a-input v-model="model.modules.cardIcon" readonly placeholder="/static/img/kq.png" style="flex: 1">
+              <a-input v-model="model.modules.cardIcon" allow-clear placeholder="/static/img/kq.png" style="flex: 1">
                 <template #suffix>
                   <a-button type="text" size="mini" @click="openIconSelector('cardIcon')">
                     <icon-folder /> 选择

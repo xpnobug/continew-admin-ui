@@ -117,7 +117,7 @@
           </a-col>
           <a-col :span="12">
             <a-form-item label="图标地址">
-              <a-input v-model="editingItem.imageUrl" readonly>
+              <a-input v-model="editingItem.imageUrl" placeholder="可粘贴 https:// 图片地址，或通过右侧选择上传" allow-clear>
                 <template #suffix>
                   <a-button type="text" size="mini" @click="selectIcon">
                     <icon-folder /> 选择

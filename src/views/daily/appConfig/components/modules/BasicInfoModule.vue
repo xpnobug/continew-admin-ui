@@ -55,7 +55,7 @@
         <a-grid-item :span="16">
           <a-space align="center" fill>
             <span class="lbl">版权图片</span>
-            <a-input v-model="model.copyImg" placeholder="点击选择或粘贴图片URL" readonly>
+            <a-input v-model="model.copyImg" placeholder="可粘贴图片 URL 或右侧选择上传" allow-clear>
               <template #suffix>
                 <a-button type="text" size="mini" @click="openCopyImgSelector">
                   <icon-folder /> 选择

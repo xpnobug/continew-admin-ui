@@ -83,7 +83,7 @@
           </a-table-column>
           <a-table-column title="头像路径" data-index="avatarPath" :width="300">
             <template #cell="{ record }">
-              <a-input v-model="record.avatarPath" size="small" readonly>
+              <a-input v-model="record.avatarPath" size="small" allow-clear>
                 <template #suffix>
                   <a-button type="text" size="mini" @click="selectAvatarImage(record)">
                     <icon-folder /> 选择
@@ -220,7 +220,7 @@
           <a-row :gutter="16">
             <a-col :span="8">
               <a-form-item label="积分图标" label-col-flex="120px">
-                <a-input v-model="model.uiOptions.pointsIconUrl" readonly>
+                <a-input v-model="model.uiOptions.pointsIconUrl" allow-clear>
                   <template #suffix>
                     <a-button type="text" size="mini" @click="selectUiPointsIcon">
                       <icon-folder /> 选择
@@ -548,7 +548,7 @@
             <a-row :gutter="12">
               <a-col :span="12">
                 <a-form-item label="首页背景图">
-                  <a-input v-model="editingTheme.homeBgImage" readonly>
+                  <a-input v-model="editingTheme.homeBgImage" allow-clear>
                     <template #suffix>
                       <a-button type="text" size="mini" @click="selectThemeImage('homeBgImage')">
                         <icon-folder /> 选择
@@ -560,7 +560,7 @@
               </a-col>
               <a-col :span="12">
                 <a-form-item label="个人中心背景图">
-                  <a-input v-model="editingTheme.mineBgImage" readonly>
+                  <a-input v-model="editingTheme.mineBgImage" allow-clear>
                     <template #suffix>
                       <a-button type="text" size="mini" @click="selectThemeImage('mineBgImage')">
                         <icon-folder /> 选择
@@ -687,7 +687,7 @@
             <a-row :gutter="12" style="margin-top: 12px">
               <a-col :span="12">
                 <a-form-item label="排卵日图标">
-                  <a-input v-model="editingTheme.ovulationDayIcon" readonly>
+                  <a-input v-model="editingTheme.ovulationDayIcon" allow-clear>
                     <template #suffix>
                       <a-button type="text" size="mini" @click="selectThemeImage('ovulationDayIcon')">
                         <icon-folder /> 选择
@@ -872,7 +872,7 @@
               <a-col :span="12">
                 <a-card size="small" title="首页图标">
                   <a-form-item label="未选中图标">
-                    <a-input v-model="editingTheme.tabIcons.home.normal" readonly>
+                    <a-input v-model="editingTheme.tabIcons.home.normal" allow-clear>
                       <template #suffix>
                         <a-button type="text" size="mini" @click="selectTabIcon('home', 'normal')">
                           <icon-folder /> 选择
@@ -882,7 +882,7 @@
                     <a-image v-if="editingTheme.tabIcons.home.normal" :src="editingTheme.tabIcons.home.normal" width="60" style="margin-top: 8px;" />
                   </a-form-item>
                   <a-form-item label="选中图标">
-                    <a-input v-model="editingTheme.tabIcons.home.active" readonly>
+                    <a-input v-model="editingTheme.tabIcons.home.active" allow-clear>
                       <template #suffix>
                         <a-button type="text" size="mini" @click="selectTabIcon('home', 'active')">
                           <icon-folder /> 选择
@@ -898,7 +898,7 @@
               <a-col :span="12">
                 <a-card size="small" title="发现页图标">
                   <a-form-item label="未选中图标">
-                    <a-input v-model="editingTheme.tabIcons.find.normal" readonly>
+                    <a-input v-model="editingTheme.tabIcons.find.normal" allow-clear>
                       <template #suffix>
                         <a-button type="text" size="mini" @click="selectTabIcon('find', 'normal')">
                           <icon-folder /> 选择
@@ -908,7 +908,7 @@
                     <a-image v-if="editingTheme.tabIcons.find.normal" :src="editingTheme.tabIcons.find.normal" width="60" style="margin-top: 8px;" />
                   </a-form-item>
                   <a-form-item label="选中图标">
-                    <a-input v-model="editingTheme.tabIcons.find.active" readonly>
+                    <a-input v-model="editingTheme.tabIcons.find.active" allow-clear>
                       <template #suffix>
                         <a-button type="text" size="mini" @click="selectTabIcon('find', 'active')">
                           <icon-folder /> 选择
@@ -924,7 +924,7 @@
               <a-col :span="12">
                 <a-card size="small" title="AI聊天图标">
                   <a-form-item label="未选中图标">
-                    <a-input v-model="editingTheme.tabIcons.aiChat.normal" readonly>
+                    <a-input v-model="editingTheme.tabIcons.aiChat.normal" allow-clear>
                       <template #suffix>
                         <a-button type="text" size="mini" @click="selectTabIcon('aiChat', 'normal')">
                           <icon-folder /> 选择
@@ -934,7 +934,7 @@
                     <a-image v-if="editingTheme.tabIcons.aiChat.normal" :src="editingTheme.tabIcons.aiChat.normal" width="60" style="margin-top: 8px;" />
                   </a-form-item>
                   <a-form-item label="选中图标">
-                    <a-input v-model="editingTheme.tabIcons.aiChat.active" readonly>
+                    <a-input v-model="editingTheme.tabIcons.aiChat.active" allow-clear>
                       <template #suffix>
                         <a-button type="text" size="mini" @click="selectTabIcon('aiChat', 'active')">
                           <icon-folder /> 选择
@@ -950,7 +950,7 @@
               <a-col :span="12">
                 <a-card size="small" title="我的页图标">
                   <a-form-item label="未选中图标">
-                    <a-input v-model="editingTheme.tabIcons.mine.normal" readonly>
+                    <a-input v-model="editingTheme.tabIcons.mine.normal" allow-clear>
                       <template #suffix>
                         <a-button type="text" size="mini" @click="selectTabIcon('mine', 'normal')">
                           <icon-folder /> 选择
@@ -960,7 +960,7 @@
                     <a-image v-if="editingTheme.tabIcons.mine.normal" :src="editingTheme.tabIcons.mine.normal" width="60" style="margin-top: 8px;" />
                   </a-form-item>
                   <a-form-item label="选中图标">
-                    <a-input v-model="editingTheme.tabIcons.mine.active" readonly>
+                    <a-input v-model="editingTheme.tabIcons.mine.active" allow-clear>
                       <template #suffix>
                         <a-button type="text" size="mini" @click="selectTabIcon('mine', 'active')">
                           <icon-folder /> 选择

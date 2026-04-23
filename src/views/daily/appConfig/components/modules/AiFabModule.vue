@@ -21,7 +21,7 @@
     <a-grid-item :span="12">
       <a-space align="center" fill>
         <span class="lbl">背景图片</span>
-        <a-input v-model="model.bgImage" placeholder="请选择背景图片或填写 URL" readonly>
+        <a-input v-model="model.bgImage" placeholder="可粘贴图片 URL 或右侧选择上传" allow-clear>
           <template #suffix>
             <a-button type="text" size="mini" @click="openBgSelector">
               <icon-folder /> 选择

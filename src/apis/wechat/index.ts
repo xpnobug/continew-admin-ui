@@ -257,6 +257,11 @@ export function listContact(query: ContactQuery & PageQuery) {
   return http.get<PageRes<ContactResp[]>>(`${CONTACT_BASE_URL}/page`, query)
 }
 
+/** @desc 同步单个联系人 */
+export function syncSingleContact(robotId: number, contactId: string) {
+  return http.post(`${CONTACT_BASE_URL}/sync-single`, { robotId, contactId })
+}
+
 /** @desc 同步联系人 */
 export function syncContacts(data: ContactSyncReq) {
   return http.post(`${CONTACT_BASE_URL}/sync`, data)
@@ -274,12 +279,12 @@ export function addFriend(data: FriendAddReq) {
 
 /** @desc 从群聊添加好友 */
 export function addFriendFromChatRoom(data: FriendAddFromChatRoomReq) {
-  return http.post(`${CONTACT_BASE_URL}/friend/add-from-chat-room`, data)
+  return http.post(`${CONTACT_BASE_URL}/friend/add-from-chatroom`, data)
 }
 
 /** @desc 设置好友备注 */
 export function setFriendRemark(data: FriendRemarkReq) {
-  return http.patch(`${CONTACT_BASE_URL}/friend/remark`, data)
+  return http.post(`${CONTACT_BASE_URL}/friend/remark`, data)
 }
 
 /** @desc 通过好友验证 */
@@ -289,7 +294,7 @@ export function passFriendVerify(data: FriendPassVerifyReq) {
 
 /** @desc 删除好友 */
 export function deleteFriend(data: FriendDeleteReq) {
-  return http.del(`${CONTACT_BASE_URL}/friend`, data)
+  return http.post(`${CONTACT_BASE_URL}/friend/delete`, data)
 }
 
 // ========== 消息相关接口 ==========
@@ -339,7 +344,9 @@ export interface SendFileMessageReq {
 export interface MessageRevokeReq {
   robotId: number
   msgId: number // 消息ID
+  clientMsgId: number // 客户端消息ID
   toWxid: string // 接收者微信ID
+  createTime: number // 创建时间(时间戳)
 }
 
 /** 聊天记录查询 */
@@ -396,7 +403,7 @@ export function revokeMessage(data: MessageRevokeReq) {
 
 /** @desc 查询聊天记录(分页) */
 export function listChatHistory(query: ChatHistoryQuery & PageQuery) {
-  return http.get<PageRes<ChatHistoryResp[]>>('/wechat/chat-history/page', query)
+  return http.get<PageRes<ChatHistoryResp[]>>(`${MESSAGE_BASE_URL}/chat-history/page`, query)
 }
 
 // ========== 群聊相关接口 ==========
@@ -479,9 +486,14 @@ export interface ChatRoomMemberSyncReq {
   chatRoomId: string
 }
 
-/** @desc 查询群成员列表 */
-export function listChatRoomMembers(robotId: number, chatRoomId: string) {
-  return http.get<ChatRoomMemberResp[]>(`${CHATROOM_BASE_URL}/members`, {
+/** @desc 查询群成员列表(分页) */
+export function listChatRoomMembers(query: { robotId: number; chatRoomId: string; keyword?: string; onlyActive?: boolean } & PageQuery) {
+  return http.get<PageRes<ChatRoomMemberResp[]>>(`${CHATROOM_BASE_URL}/members/page`, query)
+}
+
+/** @desc 获取活跃群成员列表 */
+export function getActiveChatRoomMembers(robotId: number, chatRoomId: string) {
+  return http.get<ChatRoomMemberResp[]>(`${CHATROOM_BASE_URL}/members/active`, {
     robotId,
     chatRoomId,
   })
@@ -499,37 +511,22 @@ export function createChatRoom(data: ChatRoomCreateReq) {
 
 /** @desc 邀请入群 */
 export function inviteChatRoomMember(data: ChatRoomInviteReq) {
-  return http.post(`${CHATROOM_BASE_URL}/invite`, data)
-}
-
-/** @desc 同意入群申请 */
-export function consentToJoin(data: ChatRoomJoinReq) {
-  return http.post(`${CHATROOM_BASE_URL}/join`, data)
+  return http.post(`${CHATROOM_BASE_URL}/members/invite`, data)
 }
 
 /** @desc 设置群名称 */
 export function setChatRoomName(data: ChatRoomSetNameReq) {
-  return http.patch(`${CHATROOM_BASE_URL}/name`, data)
-}
-
-/** @desc 设置群公告 */
-export function setChatRoomAnnouncement(data: ChatRoomSetAnnouncementReq) {
-  return http.patch(`${CHATROOM_BASE_URL}/announcement`, data)
-}
-
-/** @desc 设置群备注 */
-export function setChatRoomRemark(data: ChatRoomSetRemarkReq) {
-  return http.patch(`${CHATROOM_BASE_URL}/remark`, data)
+  return http.post(`${CHATROOM_BASE_URL}/name`, data)
 }
 
 /** @desc 删除群成员 */
 export function deleteChatRoomMember(data: ChatRoomMemberDeleteReq) {
-  return http.del(`${CHATROOM_BASE_URL}/members`, data)
+  return http.post(`${CHATROOM_BASE_URL}/members/delete`, data)
 }
 
 /** @desc 退出群聊 */
 export function quitChatRoom(data: ChatRoomQuitReq) {
-  return http.del(`${CHATROOM_BASE_URL}/quit`, data)
+  return http.post(`${CHATROOM_BASE_URL}/quit`, data)
 }
 
 // ========== 系统消息相关接口 ==========
@@ -564,6 +561,16 @@ export function listSystemMessages(robotId: number) {
 /** @desc 批量标记已读 */
 export function markSystemMessagesAsRead(data: SystemMessageMarkReadReq) {
   return http.post(`${SYSTEM_MESSAGE_BASE_URL}/mark-read`, data)
+}
+
+/** @desc 获取未读系统消息数量 */
+export function getUnreadSystemMessageCount(robotId: number) {
+  return http.get<number>(`${SYSTEM_MESSAGE_BASE_URL}/unread-count`, { robotId })
+}
+
+/** @desc 按类型查询系统消息 */
+export function getSystemMessagesByType(robotId: number, type: number) {
+  return http.get<SystemMessageResp[]>(`${SYSTEM_MESSAGE_BASE_URL}/by-type`, { robotId, type })
 }
 
 // ========== 配置管理相关接口 ==========

@@ -58,71 +58,93 @@
 
     <template #actions>
       <div class="card-actions">
-        <!-- 登录/登出 -->
-        <a-tooltip v-if="robot.status !== 'online'" content="扫码登录">
-          <a-button
-            v-permission="['wechat:robot:login']"
-            type="text"
-            size="small"
-            @click="onLogin"
-          >
-            <template #icon><icon-qrcode /></template>
-          </a-button>
-        </a-tooltip>
-        <a-popconfirm
-          v-else
-          content="确定要退出登录吗?"
-          @ok="onLogout"
-        >
-          <a-tooltip content="退出登录">
+        <!-- 快捷功能 -->
+        <a-space :size="4" wrap class="quick-actions">
+          <a-tooltip content="联系人管理">
+            <a-button type="text" size="small" @click="emit('open-contacts', robot)">
+              <template #icon><icon-user /></template>
+            </a-button>
+          </a-tooltip>
+          <a-tooltip content="消息管理">
+            <a-button type="text" size="small" @click="emit('open-messages', robot)">
+              <template #icon><icon-message /></template>
+            </a-button>
+          </a-tooltip>
+          <a-tooltip content="群聊管理">
+            <a-button type="text" size="small" @click="emit('open-chatrooms', robot)">
+              <template #icon><icon-users /></template>
+            </a-button>
+          </a-tooltip>
+          <a-tooltip content="系统消息">
+            <a-button type="text" size="small" @click="emit('open-system-messages', robot)">
+              <template #icon><icon-notification /></template>
+            </a-button>
+          </a-tooltip>
+          <a-tooltip content="全局设置">
+            <a-button type="text" size="small" @click="emit('open-settings', robot)">
+              <template #icon><icon-settings /></template>
+            </a-button>
+          </a-tooltip>
+        </a-space>
+
+        <a-divider direction="vertical" />
+
+        <!-- 管理操作 -->
+        <a-space :size="4" wrap class="manage-actions">
+          <!-- 登录/登出 -->
+          <a-tooltip v-if="robot.status !== 'online'" content="扫码登录">
             <a-button
-              v-permission="['wechat:robot:logout']"
+              v-permission="['wechat:robot:login']"
               type="text"
               size="small"
-              status="danger"
+              @click="onLogin"
             >
-              <template #icon><icon-poweroff /></template>
+              <template #icon><icon-qrcode /></template>
             </a-button>
           </a-tooltip>
-        </a-popconfirm>
+          <a-popconfirm
+            v-else
+            content="确定要退出登录吗?"
+            @ok="onLogout"
+          >
+            <a-tooltip content="退出登录">
+              <a-button
+                v-permission="['wechat:robot:logout']"
+                type="text"
+                size="small"
+                status="danger"
+              >
+                <template #icon><icon-poweroff /></template>
+              </a-button>
+            </a-tooltip>
+          </a-popconfirm>
 
-        <!-- 刷新状态 -->
-        <a-tooltip content="刷新机器人状态">
-          <a-button v-permission="['wechat:robot:get']" type="text" size="small" @click="onRefresh">
-            <template #icon><icon-refresh /></template>
-          </a-button>
-        </a-tooltip>
-
-        <!-- 重启客户端 -->
-        <a-popconfirm content="确定要重启客户端容器吗?" @ok="onRestartClient">
-          <a-tooltip content="重启客户端">
-            <a-button v-permission="['wechat:robot:restart-client']" type="text" size="small">
-              <template #icon><icon-desktop /></template>
+          <!-- 更多操作 -->
+          <a-dropdown>
+            <a-button type="text" size="small">
+              <template #icon><icon-more /></template>
             </a-button>
-          </a-tooltip>
-        </a-popconfirm>
-
-        <!-- 重启服务端 -->
-        <a-popconfirm content="确定要重启服务端容器吗?" @ok="onRestartServer">
-          <a-tooltip content="重启服务端">
-            <a-button v-permission="['wechat:robot:restart-server']" type="text" size="small">
-              <template #icon><icon-cloud-server /></template>
-            </a-button>
-          </a-tooltip>
-        </a-popconfirm>
-
-        <!-- 删除 -->
-        <a-popconfirm
-          content="确定要删除此机器人吗?删除后数据将无法恢复!"
-          type="error"
-          @ok="onDelete"
-        >
-          <a-tooltip content="删除机器人">
-            <a-button v-permission="['wechat:robot:delete']" type="text" size="small" status="danger">
-              <template #icon><icon-delete /></template>
-            </a-button>
-          </a-tooltip>
-        </a-popconfirm>
+            <template #content>
+              <a-doption @click="onRefresh">
+                <template #icon><icon-refresh /></template>
+                刷新状态
+              </a-doption>
+              <a-doption @click="onRestartClient">
+                <template #icon><icon-desktop /></template>
+                重启客户端
+              </a-doption>
+              <a-doption @click="onRestartServer">
+                <template #icon><icon-cloud-server /></template>
+                重启服务端
+              </a-doption>
+              <a-divider style="margin: 4px 0" />
+              <a-doption status="danger" @click="confirmDelete">
+                <template #icon><icon-delete /></template>
+                删除机器人
+              </a-doption>
+            </template>
+          </a-dropdown>
+        </a-space>
       </div>
     </template>
   </a-card>
@@ -136,7 +158,7 @@
 </template>
 
 <script setup lang="ts">
-import { Message } from '@arco-design/web-vue'
+import { Message, Modal } from '@arco-design/web-vue'
 import dayjs from 'dayjs'
 import LoginModal from './LoginModal.vue'
 import type { RobotResp } from '@/apis/wechat'
@@ -147,7 +169,14 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['refresh'])
+const emit = defineEmits([
+  'refresh',
+  'open-contacts',
+  'open-messages',
+  'open-chatrooms',
+  'open-system-messages',
+  'open-settings',
+])
 
 const loginModalVisible = ref(false)
 const defaultAvatar = 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132'
@@ -252,6 +281,19 @@ const onRestartServer = async () => {
   }
 }
 
+// 确认删除
+const confirmDelete = () => {
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除机器人"${props.robot.nickname || props.robot.robotCode}"吗?删除后数据将无法恢复!`,
+    okText: '删除',
+    okButtonProps: {
+      status: 'danger',
+    },
+    onOk: onDelete,
+  })
+}
+
 // 删除
 const onDelete = async () => {
   try {
@@ -271,8 +313,8 @@ const onDelete = async () => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 24px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    justify-content: center;
+    //background: linear-gradient(135deg, #a6ea66 0%, #a48abd 100%);
     position: relative;
     min-height: 120px;
 
@@ -318,6 +360,17 @@ const onDelete = async () => {
     align-items: center;
     justify-content: center;
     gap: 8px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+
+    .quick-actions {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .manage-actions {
+      justify-content: center;
+    }
   }
 }
 </style>
