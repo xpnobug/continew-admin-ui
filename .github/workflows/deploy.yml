@@ -40,7 +40,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           source: ./dist/*
-          target: /tmp/html
+          target: /docker/continew-admin/html
           strip_components: 1
       # 7、重启 Nginx
       - name: Restart
